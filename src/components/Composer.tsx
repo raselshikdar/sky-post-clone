@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { X, Image as ImageIcon, Globe, ChevronDown } from "lucide-react";
+import { convertToWebP } from "@/lib/imageUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,14 +32,19 @@ export default function Composer({ open, onOpenChange, parentId }: ComposerProps
   const progress = Math.min(content.length / MAX_CHARS, 1);
   const canPost = (content.trim().length > 0 || images.length > 0) && !overLimit;
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (images.length + files.length > 4) {
       toast.error("Maximum 4 images allowed");
       return;
     }
-    const newImages = files.map((file) => ({ file, preview: URL.createObjectURL(file) }));
-    setImages((prev) => [...prev, ...newImages]);
+    try {
+      const converted = await Promise.all(files.map((f) => convertToWebP(f)));
+      const newImages = converted.map((file) => ({ file, preview: URL.createObjectURL(file) }));
+      setImages((prev) => [...prev, ...newImages]);
+    } catch {
+      toast.error("Failed to process image");
+    }
     e.target.value = "";
   };
 
@@ -50,9 +56,10 @@ export default function Composer({ open, onOpenChange, parentId }: ComposerProps
   };
 
   const uploadImage = async (file: File, postId: string, position: number) => {
-    const ext = file.name.split(".").pop();
-    const path = `${user!.id}/${postId}/${position}.${ext}`;
-    const { error } = await supabase.storage.from("profiles").upload(path, file);
+    const path = `${user!.id}/${postId}/${position}.webp`;
+    const { error } = await supabase.storage.from("profiles").upload(path, file, {
+      contentType: "image/webp",
+    });
     if (error) throw error;
     const { data } = supabase.storage.from("profiles").getPublicUrl(path);
     return data.publicUrl;
@@ -194,7 +201,7 @@ export default function Composer({ open, onOpenChange, parentId }: ComposerProps
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp,image/tiff"
                 multiple
                 className="hidden"
                 onChange={handleImageSelect}
