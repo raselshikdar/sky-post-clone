@@ -167,7 +167,7 @@ export default function Profile() {
 
       {/* Profile info */}
       <div className="relative px-4 pb-3">
-        <div className="flex items-end justify-between">
+        <div className="flex items-start justify-between">
           <Avatar className="-mt-12 h-20 w-20 border-[3px] border-background lg:h-24 lg:w-24 lg:-mt-14">
             <AvatarImage src={profile.avatar_url || ""} />
             <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
@@ -175,7 +175,7 @@ export default function Profile() {
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex items-center gap-2 pb-1">
+          <div className="flex items-center gap-2 mt-2">
             {isOwnProfile ? (
               <>
                 <Button variant="outline" className="rounded-full font-semibold text-sm h-9 px-4" onClick={() => setEditOpen(true)}>
