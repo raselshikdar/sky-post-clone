@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle, Pin, Settings, Trash2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Heart, MessageCircle, Repeat2, Share, Bookmark, BookmarkCheck, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PostCardMenu from "@/components/PostCardMenu";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface PostCardProps {
   id: string;
@@ -42,6 +42,21 @@ export default function PostCard({
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Bookmark state
+  const { data: isBookmarked = false } = useQuery({
+    queryKey: ["bookmark", id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("bookmarks").select("id").eq("user_id", user!.id).eq("post_id", id).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user,
+    staleTime: 60000,
+  });
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Sync bookmark state when query data changes
+  useState(() => { setBookmarked(isBookmarked); });
+
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
@@ -71,10 +86,41 @@ export default function PostCard({
     }
   };
 
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    const newBookmarked = !bookmarked;
+    setBookmarked(newBookmarked);
+
+    if (newBookmarked) {
+      const { error } = await supabase.from("bookmarks").insert({ user_id: user.id, post_id: id });
+      if (error?.code === "23505") { toast.info("Already bookmarked"); return; }
+      if (error) { toast.error("Failed to bookmark"); setBookmarked(false); return; }
+      toast.success("Post saved");
+    } else {
+      await supabase.from("bookmarks").delete().eq("user_id", user.id).eq("post_id", id);
+      toast.success("Bookmark removed");
+    }
+    queryClient.invalidateQueries({ queryKey: ["bookmark", id] });
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const postUrl = `${window.location.origin}/post/${id}`;
+
+  const shareOptions = [
+    { label: "Copy link", onClick: () => { navigator.clipboard.writeText(postUrl); toast.success("Link copied!"); } },
+    { label: "Share on X/Twitter", onClick: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(content.slice(0, 100))}`, "_blank") },
+    { label: "Share on Facebook", onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, "_blank") },
+    { label: "Share on WhatsApp", onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(content.slice(0, 100) + " " + postUrl)}`, "_blank") },
+    { label: "Share on Telegram", onClick: () => window.open(`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(content.slice(0, 100))}`, "_blank") },
+  ];
+
   const renderImages = () => {
     if (!images || images.length === 0) return null;
-    const count = images.length;
-    if (count === 1) {
+    if (images.length === 1) {
       return (
         <div className="mt-2 overflow-hidden rounded-xl border border-border">
           <img src={images[0]} alt="" className="w-full object-cover" style={{ maxHeight: 400 }} />
@@ -82,7 +128,7 @@ export default function PostCard({
       );
     }
     return (
-      <div className={`mt-2 grid gap-0.5 overflow-hidden rounded-xl border border-border grid-cols-2`}>
+      <div className="mt-2 grid gap-0.5 overflow-hidden rounded-xl border border-border grid-cols-2">
         {images.slice(0, 4).map((img, i) => (
           <img key={i} src={img} alt="" className="aspect-square w-full object-cover" />
         ))}
@@ -105,6 +151,8 @@ export default function PostCard({
   };
 
   if (hidden) return null;
+
+  const BookmarkIcon = bookmarked || isBookmarked ? BookmarkCheck : Bookmark;
 
   return (
     <article
@@ -137,13 +185,33 @@ export default function PostCard({
 
         <div className="mt-2 flex items-center justify-between -ml-1.5">
           <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); navigate(`/post/${id}`); }} />
-          <ActionButton icon={Repeat2} count={reposts} active={reposted} activeColor="text-bsky-repost" onClick={handleRepost} />
+          <ActionButton icon={Repeat2} count={reposts} active={reposted} activeColor="text-[hsl(var(--bsky-repost))]" onClick={handleRepost} />
           <ActionButton
-            icon={Heart} count={likes} active={liked} activeColor="text-bsky-like"
+            icon={Heart} count={likes} active={liked} activeColor="text-[hsl(var(--bsky-like))]"
             animate={animating} onAnimationEnd={() => setAnimating(false)} onClick={handleLike} fill={liked}
           />
-          <ActionButton icon={Bookmark} onClick={(e) => { e.stopPropagation(); }} />
-          <ActionButton icon={Share} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/post/${id}`); toast.success("Link copied!"); }} />
+          <ActionButton
+            icon={BookmarkIcon}
+            active={bookmarked || isBookmarked}
+            activeColor="text-primary"
+            onClick={handleBookmark}
+            fill={bookmarked || isBookmarked}
+          />
+          {/* Share dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={handleShare}>
+              <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+                <Share className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 z-50 bg-background border border-border shadow-lg">
+              {shareOptions.map((opt) => (
+                <DropdownMenuItem key={opt.label} onClick={(e) => { e.stopPropagation(); opt.onClick(); }} className="cursor-pointer py-2.5 px-3 text-sm">
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <PostCardMenu
             postId={id}
             authorId={authorId}

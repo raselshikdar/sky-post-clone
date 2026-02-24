@@ -17,6 +17,40 @@ export default function Home() {
   const [showTopics, setShowTopics] = useState(true);
   const { user, profile } = useAuth();
 
+  // Trending topics from actual post content (extract top words)
+  const { data: trendingTopics = [] } = useQuery({
+    queryKey: ["home_trending_topics"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select("content")
+        .is("parent_id", null)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (!data) return [];
+      // Extract hashtags and common words
+      const wordMap: Record<string, number> = {};
+      data.forEach((p) => {
+        const hashtags = p.content.match(/#(\w+)/g);
+        if (hashtags) {
+          hashtags.forEach((tag: string) => {
+            const clean = tag.replace("#", "");
+            wordMap[clean] = (wordMap[clean] || 0) + 1;
+          });
+        }
+      });
+      // If no hashtags, show default categories from feeds
+      if (Object.keys(wordMap).length === 0) {
+        return ["Technology", "Sports", "Politics", "Entertainment", "Science", "Gaming", "Music", "Art"];
+      }
+      return Object.entries(wordMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([word]) => word);
+    },
+    staleTime: 300000,
+  });
+
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["posts", tab],
     queryFn: async () => {
@@ -85,7 +119,7 @@ export default function Home() {
         postImages[img.post_id].push(img.url);
       });
 
-      return filtered.map((post) => {
+      let result = filtered.map((post) => {
         const p = post.profiles as any;
         return {
           id: post.id,
@@ -103,6 +137,13 @@ export default function Home() {
           isReposted: userRepostedSet.has(post.id),
         };
       });
+
+      // "What's Hot" tab: sort by engagement (likes + reposts + replies)
+      if (tab === "whats-hot") {
+        result.sort((a, b) => (b.likeCount + b.repostCount + b.replyCount) - (a.likeCount + a.repostCount + a.replyCount));
+      }
+
+      return result;
     },
   });
 
@@ -117,12 +158,12 @@ export default function Home() {
         </div>
 
         {/* Trending topics row - only on Discover tab */}
-        {tab === "discover" && showTopics && (
+        {tab === "discover" && showTopics && trendingTopics.length > 0 && (
           <div className="flex items-center border-b border-border">
             <ScrollArea className="flex-1">
               <div className="flex items-center gap-0.5 px-2 py-2">
                 <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
-                {["Technology", "Sports", "Politics", "Entertainment", "Science", "Gaming", "Music", "Art", "Film", "Books"].map((topic) => (
+                {trendingTopics.map((topic) => (
                   <button key={topic} className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
                     {topic}
                   </button>
