@@ -26,8 +26,32 @@ export default function Messages() {
 
       if (!data || data.length === 0) return [];
 
+      // Filter out deleted conversations
+      const convIds = data.map((c: any) => c.id);
+      const { data: deletions } = await supabase
+        .from("conversation_deletions")
+        .select("conversation_id")
+        .eq("user_id", user.id)
+        .in("conversation_id", convIds);
+      const deletedIds = new Set((deletions || []).map((d: any) => d.conversation_id));
+
+      // Filter out blocked users
+      const { data: blocks } = await supabase
+        .from("blocked_accounts")
+        .select("blocked_user_id")
+        .eq("user_id", user.id);
+      const blockedIds = new Set((blocks || []).map((b: any) => b.blocked_user_id));
+
+      const filteredData = data.filter((c: any) => {
+        if (deletedIds.has(c.id)) return false;
+        const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
+        return !blockedIds.has(otherId);
+      });
+
+      if (filteredData.length === 0) return [];
+
       // Get other participant profiles
-      const otherIds = data.map((c: any) =>
+      const otherIds = filteredData.map((c: any) =>
         c.participant_1 === user.id ? c.participant_2 : c.participant_1
       );
       const { data: profiles } = await supabase
@@ -39,11 +63,11 @@ export default function Messages() {
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
 
       // Get last message for each conversation
-      const convIds = data.map((c: any) => c.id);
+      const filteredIds = filteredData.map((c: any) => c.id);
       const { data: lastMessages } = await supabase
         .from("messages")
         .select("conversation_id, content, sender_id, created_at")
-        .in("conversation_id", convIds)
+        .in("conversation_id", filteredIds)
         .order("created_at", { ascending: false });
 
       const lastMsgMap: Record<string, any> = {};
@@ -55,7 +79,7 @@ export default function Messages() {
       const { data: unreadMessages } = await supabase
         .from("messages")
         .select("conversation_id")
-        .in("conversation_id", convIds)
+        .in("conversation_id", filteredIds)
         .neq("sender_id", user.id)
         .eq("read", false);
 
@@ -64,7 +88,7 @@ export default function Messages() {
         unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
       });
 
-      return data.map((c: any) => {
+      return filteredData.map((c: any) => {
         const otherId = c.participant_1 === user.id ? c.participant_2 : c.participant_1;
         return {
           ...c,

@@ -98,24 +98,59 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_deletions: {
+        Row: {
+          conversation_id: string
+          deleted_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          deleted_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          deleted_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_deletions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
+          disappear_after: number | null
           id: string
+          is_encrypted: boolean
           last_message_at: string | null
           participant_1: string
           participant_2: string
         }
         Insert: {
           created_at?: string
+          disappear_after?: number | null
           id?: string
+          is_encrypted?: boolean
           last_message_at?: string | null
           participant_1: string
           participant_2: string
         }
         Update: {
           created_at?: string
+          disappear_after?: number | null
           id?: string
+          is_encrypted?: boolean
           last_message_at?: string | null
           participant_1?: string
           participant_2?: string
@@ -287,6 +322,38 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -296,6 +363,7 @@ export type Database = {
           id: string
           image_url: string | null
           read: boolean
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
@@ -306,6 +374,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           read?: boolean
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
@@ -316,6 +385,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           read?: boolean
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -324,6 +394,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -360,6 +437,35 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      muted_conversations: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "muted_conversations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -670,6 +776,27 @@ export type Database = {
           },
         ]
       }
+      restricted_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          restricted_user_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          restricted_user_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          restricted_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_feeds: {
         Row: {
           created_at: string
@@ -739,7 +866,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_conversation_member: {
+        Args: { _message_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
