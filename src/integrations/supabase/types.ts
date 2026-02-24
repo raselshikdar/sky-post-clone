@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reported_user_id: string
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+        }
+        Relationships: []
+      }
       blocked_accounts: {
         Row: {
           blocked_user_id: string
