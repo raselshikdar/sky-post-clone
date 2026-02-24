@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, User, Shield, Bell, Palette, Eye, VolumeX, UserX, LogOut, ChevronLeft, BadgeCheck, HelpCircle } from "lucide-react";
+import {
+  ChevronRight, User, Shield, Bell, Palette, Eye, VolumeX, UserX, LogOut,
+  ChevronLeft, BadgeCheck, HelpCircle, Globe, Accessibility, FileText, Info,
+  ShieldCheck, Lock, UserPlus
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 interface MutedAccount { id: string; muted_user_id: string; profiles?: { username: string; display_name: string } }
 interface BlockedAccount { id: string; blocked_user_id: string; profiles?: { username: string; display_name: string } }
@@ -50,7 +55,7 @@ export default function SettingsPage() {
   };
 
   const renderBack = (title: string) => (
-    <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+    <div className="sticky top-[49px] lg:top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
       <button onClick={() => setSection(null)} className="p-1 rounded-full hover:bg-accent">
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -58,6 +63,7 @@ export default function SettingsPage() {
     </div>
   );
 
+  // Sub-sections
   if (section === "account") {
     return (
       <div className="flex flex-col h-full">
@@ -135,44 +141,96 @@ export default function SettingsPage() {
     );
   }
 
-  const settingsItems = [
-    { label: "Account", icon: User, key: "account" },
-    { label: "Muted Accounts", icon: VolumeX, key: "muted" },
-    { label: "Blocked Accounts", icon: UserX, key: "blocked" },
-    { label: "Apply for Verification", icon: BadgeCheck, key: "verification", route: "/verification/apply" },
-    { label: "Help & Feedback", icon: HelpCircle, key: "support", route: "/support" },
+  if (section === "moderation") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack("Moderation")}
+        <ScrollArea className="flex-1">
+          <div className="py-2">
+            <SettingsRow icon={VolumeX} label="Muted Accounts" onClick={() => setSection("muted")} />
+            <SettingsRow icon={UserX} label="Blocked Accounts" onClick={() => setSection("blocked")} />
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  // Main settings page
+  const mainItems = [
+    { label: "Account", icon: User, action: () => setSection("account") },
+    { label: "Privacy and security", icon: Lock, action: () => setSection("moderation") },
+    { label: "Moderation", icon: ShieldCheck, action: () => setSection("moderation") },
+    { label: "Notifications", icon: Bell, action: () => navigate("/notifications/settings") },
+    { label: "Content and media", icon: FileText, action: () => navigate("/feeds/settings") },
+    { label: "Appearance", icon: Palette, action: () => {} },
+    { label: "Accessibility", icon: Accessibility, action: () => {} },
+    { label: "Languages", icon: Globe, action: () => {} },
+    { label: "Apply for Verification", icon: BadgeCheck, action: () => navigate("/verification/apply") },
+    { label: "Help", icon: HelpCircle, action: () => navigate("/support") },
+    { label: "About", icon: Info, action: () => {} },
   ];
 
   return (
     <div className="flex flex-col h-full">
-      <div className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      {/* Header */}
+      <div className="sticky top-[49px] lg:top-0 z-20 flex items-center gap-4 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+        <button onClick={() => navigate(-1)} className="p-1">
+          <ChevronLeft className="h-5 w-5 text-foreground" />
+        </button>
         <h2 className="text-lg font-bold">Settings</h2>
       </div>
+
       <ScrollArea className="flex-1">
-        <div className="py-2">
-          {settingsItems.map(({ label, icon: Icon, key, route }) => (
-            <button
-              key={key}
-              onClick={() => route ? navigate(route) : setSection(key)}
-              className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
-                <span className="text-[15px] font-medium">{label}</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-          <div className="border-t border-border my-2" />
-          <button
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-destructive hover:bg-accent transition-colors"
-          >
-            <LogOut className="h-5 w-5" strokeWidth={1.75} />
-            <span className="text-[15px] font-medium">Sign Out</span>
-          </button>
+        {/* Profile card */}
+        <div className="flex flex-col items-center py-6 border-b border-border">
+          <Avatar className="h-20 w-20 cursor-pointer" onClick={() => navigate(`/profile/${profile?.username}`)}>
+            <AvatarImage src={profile?.avatar_url || ""} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+              {profile?.display_name?.[0]?.toUpperCase() || "?"}
+            </AvatarFallback>
+          </Avatar>
+          <h3 className="mt-3 text-lg font-bold text-foreground flex items-center gap-1">
+            {profile?.display_name || "User"}
+            {user && <VerifiedBadge userId={user.id} className="h-4 w-4" />}
+          </h3>
+          <p className="text-sm text-muted-foreground">@{profile?.username || "handle"}</p>
         </div>
+
+        {/* Menu items */}
+        <div className="py-2">
+          {mainItems.map(({ label, icon: Icon, action }) => (
+            <SettingsRow key={label} icon={Icon} label={label} onClick={action} />
+          ))}
+        </div>
+
+        <div className="border-t border-border" />
+
+        {/* Sign out */}
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-destructive hover:bg-accent transition-colors"
+        >
+          <LogOut className="h-5 w-5" strokeWidth={1.75} />
+          <span className="text-[15px] font-medium">Sign out</span>
+        </button>
+
+        <div className="h-20" />
       </ScrollArea>
     </div>
+  );
+}
+
+function SettingsRow({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+        <span className="text-[15px] font-medium text-foreground">{label}</span>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </button>
   );
 }
