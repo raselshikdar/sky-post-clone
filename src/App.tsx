@@ -17,6 +17,7 @@ import SettingsPage from "@/pages/Settings";
 import Messages from "@/pages/Messages";
 import Conversation from "@/pages/Conversation";
 import ChatSettings from "@/pages/ChatSettings";
+import NotificationSettings from "@/pages/NotificationSettings";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/feeds" element={<Feeds />} />
               <Route path="/feeds/settings" element={<FeedSettings />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/notifications/settings" element={<NotificationSettings />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/post/:postId" element={<PostDetail />} />
               <Route path="/settings" element={<SettingsPage />} />
