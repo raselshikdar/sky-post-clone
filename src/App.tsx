@@ -20,6 +20,7 @@ import Conversation from "@/pages/Conversation";
 import ChatSettings from "@/pages/ChatSettings";
 import NotificationSettings from "@/pages/NotificationSettings";
 import NotFound from "@/pages/NotFound";
+import ResetPassword from "@/pages/ResetPassword";
 import SupportTicketForm from "@/pages/SupportTicketForm";
 import VerificationApply from "@/pages/VerificationApply";
 import AdminLayout from "@/pages/admin/AdminLayout";
@@ -57,6 +58,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<SearchPage />} />
