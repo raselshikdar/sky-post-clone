@@ -159,8 +159,8 @@ export default function PostCard({
       className="flex gap-3 px-4 py-3 bsky-hover cursor-pointer bsky-divider"
       onClick={() => navigate(`/post/${id}`)}
     >
-      <div className="flex-shrink-0 pt-0.5" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>
-        <Avatar className="h-11 w-11">
+      <div className="flex-shrink-0 pt-0.5">
+        <Avatar className="h-11 w-11 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>
           <AvatarImage src={authorAvatar} />
           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
             {authorName[0]?.toUpperCase()}

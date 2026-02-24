@@ -24,7 +24,13 @@ export default function PostDetail() {
         .select(`id, content, created_at, parent_id, author_id, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
         .eq("id", postId!)
         .single();
-      return data;
+      if (!data) return null;
+      const { data: imgs } = await supabase
+        .from("post_images")
+        .select("url, position")
+        .eq("post_id", postId!)
+        .order("position");
+      return { ...data, images: (imgs || []).map((i) => i.url) };
     },
     enabled: !!postId,
   });
@@ -135,6 +141,14 @@ export default function PostDetail() {
         </div>
 
         <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">{post.content}</p>
+
+        {post.images && post.images.length > 0 && (
+          <div className={`mt-3 overflow-hidden rounded-xl border border-border ${post.images.length > 1 ? "grid grid-cols-2 gap-0.5" : ""}`}>
+            {post.images.slice(0, 4).map((img, i) => (
+              <img key={i} src={img} alt="" className={`w-full object-cover ${post.images.length === 1 ? "" : "aspect-square"}`} style={post.images.length === 1 ? { maxHeight: 500 } : undefined} />
+            ))}
+          </div>
+        )}
 
         <p className="mt-3 text-sm text-muted-foreground">
           {format(new Date(post.created_at), "h:mm a · MMM d, yyyy")}
