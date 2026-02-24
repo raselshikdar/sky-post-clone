@@ -526,7 +526,7 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
             {bannerPreview && <img src={bannerPreview} alt="" className="h-full w-full object-cover" />}
           </div>
           <label htmlFor="banner-upload"
-            className="absolute right-3 bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer">
+            className="absolute right-3 bottom-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer">
             <Camera className="h-4 w-4" />
           </label>
           <input id="banner-upload" ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
