@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { X, TrendingUp } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import PostCard from "@/components/PostCard";
 import Composer from "@/components/Composer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,6 +17,7 @@ export default function Home() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   // Trending topics from actual post content (extract top words)
   const { data: trendingTopics = [] } = useQuery({
@@ -164,7 +166,11 @@ export default function Home() {
               <div className="flex items-center gap-0.5 px-2 py-2">
                 <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
                 {trendingTopics.map((topic) => (
-                  <button key={topic} className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
+                  <button
+                    key={topic}
+                    onClick={() => navigate(`/search?q=${encodeURIComponent(topic)}`)}
+                    className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors"
+                  >
                     {topic}
                   </button>
                 ))}
