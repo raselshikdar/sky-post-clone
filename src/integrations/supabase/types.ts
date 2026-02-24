@@ -292,7 +292,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          delivered: boolean
           id: string
+          image_url: string | null
           read: boolean
           sender_id: string
         }
@@ -300,7 +302,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          delivered?: boolean
           id?: string
+          image_url?: string | null
           read?: boolean
           sender_id: string
         }
@@ -308,7 +312,9 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          delivered?: boolean
           id?: string
+          image_url?: string | null
           read?: boolean
           sender_id?: string
         }
