@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun, ShieldCheck } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -62,7 +63,10 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-foreground truncate">{profile?.display_name || "User"}</p>
+            <p className="text-sm font-bold text-foreground truncate flex items-center gap-1">
+              {profile?.display_name || "User"}
+              {user && <VerifiedBadge userId={user.id} className="h-3.5 w-3.5" />}
+            </p>
             <p className="text-xs text-muted-foreground truncate">@{profile?.username || "handle"}</p>
             <p className="text-xs mt-0.5">
               <span className="font-bold text-foreground">{followerCount}</span> <span className="text-muted-foreground">followers</span>

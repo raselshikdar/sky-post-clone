@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PostCardMenu from "@/components/PostCardMenu";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 interface PostCardProps {
   id: string;
@@ -122,6 +123,7 @@ export default function PostCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1 text-sm">
           <span className="truncate font-semibold text-foreground">{authorName}</span>
+          <VerifiedBadge userId={authorId} className="h-4 w-4" />
           <span className="truncate bsky-text-secondary">@{authorHandle}</span>
           <span className="bsky-text-secondary">·</span>
           <span className="flex-shrink-0 bsky-text-secondary">{timeAgo(createdAt)}</span>
