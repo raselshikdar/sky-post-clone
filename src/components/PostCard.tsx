@@ -173,9 +173,9 @@ export default function PostCard({
 
         <div className="mt-2 flex items-center justify-between -ml-1.5">
           <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); navigate(`/post/${id}`); }} />
-          <ActionButton icon={Repeat2} count={reposts} active={reposted} activeColor="text-[hsl(var(--bsky-repost))]" onClick={handleRepost} />
+          <ActionButton icon={Repeat2} count={reposts} active={reposted} activeColor="text-[hsl(var(--bsky-repost))]" hoverColor="hover:text-[hsl(var(--bsky-repost))]" onClick={handleRepost} />
           <ActionButton
-            icon={Heart} count={likes} active={liked} activeColor="text-[hsl(var(--bsky-like))]"
+            icon={Heart} count={likes} active={liked} activeColor="text-[hsl(var(--bsky-like))]" hoverColor="hover:text-[hsl(var(--bsky-like))]"
             animate={animating} onAnimationEnd={() => setAnimating(false)} onClick={handleLike} fill={liked}
           />
           <ActionButton
@@ -214,14 +214,14 @@ export default function PostCard({
 }
 
 function ActionButton({
-  icon: Icon, count, active, activeColor, animate, onAnimationEnd, onClick, fill,
+  icon: Icon, count, active, activeColor, animate, onAnimationEnd, onClick, fill, hoverColor,
 }: {
   icon: any; count?: number; active?: boolean; activeColor?: string;
-  animate?: boolean; onAnimationEnd?: () => void; onClick?: (e: React.MouseEvent) => void; fill?: boolean;
+  animate?: boolean; onAnimationEnd?: () => void; onClick?: (e: React.MouseEvent) => void; fill?: boolean; hoverColor?: string;
 }) {
   return (
     <button
-      className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary ${active ? activeColor : ""}`}
+      className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors ${hoverColor || "hover:text-primary"} ${active ? activeColor : ""}`}
       onClick={onClick}
     >
       <Icon

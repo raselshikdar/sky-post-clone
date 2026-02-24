@@ -13,6 +13,8 @@ import PostDetail from "@/pages/PostDetail";
 import Notifications from "@/pages/Notifications";
 import SearchPage from "@/pages/SearchPage";
 import Feeds from "@/pages/Feeds";
+import Lists from "@/pages/Lists";
+import SavedPosts from "@/pages/SavedPosts";
 import FeedSettings from "@/pages/FeedSettings";
 import SettingsPage from "@/pages/Settings";
 import Messages from "@/pages/Messages";
@@ -64,6 +66,8 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/feeds" element={<Feeds />} />
                 <Route path="/feeds/settings" element={<FeedSettings />} />
+                <Route path="/lists" element={<Lists />} />
+                <Route path="/saved" element={<SavedPosts />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/notifications/settings" element={<NotificationSettings />} />
                 <Route path="/profile/:username" element={<Profile />} />
