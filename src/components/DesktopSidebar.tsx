@@ -24,7 +24,7 @@ export default function DesktopSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex w-full flex-1 flex-col gap-1">
+      <nav className="flex w-full flex-1 flex-col gap-1 overflow-y-auto">
         {navItems.map(({ label, path, icon: Icon }) => {
           const profilePath = path === "/profile" ? `/profile/${profile?.username || ""}` : path;
           const isActive = path === "/"
