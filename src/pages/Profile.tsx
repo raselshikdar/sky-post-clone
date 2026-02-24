@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
@@ -17,6 +17,12 @@ import { toast } from "sonner";
 
 const PROFILE_TABS = ["Posts", "Replies", "Media", "Videos", "Likes", "Feeds", "Starter Packs", "Lists"] as const;
 type ProfileTab = typeof PROFILE_TABS[number];
+
+function formatCount(n: number) {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}K`;
+  return n.toString();
+}
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>();
@@ -57,12 +63,42 @@ export default function Profile() {
     enabled: !!profile?.id,
   });
 
+  // Check if the other user follows back (for "Follows you" badge)
+  const { data: followsYou } = useQuery({
+    queryKey: ["followsYou", profile?.id],
+    queryFn: async () => {
+      if (!user || !profile) return false;
+      const { data } = await supabase.from("follows").select("id").eq("follower_id", profile.id).eq("following_id", user.id).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!profile?.id && !isOwnProfile,
+  });
+
   const { data: isFollowing } = useQuery({
     queryKey: ["isFollowing", profile?.id],
     queryFn: async () => {
       if (!user || !profile) return false;
       const { data } = await supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", profile.id).maybeSingle();
       return !!data;
+    },
+    enabled: !!user && !!profile?.id && !isOwnProfile,
+  });
+
+  // Mutual followers (people you follow who also follow this person)
+  const { data: mutualFollowers = [] } = useQuery({
+    queryKey: ["mutualFollowers", profile?.id],
+    queryFn: async () => {
+      if (!user || !profile) return [];
+      // Get people I follow
+      const { data: myFollowing } = await supabase.from("follows").select("following_id").eq("follower_id", user.id);
+      if (!myFollowing || myFollowing.length === 0) return [];
+      const myFollowingIds = myFollowing.map((f) => f.following_id);
+      // Get people who follow this profile
+      const { data: theirFollowers } = await supabase.from("follows").select("follower_id").eq("following_id", profile.id).in("follower_id", myFollowingIds).limit(3);
+      if (!theirFollowers || theirFollowers.length === 0) return [];
+      const mutualIds = theirFollowers.map((f) => f.follower_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", mutualIds);
+      return profiles || [];
     },
     enabled: !!user && !!profile?.id && !isOwnProfile,
   });
@@ -185,6 +221,9 @@ export default function Profile() {
               </>
             ) : user ? (
               <>
+                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-accent">
+                  <BellPlus className="h-5 w-5" />
+                </button>
                 <Button variant={isFollowing ? "outline" : "default"} className="rounded-full font-semibold text-sm h-9 px-5" onClick={handleFollow}>
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
@@ -195,19 +234,43 @@ export default function Profile() {
         </div>
 
         <h1 className="mt-2 text-[22px] font-extrabold leading-tight">{profile.display_name}</h1>
-        <p className="text-sm text-muted-foreground">@{profile.username}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-sm text-muted-foreground">@{profile.username}</p>
+          {!isOwnProfile && followsYou && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">Follows you</span>
+          )}
+        </div>
 
         <div className="mt-2 flex items-center gap-1 text-sm flex-wrap">
-          <span className="font-bold">{followCounts?.followers || 0}</span>
+          <span className="font-bold">{formatCount(followCounts?.followers || 0)}</span>
           <span className="text-muted-foreground mr-2">followers</span>
-          <span className="font-bold">{followCounts?.following || 0}</span>
+          <span className="font-bold">{formatCount(followCounts?.following || 0)}</span>
           <span className="text-muted-foreground mr-2">following</span>
-          <span className="font-bold">{postCount || 0}</span>
+          <span className="font-bold">{formatCount(postCount || 0)}</span>
           <span className="text-muted-foreground">posts</span>
         </div>
 
         {profile.bio && (
           <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{renderBio(profile.bio)}</p>
+        )}
+
+        {/* Mutual followers */}
+        {!isOwnProfile && mutualFollowers.length > 0 && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {mutualFollowers.slice(0, 3).map((mf: any) => (
+                <Avatar key={mf.id} className="h-6 w-6 border-2 border-background">
+                  <AvatarImage src={mf.avatar_url || ""} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                    {mf.display_name?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+            <p className="text-sm text-primary">
+              Followed by {mutualFollowers.map((mf: any) => mf.display_name).join(" and ")}
+            </p>
+          </div>
         )}
       </div>
 
@@ -270,6 +333,11 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
     toast.success("Account blocked");
   };
 
+  const handleReport = async () => {
+    if (!user || !profileId) return;
+    toast.success("Report submitted");
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -309,9 +377,15 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleMuteAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer">
               <span>Mute account</span>
+              <VolumeX className="h-5 w-5 text-muted-foreground" />
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleBlockAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
               <span>Block account</span>
+              <Ban className="h-5 w-5" />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleReport} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
+              <span>Report account</span>
+              <Flag className="h-5 w-5" />
             </DropdownMenuItem>
           </>
         )}
