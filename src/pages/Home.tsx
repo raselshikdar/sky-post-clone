@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { X, TrendingUp } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
 import Composer from "@/components/Composer";
@@ -10,8 +12,9 @@ import { Image as ImageIcon } from "lucide-react";
 type FeedTab = "discover" | "following" | "whats-hot";
 
 export default function Home() {
-  const [tab, setTab] = useState<FeedTab>("following");
+  const [tab, setTab] = useState<FeedTab>("discover");
   const [composerOpen, setComposerOpen] = useState(false);
+  const [showTopics, setShowTopics] = useState(true);
   const { user, profile } = useAuth();
 
   const { data: posts = [], isLoading } = useQuery({
@@ -106,10 +109,32 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Tabs */}
-      <div className="sticky top-[49px] lg:top-0 z-20 flex border-b border-border bg-background/95 backdrop-blur-sm">
-        <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
-        <TabButton label="Following" active={tab === "following"} onClick={() => setTab("following")} />
-        <TabButton label="What's Hot Classic" active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
+      <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <div className="flex border-b border-border">
+          <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
+          <TabButton label="Following" active={tab === "following"} onClick={() => setTab("following")} />
+          <TabButton label="What's Hot Classic" active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
+        </div>
+
+        {/* Trending topics row - only on Discover tab */}
+        {tab === "discover" && showTopics && (
+          <div className="flex items-center border-b border-border">
+            <ScrollArea className="flex-1">
+              <div className="flex items-center gap-0.5 px-2 py-2">
+                <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
+                {["Technology", "Sports", "Politics", "Entertainment", "Science", "Gaming", "Music", "Art", "Film", "Books"].map((topic) => (
+                  <button key={topic} className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
+                    {topic}
+                  </button>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" className="h-0" />
+            </ScrollArea>
+            <button onClick={() => setShowTopics(false)} className="flex-shrink-0 p-2 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Composer prompt */}
