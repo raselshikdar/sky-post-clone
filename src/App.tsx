@@ -20,6 +20,8 @@ import Conversation from "@/pages/Conversation";
 import ChatSettings from "@/pages/ChatSettings";
 import NotificationSettings from "@/pages/NotificationSettings";
 import NotFound from "@/pages/NotFound";
+import SupportTicketForm from "@/pages/SupportTicketForm";
+import VerificationApply from "@/pages/VerificationApply";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -68,6 +70,8 @@ const App = () => (
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/messages/settings" element={<ChatSettings />} />
                 <Route path="/messages/:conversationId" element={<Conversation />} />
+                <Route path="/support" element={<SupportTicketForm />} />
+                <Route path="/verification/apply" element={<VerificationApply />} />
               </Route>
               <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<AdminOverview />} />

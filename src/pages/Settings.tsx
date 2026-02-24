@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronRight, User, Shield, Bell, Palette, Eye, VolumeX, UserX, LogOut, ChevronLeft } from "lucide-react";
+import { ChevronRight, User, Shield, Bell, Palette, Eye, VolumeX, UserX, LogOut, ChevronLeft, BadgeCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -139,6 +139,8 @@ export default function SettingsPage() {
     { label: "Account", icon: User, key: "account" },
     { label: "Muted Accounts", icon: VolumeX, key: "muted" },
     { label: "Blocked Accounts", icon: UserX, key: "blocked" },
+    { label: "Apply for Verification", icon: BadgeCheck, key: "verification", route: "/verification/apply" },
+    { label: "Help & Feedback", icon: HelpCircle, key: "support", route: "/support" },
   ];
 
   return (
@@ -148,10 +150,10 @@ export default function SettingsPage() {
       </div>
       <ScrollArea className="flex-1">
         <div className="py-2">
-          {settingsItems.map(({ label, icon: Icon, key }) => (
+          {settingsItems.map(({ label, icon: Icon, key, route }) => (
             <button
               key={key}
-              onClick={() => setSection(key)}
+              onClick={() => route ? navigate(route) : setSection(key)}
               className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors"
             >
               <div className="flex items-center gap-3">
