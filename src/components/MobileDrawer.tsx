@@ -133,12 +133,12 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             <a href="#" className="text-primary hover:underline">Privacy</a>
           </div>
           <div className="flex gap-1.5">
-            <button className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
+            <NavLink to="/support" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
               <MessageCircle className="h-3 w-3" /> Feedback
-            </button>
-            <button className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
+            </NavLink>
+            <NavLink to="/support" onClick={() => onOpenChange(false)} className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
               Help
-            </button>
+            </NavLink>
           </div>
         </div>
       </SheetContent>
