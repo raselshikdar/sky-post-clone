@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal } from "lucide-react";
+import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
@@ -154,7 +155,50 @@ export default function PostCard({
           />
           <ActionButton icon={Bookmark} onClick={(e) => { e.stopPropagation(); }} />
           <ActionButton icon={Share} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/post/${id}`); }} />
-          <ActionButton icon={MoreHorizontal} onClick={(e) => { e.stopPropagation(); }} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+                <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 z-50 bg-background border border-border shadow-lg">
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Translate</span>
+                <Languages className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Copy post text</span>
+                <Copy className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Mute thread</span>
+                <BellOff className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Mute words & tags</span>
+                <Filter className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Hide post for me</span>
+                <EyeOff className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Mute account</span>
+                <VolumeX className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Block account</span>
+                <UserX className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                <span>Report post</span>
+                <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </article>
