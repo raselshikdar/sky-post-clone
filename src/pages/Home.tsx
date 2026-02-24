@@ -15,6 +15,7 @@ type FeedTab = "discover" | "following" | "whats-hot";
 export default function Home() {
   const [tab, setTab] = useState<FeedTab>("discover");
   const [composerOpen, setComposerOpen] = useState(false);
+  const [composerAutoImage, setComposerAutoImage] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -198,7 +199,9 @@ export default function Home() {
         >
           What's up?
         </button>
-        <ImageIcon className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+        <button onClick={() => { setComposerAutoImage(true); setComposerOpen(true); }}>
+          <ImageIcon className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+        </button>
       </div>
 
       {/* Feed */}
@@ -215,7 +218,7 @@ export default function Home() {
         posts.map((post) => <PostCard key={post.id} {...post} />)
       )}
 
-      <Composer open={composerOpen} onOpenChange={setComposerOpen} />
+      <Composer open={composerOpen} onOpenChange={(v) => { setComposerOpen(v); if (!v) setComposerAutoImage(false); }} autoOpenImagePicker={composerAutoImage} />
     </div>
   );
 }
