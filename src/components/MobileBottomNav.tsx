@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const mobileNavItems = [
   { label: "Home", path: "/", icon: Home },
   { label: "Search", path: "/search", icon: Search },
-  { label: "Chat", path: "/chat", icon: MessageCircle },
+  { label: "Chat", path: "/messages", icon: MessageCircle },
   { label: "Notifications", path: "/notifications", icon: Bell },
 ];
 
