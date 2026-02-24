@@ -525,11 +525,11 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
           <div className="aspect-[3/1] w-full bg-primary/20">
             {bannerPreview && <img src={bannerPreview} alt="" className="h-full w-full object-cover" />}
           </div>
-          <button onClick={() => bannerInputRef.current?.click()}
-            className="absolute right-3 bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+          <label htmlFor="banner-upload"
+            className="absolute right-3 bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer">
             <Camera className="h-4 w-4" />
-          </button>
-          <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
+          </label>
+          <input id="banner-upload" ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
         </div>
 
         {/* Avatar overlapping banner */}
@@ -541,11 +541,11 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
                 {displayName[0]?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
-            <button onClick={() => avatarInputRef.current?.click()}
-              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+            <label htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer">
               <Camera className="h-3.5 w-3.5" />
-            </button>
-            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            </label>
+            <input id="avatar-upload" ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
         </div>
 
