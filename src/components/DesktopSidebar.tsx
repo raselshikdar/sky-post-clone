@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Search, Compass, Bell, User, Settings, CloudSun } from "lucide-react";
+import { Home, Search, Compass, Bell, User, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import DoyelLogo from "@/components/DoyelLogo";
 
 const navItems = [
   { label: "Home", path: "/", icon: Home },
@@ -20,7 +21,7 @@ export default function DesktopSidebar() {
     <aside className="sticky top-0 hidden h-screen w-[72px] flex-col items-center border-r border-border py-4 lg:flex xl:w-[240px] xl:items-start xl:px-4">
       {/* Logo */}
       <div className="mb-6 flex h-10 w-10 items-center justify-center xl:ml-2">
-        <CloudSun className="h-8 w-8 text-primary" strokeWidth={1.5} />
+        <DoyelLogo className="h-8 w-8" />
       </div>
 
       {/* Nav */}
