@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Image as ImageIcon, Globe, ChevronDown } from "lucide-react";
 import { convertToWebP } from "@/lib/imageUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,11 +13,12 @@ interface ComposerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   parentId?: string;
+  autoOpenImagePicker?: boolean;
 }
 
 const MAX_CHARS = 300;
 
-export default function Composer({ open, onOpenChange, parentId }: ComposerProps) {
+export default function Composer({ open, onOpenChange, parentId, autoOpenImagePicker }: ComposerProps) {
   const [content, setContent] = useState("");
   const [posting, setPosting] = useState(false);
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
@@ -30,6 +31,13 @@ export default function Composer({ open, onOpenChange, parentId }: ComposerProps
   const remaining = MAX_CHARS - content.length;
   const overLimit = remaining < 0;
   const progress = Math.min(content.length / MAX_CHARS, 1);
+  useEffect(() => {
+    if (open && autoOpenImagePicker) {
+      const timer = setTimeout(() => fileInputRef.current?.click(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open, autoOpenImagePicker]);
+
   const canPost = (content.trim().length > 0 || images.length > 0) && !overLimit;
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
