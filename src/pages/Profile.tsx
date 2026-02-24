@@ -316,26 +316,66 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
   isOwner: boolean; onCopyLink: () => void; onSearchPosts: () => void; profileId?: string;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const handleMuteAccount = async () => {
+  const { data: isMuted } = useQuery({
+    queryKey: ["isMuted", profileId],
+    queryFn: async () => {
+      if (!user || !profileId) return false;
+      const { data } = await supabase.from("muted_accounts").select("id").eq("user_id", user.id).eq("muted_user_id", profileId).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!profileId && !isOwner,
+  });
+
+  const { data: isBlocked } = useQuery({
+    queryKey: ["isBlocked", profileId],
+    queryFn: async () => {
+      if (!user || !profileId) return false;
+      const { data } = await supabase.from("blocked_accounts").select("id").eq("user_id", user.id).eq("blocked_user_id", profileId).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!profileId && !isOwner,
+  });
+
+  const handleToggleMute = async () => {
     if (!user || !profileId) return;
-    const { error } = await supabase.from("muted_accounts").insert({ user_id: user.id, muted_user_id: profileId });
-    if (error?.code === "23505") { toast.info("Account already muted"); return; }
-    if (error) { toast.error("Failed to mute account"); return; }
-    toast.success("Account muted");
+    if (isMuted) {
+      await supabase.from("muted_accounts").delete().eq("user_id", user.id).eq("muted_user_id", profileId);
+      toast.success("Account unmuted");
+    } else {
+      const { error } = await supabase.from("muted_accounts").insert({ user_id: user.id, muted_user_id: profileId });
+      if (error?.code === "23505") { toast.info("Account already muted"); return; }
+      if (error) { toast.error("Failed to mute account"); return; }
+      toast.success("Account muted");
+    }
+    queryClient.invalidateQueries({ queryKey: ["isMuted", profileId] });
   };
 
-  const handleBlockAccount = async () => {
+  const handleToggleBlock = async () => {
     if (!user || !profileId) return;
-    const { error } = await supabase.from("blocked_accounts").insert({ user_id: user.id, blocked_user_id: profileId });
-    if (error?.code === "23505") { toast.info("Account already blocked"); return; }
-    if (error) { toast.error("Failed to block account"); return; }
-    toast.success("Account blocked");
+    if (isBlocked) {
+      await supabase.from("blocked_accounts").delete().eq("user_id", user.id).eq("blocked_user_id", profileId);
+      toast.success("Account unblocked");
+    } else {
+      const { error } = await supabase.from("blocked_accounts").insert({ user_id: user.id, blocked_user_id: profileId });
+      if (error?.code === "23505") { toast.info("Account already blocked"); return; }
+      if (error) { toast.error("Failed to block account"); return; }
+      // Also unfollow when blocking
+      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", profileId);
+      toast.success("Account blocked");
+    }
+    queryClient.invalidateQueries({ queryKey: ["isBlocked", profileId] });
+    queryClient.invalidateQueries({ queryKey: ["isFollowing", profileId] });
+    queryClient.invalidateQueries({ queryKey: ["followCounts", profileId] });
   };
 
   const handleReport = async () => {
     if (!user || !profileId) return;
-    toast.success("Report submitted");
+    const { error } = await supabase.from("account_reports").insert({ reporter_id: user.id, reported_user_id: profileId, reason: "spam" });
+    if (error?.code === "23505") { toast.info("You have already reported this account"); return; }
+    if (error) { toast.error("Failed to submit report"); return; }
+    toast.success("Report submitted. We'll review this account.");
   };
 
   return (
@@ -357,11 +397,11 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
         {isOwner && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer" onClick={() => toast.info("Lists coming soon")}>
               <span>Add to lists</span>
               <ListFilter className="h-5 w-5 text-muted-foreground" />
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer" onClick={() => toast.info("Go live coming soon")}>
               <span>Go live</span>
               <Radio className="h-5 w-5 text-muted-foreground" />
             </DropdownMenuItem>
@@ -370,17 +410,21 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
         {!isOwner && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer" onClick={() => toast.info("Starter packs coming soon")}>
+              <span>Add to starter packs</span>
+              <ListFilter className="h-5 w-5 text-muted-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer" onClick={() => toast.info("Lists coming soon")}>
               <span>Add to lists</span>
               <ListFilter className="h-5 w-5 text-muted-foreground" />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleMuteAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-              <span>Mute account</span>
+            <DropdownMenuItem onClick={handleToggleMute} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+              <span>{isMuted ? "Unmute account" : "Mute account"}</span>
               <VolumeX className="h-5 w-5 text-muted-foreground" />
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleBlockAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
-              <span>Block account</span>
+            <DropdownMenuItem onClick={handleToggleBlock} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
+              <span>{isBlocked ? "Unblock account" : "Block account"}</span>
               <Ban className="h-5 w-5" />
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleReport} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
