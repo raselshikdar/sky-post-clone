@@ -5,13 +5,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useRef, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 const PROFILE_TABS = ["Posts", "Replies", "Media", "Videos", "Likes", "Feeds", "Starter Packs", "Lists"] as const;
 type ProfileTab = typeof PROFILE_TABS[number];
@@ -26,11 +28,7 @@ export default function Profile() {
   const { data: profile } = useQuery({
     queryKey: ["profile", username],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username!)
-        .single();
+      const { data } = await supabase.from("profiles").select("*").eq("username", username!).single();
       return data;
     },
     enabled: !!username,
@@ -63,12 +61,7 @@ export default function Profile() {
     queryKey: ["isFollowing", profile?.id],
     queryFn: async () => {
       if (!user || !profile) return false;
-      const { data } = await supabase
-        .from("follows")
-        .select("id")
-        .eq("follower_id", user.id)
-        .eq("following_id", profile.id)
-        .maybeSingle();
+      const { data } = await supabase.from("follows").select("id").eq("follower_id", user.id).eq("following_id", profile.id).maybeSingle();
       return !!data;
     },
     enabled: !!user && !!profile?.id && !isOwnProfile,
@@ -85,6 +78,11 @@ export default function Profile() {
     }
     queryClient.invalidateQueries({ queryKey: ["isFollowing", profile.id] });
     queryClient.invalidateQueries({ queryKey: ["followCounts", profile.id] });
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/profile/${profile?.username}`);
+    toast.success("Link copied to clipboard");
   };
 
   const { data: posts = [] } = useQuery({
@@ -126,25 +124,19 @@ export default function Profile() {
       return data.map((post) => {
         const p = post.profiles as any;
         return {
-          id: post.id,
-          authorId: post.author_id,
-          authorName: p?.display_name || "",
-          authorHandle: p?.username || "",
-          authorAvatar: p?.avatar_url || "",
-          content: post.content,
+          id: post.id, authorId: post.author_id,
+          authorName: p?.display_name || "", authorHandle: p?.username || "",
+          authorAvatar: p?.avatar_url || "", content: post.content,
           createdAt: post.created_at,
-          likeCount: likeCounts[post.id] || 0,
-          replyCount: replyCounts[post.id] || 0,
+          likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
-          isLiked: userLikedSet.has(post.id),
-          isReposted: userRepostedSet.has(post.id),
+          isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
         };
       });
     },
     enabled: !!profile?.id,
   });
 
-  // Linkify bio URLs
   const renderBio = (bio: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = bio.split(urlRegex);
@@ -153,9 +145,7 @@ export default function Profile() {
         <a key={i} href={part} className="bsky-link" target="_blank" rel="noopener noreferrer">
           {part.replace(/^https?:\/\//, "")}
         </a>
-      ) : (
-        <span key={i}>{part}</span>
-      )
+      ) : <span key={i}>{part}</span>
     );
   };
 
@@ -165,24 +155,18 @@ export default function Profile() {
 
   return (
     <div className="flex flex-col">
-      {/* Banner with overlaid back button */}
+      {/* Banner */}
       <div className="relative">
         <div className="aspect-[3/1] w-full bg-primary/20">
-          {profile.banner_url && (
-            <img src={profile.banner_url} alt="" className="h-full w-full object-cover" />
-          )}
+          {profile.banner_url && <img src={profile.banner_url} alt="" className="h-full w-full object-cover" />}
         </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-        >
+        <button onClick={() => navigate(-1)} className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70">
           <ArrowLeft className="h-4 w-4" />
         </button>
       </div>
 
       {/* Profile info */}
       <div className="relative px-4 pb-3">
-        {/* Avatar + action buttons row */}
         <div className="flex items-end justify-between">
           <Avatar className="-mt-12 h-20 w-20 border-[3px] border-background lg:h-24 lg:w-24 lg:-mt-14">
             <AvatarImage src={profile.avatar_url || ""} />
@@ -197,32 +181,22 @@ export default function Profile() {
                 <Button variant="outline" className="rounded-full font-semibold text-sm h-9 px-4" onClick={() => setEditOpen(true)}>
                   Edit Profile
                 </Button>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-accent">
-                  <MoreHorizontal className="h-5 w-5" />
-                </button>
+                <ProfileMoreMenu isOwner onCopyLink={handleCopyLink} onSearchPosts={() => navigate("/search")} />
               </>
             ) : user ? (
               <>
-                <Button
-                  variant={isFollowing ? "outline" : "default"}
-                  className="rounded-full font-semibold text-sm h-9 px-5"
-                  onClick={handleFollow}
-                >
+                <Button variant={isFollowing ? "outline" : "default"} className="rounded-full font-semibold text-sm h-9 px-5" onClick={handleFollow}>
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-accent">
-                  <MoreHorizontal className="h-5 w-5" />
-                </button>
+                <ProfileMoreMenu isOwner={false} onCopyLink={handleCopyLink} onSearchPosts={() => navigate("/search")} profileId={profile.id} />
               </>
             ) : null}
           </div>
         </div>
 
-        {/* Name & handle */}
         <h1 className="mt-2 text-[22px] font-extrabold leading-tight">{profile.display_name}</h1>
         <p className="text-sm text-muted-foreground">@{profile.username}</p>
 
-        {/* Stats row */}
         <div className="mt-2 flex items-center gap-1 text-sm flex-wrap">
           <span className="font-bold">{followCounts?.followers || 0}</span>
           <span className="text-muted-foreground mr-2">followers</span>
@@ -232,30 +206,20 @@ export default function Profile() {
           <span className="text-muted-foreground">posts</span>
         </div>
 
-        {/* Bio */}
         {profile.bio && (
-          <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-            {renderBio(profile.bio)}
-          </p>
+          <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{renderBio(profile.bio)}</p>
         )}
       </div>
 
-      {/* Scrollable tabs */}
+      {/* Tabs */}
       <div className="border-b border-border">
         <ScrollArea className="w-full">
           <div className="flex">
             {PROFILE_TABS.map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTab(t)}
-                className={`relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === t ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <button key={t} onClick={() => setActiveTab(t)}
+                className={`relative whitespace-nowrap px-4 py-3 text-sm font-semibold transition-colors ${activeTab === t ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {t}
-                {activeTab === t && (
-                  <div className="absolute bottom-0 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-primary" />
-                )}
+                {activeTab === t && <div className="absolute bottom-0 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-primary" />}
               </button>
             ))}
           </div>
@@ -263,14 +227,12 @@ export default function Profile() {
         </ScrollArea>
       </div>
 
-      {/* Posts list */}
       {posts.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">No {activeTab.toLowerCase()} yet</p>
       ) : (
         posts.map((post) => <PostCard key={post.id} {...post} />)
       )}
 
-      {/* Edit Profile Modal */}
       {isOwnProfile && (
         <EditProfileDialog
           open={editOpen}
@@ -286,37 +248,194 @@ export default function Profile() {
   );
 }
 
+/* ---- Profile "..." Menu ---- */
+function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
+  isOwner: boolean; onCopyLink: () => void; onSearchPosts: () => void; profileId?: string;
+}) {
+  const { user } = useAuth();
+
+  const handleMuteAccount = async () => {
+    if (!user || !profileId) return;
+    const { error } = await supabase.from("muted_accounts").insert({ user_id: user.id, muted_user_id: profileId });
+    if (error?.code === "23505") { toast.info("Account already muted"); return; }
+    if (error) { toast.error("Failed to mute account"); return; }
+    toast.success("Account muted");
+  };
+
+  const handleBlockAccount = async () => {
+    if (!user || !profileId) return;
+    const { error } = await supabase.from("blocked_accounts").insert({ user_id: user.id, blocked_user_id: profileId });
+    if (error?.code === "23505") { toast.info("Account already blocked"); return; }
+    if (error) { toast.error("Failed to block account"); return; }
+    toast.success("Account blocked");
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-accent">
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 z-50 bg-background border border-border shadow-lg">
+        <DropdownMenuItem onClick={onCopyLink} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+          <span>Copy link to profile</span>
+          <Link2 className="h-5 w-5 text-muted-foreground" />
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onSearchPosts} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+          <span>Search posts</span>
+          <Search className="h-5 w-5 text-muted-foreground" />
+        </DropdownMenuItem>
+        {isOwner && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+              <span>Add to lists</span>
+              <ListFilter className="h-5 w-5 text-muted-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+              <span>Go live</span>
+              <Radio className="h-5 w-5 text-muted-foreground" />
+            </DropdownMenuItem>
+          </>
+        )}
+        {!isOwner && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-center justify-between py-3 px-4 cursor-pointer">
+              <span>Add to lists</span>
+              <ListFilter className="h-5 w-5 text-muted-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleMuteAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+              <span>Mute account</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleBlockAccount} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
+              <span>Block account</span>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* ---- Edit Profile Dialog (Bluesky style) ---- */
 function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
   const [displayName, setDisplayName] = useState(profile.display_name || "");
   const [bio, setBio] = useState(profile.bio || "");
   const [saving, setSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>(profile.avatar_url || "");
+  const [bannerPreview, setBannerPreview] = useState<string>(profile.banner_url || "");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerFile(file);
+    setBannerPreview(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (file: File, path: string) => {
+    const { error } = await supabase.storage.from("profiles").upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from("profiles").getPublicUrl(path);
+    return `${data.publicUrl}?t=${Date.now()}`;
+  };
 
   const handleSave = async () => {
     setSaving(true);
-    await supabase.from("profiles").update({ display_name: displayName, bio }).eq("id", profile.id);
-    onSaved();
-    onOpenChange(false);
-    setSaving(false);
+    try {
+      const updates: any = { display_name: displayName, bio };
+
+      if (avatarFile) {
+        const ext = avatarFile.name.split(".").pop();
+        updates.avatar_url = await uploadImage(avatarFile, `${profile.id}/avatar.${ext}`);
+      }
+      if (bannerFile) {
+        const ext = bannerFile.name.split(".").pop();
+        updates.banner_url = await uploadImage(bannerFile, `${profile.id}/banner.${ext}`);
+      }
+
+      const { error } = await supabase.from("profiles").update(updates).eq("id", profile.id);
+      if (error) { toast.error("Failed to save profile"); return; }
+
+      toast.success("Profile updated");
+      onSaved();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const hasChanges = displayName !== (profile.display_name || "") || bio !== (profile.bio || "") || avatarFile || bannerFile;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Display Name</label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Bio</label>
-            <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
-          </div>
-          <Button onClick={handleSave} disabled={saving} className="w-full rounded-full">
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <button onClick={() => onOpenChange(false)} className="text-sm font-semibold text-primary">Cancel</button>
+          <h2 className="text-base font-bold">Edit profile</h2>
+          <button onClick={handleSave} disabled={saving || !hasChanges}
+            className={`text-sm font-semibold ${hasChanges ? "text-primary" : "text-muted-foreground"}`}>
             {saving ? "Saving..." : "Save"}
-          </Button>
+          </button>
+        </div>
+
+        {/* Banner with camera button */}
+        <div className="relative">
+          <div className="aspect-[3/1] w-full bg-primary/20">
+            {bannerPreview && <img src={bannerPreview} alt="" className="h-full w-full object-cover" />}
+          </div>
+          <button onClick={() => bannerInputRef.current?.click()}
+            className="absolute right-3 bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+            <Camera className="h-4 w-4" />
+          </button>
+          <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerChange} />
+        </div>
+
+        {/* Avatar overlapping banner */}
+        <div className="relative px-4 -mt-10 mb-4">
+          <div className="relative inline-block">
+            <Avatar className="h-20 w-20 border-[3px] border-background">
+              <AvatarImage src={avatarPreview} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                {displayName[0]?.toUpperCase() || "?"}
+              </AvatarFallback>
+            </Avatar>
+            <button onClick={() => avatarInputRef.current?.click()}
+              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          </div>
+        </div>
+
+        {/* Form fields */}
+        <div className="px-4 pb-5 space-y-4">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Display name</label>
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
+              className="mt-1 bg-secondary/50 border-0 rounded-lg" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Description</label>
+            <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4}
+              className="mt-1 bg-secondary/50 border-0 rounded-lg resize-none" />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
