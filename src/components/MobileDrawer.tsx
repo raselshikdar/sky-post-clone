@@ -1,8 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings } from "lucide-react";
+import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useTheme } from "next-themes";
+import { Switch } from "@/components/ui/switch";
 
 const drawerNavItems = [
   { label: "Explore", path: "/search", icon: Search },
@@ -23,6 +25,8 @@ interface MobileDrawerProps {
 
 export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
   const { profile } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -67,6 +71,20 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             );
           })}
         </nav>
+
+        <div className="border-t border-border" />
+
+        {/* Dark mode toggle */}
+        <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center gap-3">
+            {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            <span className="text-sm font-medium">Dark mode</span>
+          </div>
+          <Switch
+            checked={isDark}
+            onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+          />
+        </div>
 
         <div className="border-t border-border" />
 

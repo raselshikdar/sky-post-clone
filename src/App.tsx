@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "next-themes";
 import AppLayout from "@/components/AppLayout";
 import Home from "@/pages/Home";
 import Auth from "@/pages/Auth";
@@ -37,34 +38,36 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/feeds" element={<Feeds />} />
-              <Route path="/feeds/settings" element={<FeedSettings />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/notifications/settings" element={<NotificationSettings />} />
-              <Route path="/profile/:username" element={<Profile />} />
-              <Route path="/post/:postId" element={<PostDetail />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/messages/settings" element={<ChatSettings />} />
-              <Route path="/messages/:conversationId" element={<Conversation />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/feeds" element={<Feeds />} />
+                <Route path="/feeds/settings" element={<FeedSettings />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/notifications/settings" element={<NotificationSettings />} />
+                <Route path="/profile/:username" element={<Profile />} />
+                <Route path="/post/:postId" element={<PostDetail />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/messages/settings" element={<ChatSettings />} />
+                <Route path="/messages/:conversationId" element={<Conversation />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
