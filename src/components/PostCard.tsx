@@ -9,6 +9,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import PostCardMenu from "@/components/PostCardMenu";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import ImageGrid from "@/components/ImageGrid";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface PostCardProps {
@@ -120,20 +121,7 @@ export default function PostCard({
 
   const renderImages = () => {
     if (!images || images.length === 0) return null;
-    if (images.length === 1) {
-      return (
-        <div className="mt-2 overflow-hidden rounded-xl border border-border">
-          <img src={images[0]} alt="" className="w-full object-cover" style={{ maxHeight: 400 }} />
-        </div>
-      );
-    }
-    return (
-      <div className="mt-2 grid gap-0.5 overflow-hidden rounded-xl border border-border grid-cols-2">
-        {images.slice(0, 4).map((img, i) => (
-          <img key={i} src={img} alt="" className="aspect-square w-full object-cover" />
-        ))}
-      </div>
-    );
+    return <ImageGrid images={images} />;
   };
 
   const renderContent = () => {

@@ -9,6 +9,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { format } from "date-fns";
 import { useState } from "react";
 import Composer from "@/components/Composer";
+import ImageGrid from "@/components/ImageGrid";
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
@@ -143,10 +144,8 @@ export default function PostDetail() {
         <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">{post.content}</p>
 
         {post.images && post.images.length > 0 && (
-          <div className={`mt-3 overflow-hidden rounded-xl border border-border ${post.images.length > 1 ? "grid grid-cols-2 gap-0.5" : ""}`}>
-            {post.images.slice(0, 4).map((img, i) => (
-              <img key={i} src={img} alt="" className={`w-full object-cover ${post.images.length === 1 ? "" : "aspect-square"}`} style={post.images.length === 1 ? { maxHeight: 500 } : undefined} />
-            ))}
+          <div className="mt-3">
+            <ImageGrid images={post.images} />
           </div>
         )}
 
