@@ -30,29 +30,30 @@ export default function MessageBubble({
   const [showReactions, setShowReactions] = useState(false);
 
   const tickIcon = read
-    ? <CheckCheck className="h-3.5 w-3.5 text-[hsl(var(--bsky-blue))]" />
+    ? <CheckCheck className="h-[14px] w-[14px] text-[hsl(var(--bsky-blue))]" />
     : delivered
-    ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/50" />
-    : <Check className="h-3.5 w-3.5 text-primary-foreground/50" />;
+    ? <CheckCheck className="h-[14px] w-[14px] text-primary-foreground/50" />
+    : <Check className="h-[14px] w-[14px] text-primary-foreground/50" />;
+
+  // For received messages, ticks use muted color
+  const receivedTickIcon = read
+    ? <CheckCheck className="h-[14px] w-[14px] text-[hsl(var(--bsky-blue))]" />
+    : delivered
+    ? <CheckCheck className="h-[14px] w-[14px] text-muted-foreground/60" />
+    : <Check className="h-[14px] w-[14px] text-muted-foreground/60" />;
 
   return (
-    <div className={`flex flex-col mb-1 ${isMine ? "items-end" : "items-start"}`}>
+    <div className={`flex flex-col mb-[3px] ${isMine ? "items-end" : "items-start"}`}>
       {/* Reply reference */}
       {replyTo && (
-        <div className={`max-w-[80%] rounded-lg px-3 py-1.5 text-xs border-l-2 border-primary/50 mb-0.5 ${
-          isMine ? "bg-primary/10" : "bg-muted/80"
-        }`}>
-          <span className="font-semibold text-primary text-[10px]">{replyTo.senderName}</span>
+        <div className={`max-w-[85%] rounded-lg px-3 py-1.5 text-xs border-l-2 border-primary/50 mb-0.5 bg-accent/50`}>
+          <span className="font-semibold text-primary text-[11px]">{replyTo.senderName}</span>
           <p className="truncate text-muted-foreground">{replyTo.content}</p>
         </div>
       )}
 
-      {/* Bubble */}
-      <div
-        className="relative group max-w-[80%]"
-        onDoubleClick={() => setShowReactions(!showReactions)}
-      >
-        {/* Hover actions */}
+      <div className="relative group max-w-[85%] min-w-[80px]" onDoubleClick={() => setShowReactions(!showReactions)}>
+        {/* Hover action buttons */}
         <div className={`absolute top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 ${
           isMine ? "right-full mr-1" : "left-full ml-1"
         }`}>
@@ -64,36 +65,44 @@ export default function MessageBubble({
           </button>
         </div>
 
-        <div className={`rounded-2xl overflow-hidden ${
+        {/* Bubble */}
+        <div className={`relative rounded-lg overflow-hidden shadow-sm ${
           isMine
-            ? "bg-primary text-primary-foreground rounded-br-sm"
-            : "bg-muted text-foreground rounded-bl-sm"
+            ? "bg-primary text-primary-foreground rounded-tr-none"
+            : "bg-muted text-foreground rounded-tl-none"
         }`}>
+          {/* WhatsApp-style tail */}
+          <div className={`absolute top-0 w-3 h-3 ${
+            isMine
+              ? "-right-1.5 bg-primary"
+              : "-left-1.5 bg-muted"
+          }`} style={{
+            clipPath: isMine
+              ? "polygon(0 0, 100% 0, 0 100%)"
+              : "polygon(100% 0, 0 0, 100% 100%)"
+          }} />
+
           {imageUrl && (
             <img src={imageUrl} alt="Shared" className="w-full max-h-64 object-cover cursor-pointer" onClick={() => window.open(imageUrl, "_blank")} />
           )}
 
-          {/* Content with inline timestamp — WhatsApp style */}
-          <div className="px-3 py-1.5">
-            {content ? (
-              <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed inline">{content}
-                {/* Invisible spacer so time doesn't overlap text */}
-                <span className="inline-block w-[70px]" />
-              </p>
-            ) : null}
+          {/* Message content + inline time (WhatsApp style) */}
+          <div className="relative px-2.5 py-[5px]">
+            <span className="whitespace-pre-wrap break-words text-[15px] leading-[20px]">
+              {content || ""}
+              {/* Invisible spacer to prevent time overlapping last word */}
+              <span className={`inline-block align-bottom ${isMine ? "w-[68px]" : "w-[52px]"}`}>&nbsp;</span>
+            </span>
 
-            {/* Floating time + ticks at bottom-right */}
-            <span className={`float-right flex items-center gap-0.5 mt-1 ml-2 ${
-              !content && imageUrl ? "pt-0.5" : "-mb-0.5"
-            }`}>
-              <span className={`text-[10px] leading-none ${isMine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+            {/* Time + tick floating bottom-right */}
+            <span className={`absolute bottom-[5px] right-2 flex items-center gap-[3px] select-none`}>
+              <span className={`text-[11px] leading-none ${
+                isMine ? "text-primary-foreground/60" : "text-muted-foreground"
+              }`}>
                 {time}
               </span>
               {isMine && tickIcon}
             </span>
-
-            {/* Clear float */}
-            <div className="clear-both" />
           </div>
         </div>
 
@@ -115,7 +124,7 @@ export default function MessageBubble({
         )}
       </div>
 
-      {/* Reactions */}
+      {/* Reaction badges */}
       {reactions.length > 0 && (
         <div className={`flex gap-1 mt-0.5 ${isMine ? "pr-2" : "pl-2"}`}>
           {reactions.map((r) => (

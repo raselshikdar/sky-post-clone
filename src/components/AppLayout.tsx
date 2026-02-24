@@ -11,16 +11,18 @@ export default function AppLayout() {
   const [composerOpen, setComposerOpen] = useState(false);
   const { pathname } = useLocation();
   const isMessagesPage = pathname.startsWith("/messages");
+  // Detect if we're inside a specific conversation (not /messages or /messages/settings)
+  const isConversation = /^\/messages\/[^/]+$/.test(pathname) && pathname !== "/messages/settings";
 
   return (
     <div className="flex min-h-screen w-full justify-center bg-background">
       <DesktopSidebar />
 
       <div className="flex w-full max-w-feed flex-col border-x border-border min-h-screen">
-        <MobileTopBar />
+        {!isConversation && <MobileTopBar />}
         <Outlet />
-        {/* Mobile bottom padding */}
-        <div className="h-16 lg:hidden" />
+        {/* Mobile bottom padding - not on conversation pages */}
+        {!isConversation && <div className="h-16 lg:hidden" />}
       </div>
 
       <RightSidebar />
@@ -35,10 +37,10 @@ export default function AppLayout() {
         </button>
       )}
 
-      {/* Desktop New Post button in sidebar */}
       <Composer open={composerOpen} onOpenChange={setComposerOpen} />
 
-      <MobileBottomNav />
+      {/* Hide bottom nav on conversation pages (like WhatsApp) */}
+      {!isConversation && <MobileBottomNav />}
     </div>
   );
 }
