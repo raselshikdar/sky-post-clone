@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const drawerNavItems = [
   { label: "Explore", path: "/search", icon: Search },
@@ -24,9 +26,27 @@ interface MobileDrawerProps {
 }
 
 export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+
+  const { data: followerCount = 0 } = useQuery({
+    queryKey: ["follower_count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  const { data: followingCount = 0 } = useQuery({
+    queryKey: ["following_count", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", user!.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -42,6 +62,11 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-foreground truncate">{profile?.display_name || "User"}</p>
             <p className="text-xs text-muted-foreground truncate">@{profile?.username || "handle"}</p>
+            <p className="text-xs mt-0.5">
+              <span className="font-bold text-foreground">{followerCount}</span> <span className="text-muted-foreground">followers</span>
+              <span className="text-muted-foreground mx-1">·</span>
+              <span className="font-bold text-foreground">{followingCount}</span> <span className="text-muted-foreground">following</span>
+            </p>
           </div>
         </div>
 
