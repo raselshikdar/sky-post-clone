@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Repeat2, Share } from "lucide-react";
+import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
@@ -133,7 +133,7 @@ export default function PostCard({
         {renderImages()}
 
         {/* Action bar */}
-        <div className="mt-2 flex max-w-md items-center justify-between">
+        <div className="mt-2 flex items-center justify-between -ml-1.5">
           <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); navigate(`/post/${id}`); }} />
           <ActionButton
             icon={Repeat2}
@@ -152,7 +152,9 @@ export default function PostCard({
             onClick={handleLike}
             fill={liked}
           />
+          <ActionButton icon={Bookmark} onClick={(e) => { e.stopPropagation(); }} />
           <ActionButton icon={Share} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/post/${id}`); }} />
+          <ActionButton icon={MoreHorizontal} onClick={(e) => { e.stopPropagation(); }} />
         </div>
       </div>
     </article>
