@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle } from "lucide-react";
+import { Heart, MessageCircle, Repeat2, Share, Bookmark, MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle, Pin, Settings, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
@@ -37,6 +37,15 @@ export default function PostCard({
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const isOwner = user?.id === authorId;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || !isOwner) return;
+    await supabase.from("posts").delete().eq("id", id);
+    queryClient.invalidateQueries({ queryKey: ["posts"] });
+  };
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -162,41 +171,78 @@ export default function PostCard({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 z-50 bg-background border border-border shadow-lg">
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Translate</span>
-                <Languages className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Copy post text</span>
-                <Copy className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Mute thread</span>
-                <BellOff className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Mute words & tags</span>
-                <Filter className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Hide post for me</span>
-                <EyeOff className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Mute account</span>
-                <VolumeX className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Block account</span>
-                <UserX className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                <span>Report post</span>
-                <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-              </DropdownMenuItem>
+              {isOwner ? (
+                <>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Pin to your profile</span>
+                    <Pin className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Translate</span>
+                    <Languages className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Copy post text</span>
+                    <Copy className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Mute thread</span>
+                    <BellOff className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Mute words & tags</span>
+                    <Filter className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Edit interaction settings</span>
+                    <Settings className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDelete} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
+                    <span>Delete post</span>
+                    <Trash2 className="h-5 w-5" />
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Translate</span>
+                    <Languages className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Copy post text</span>
+                    <Copy className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Mute thread</span>
+                    <BellOff className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Mute words & tags</span>
+                    <Filter className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Hide post for me</span>
+                    <EyeOff className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Mute account</span>
+                    <VolumeX className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Block account</span>
+                    <UserX className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
+                    <span>Report post</span>
+                    <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
