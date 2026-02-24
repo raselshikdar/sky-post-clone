@@ -2,8 +2,9 @@ import { NavLink, useLocation } from "react-router-dom";
 import { Home, Search, MessageCircle, Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const mobileNavItems = [
   { label: "Home", path: "/", icon: Home },
@@ -15,6 +16,7 @@ const mobileNavItems = [
 export default function MobileBottomNav() {
   const { pathname } = useLocation();
   const { profile, user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["unread_notifications_count", user?.id],
@@ -28,8 +30,52 @@ export default function MobileBottomNav() {
       return count || 0;
     },
     enabled: !!user,
-    refetchInterval: 30000,
   });
+
+  const { data: unreadMessages = 0 } = useQuery({
+    queryKey: ["unread_messages_count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("messages")
+        .select("*, conversations!inner(id)", { count: "exact", head: true })
+        .neq("sender_id", user.id)
+        .eq("read", false)
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`, { referencedTable: "conversations" });
+      return count || 0;
+    },
+    enabled: !!user,
+  });
+
+  // Realtime: notifications
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("nav-notif-badge")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => {
+        queryClient.invalidateQueries({ queryKey: ["unread_notifications_count"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, queryClient]);
+
+  // Realtime: messages
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("nav-msg-badge")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["unread_messages_count"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, queryClient]);
+
+  const getBadge = (label: string) => {
+    if (label === "Notifications") return unreadCount;
+    if (label === "Chat") return unreadMessages;
+    return 0;
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-background py-2 lg:hidden">
@@ -37,6 +83,7 @@ export default function MobileBottomNav() {
         const isActive = path === "/"
           ? pathname === "/"
           : pathname.startsWith(path);
+        const badge = getBadge(label);
 
         return (
           <NavLink
@@ -52,9 +99,9 @@ export default function MobileBottomNav() {
                 strokeWidth={isActive ? 2.25 : 1.75}
                 fill={isActive && path === "/" ? "currentColor" : "none"}
               />
-              {label === "Notifications" && unreadCount > 0 && (
+              {badge > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                  {unreadCount > 99 ? "99+" : unreadCount}
+                  {badge > 99 ? "99+" : badge}
                 </span>
               )}
             </div>
