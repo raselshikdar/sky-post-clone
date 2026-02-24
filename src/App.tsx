@@ -20,6 +20,14 @@ import Conversation from "@/pages/Conversation";
 import ChatSettings from "@/pages/ChatSettings";
 import NotificationSettings from "@/pages/NotificationSettings";
 import NotFound from "@/pages/NotFound";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminModeration from "@/pages/admin/AdminModeration";
+import AdminFeeds from "@/pages/admin/AdminFeeds";
+import AdminVerification from "@/pages/admin/AdminVerification";
+import AdminSupport from "@/pages/admin/AdminSupport";
+import AdminRoles from "@/pages/admin/AdminRoles";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +69,15 @@ const App = () => (
                 <Route path="/messages/settings" element={<ChatSettings />} />
                 <Route path="/messages/:conversationId" element={<Conversation />} />
               </Route>
-              <Route path="*" element={<NotFound />} />
+              <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<AdminOverview />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="moderation" element={<AdminModeration />} />
+                <Route path="feeds" element={<AdminFeeds />} />
+                <Route path="verification" element={<AdminVerification />} />
+                <Route path="support" element={<AdminSupport />} />
+                <Route path="roles" element={<AdminRoles />} />
+              </Route>
             </Routes>
           </AuthProvider>
         </BrowserRouter>

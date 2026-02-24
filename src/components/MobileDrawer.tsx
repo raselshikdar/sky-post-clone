@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun } from "lucide-react";
+import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun, ShieldCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useRole } from "@/hooks/use-role";
 
 const drawerNavItems = [
   { label: "Explore", path: "/search", icon: Search },
@@ -29,6 +30,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
   const { profile, user } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const { isStaff, isAdmin } = useRole();
 
   const { data: followerCount = 0 } = useQuery({
     queryKey: ["follower_count", user?.id],
@@ -92,6 +94,20 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
               </NavLink>
             );
           })}
+          {isStaff && (
+            <NavLink
+              to="/admin"
+              onClick={() => onOpenChange(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-semibold transition-colors ${
+                  isActive ? "text-primary bg-primary/10" : "text-primary hover:bg-primary/5"
+                }`
+              }
+            >
+              <ShieldCheck className="h-5 w-5" strokeWidth={1.75} />
+              {isAdmin ? "Admin Panel" : "Mod Panel"}
+            </NavLink>
+          )}
         </nav>
 
         <div className="border-t border-border" />
