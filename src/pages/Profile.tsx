@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
 import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
@@ -233,7 +234,10 @@ export default function Profile() {
           </div>
         </div>
 
-        <h1 className="mt-2 text-[22px] font-extrabold leading-tight">{profile.display_name}</h1>
+        <h1 className="mt-2 text-[22px] font-extrabold leading-tight flex items-center gap-1.5">
+          {profile.display_name}
+          <VerifiedBadge userId={profile.id} className="h-5 w-5" />
+        </h1>
         <div className="flex items-center gap-1.5 mt-0.5">
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
           {!isOwnProfile && followsYou && (
