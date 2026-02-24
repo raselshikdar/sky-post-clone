@@ -19,9 +19,25 @@
     <meta name="twitter:image" content="https://sky-post-clone.lovable.app/doyel-logo.png">
     <meta name="twitter:title" content="Doyel — Social by Bangladesh">
     <meta name="twitter:description" content="Doyel is a social platform inspired by the Oriental Magpie Robin. Share, connect, and discover.">
+  <style>
+    #splash-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #ffffff; transition: opacity 0.4s ease;
+    }
+    @media (prefers-color-scheme: dark) { #splash-screen { background: #09090b; } }
+    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+    #splash-screen img { width: 72px; height: 72px; animation: splash-pulse 1.5s ease-in-out infinite; filter: drop-shadow(0 2px 8px rgba(0,133,255,0.3)); }
+    #splash-screen p { margin-top: 16px; font-family: system-ui, sans-serif; font-size: 14px; color: #0085ff; font-weight: 600; letter-spacing: 0.5px; }
+    @keyframes splash-pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+  </style>
 </head>
 
   <body>
+    <div id="splash-screen">
+      <img src="/doyel-logo.png" alt="Doyel" />
+      <p>Doyel</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
