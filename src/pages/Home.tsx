@@ -40,7 +40,24 @@ export default function Home() {
       const { data } = await query;
       if (!data) return [];
 
-      const postIds = data.map((p) => p.id);
+      // Filter out hidden posts, muted threads, muted/blocked authors
+      let filtered = data;
+      if (user) {
+        const [hiddenRes, mutedThreadsRes, mutedAccRes, blockedRes] = await Promise.all([
+          supabase.from("hidden_posts").select("post_id").eq("user_id", user.id),
+          supabase.from("muted_threads").select("post_id").eq("user_id", user.id),
+          supabase.from("muted_accounts").select("muted_user_id").eq("user_id", user.id),
+          supabase.from("blocked_accounts").select("blocked_user_id").eq("user_id", user.id),
+        ]);
+        const hiddenIds = new Set((hiddenRes.data || []).map((h) => h.post_id));
+        const mutedThreadIds = new Set((mutedThreadsRes.data || []).map((m) => m.post_id));
+        const mutedUserIds = new Set((mutedAccRes.data || []).map((m) => m.muted_user_id));
+        const blockedUserIds = new Set((blockedRes.data || []).map((b) => b.blocked_user_id));
+        filtered = data.filter((p) => !hiddenIds.has(p.id) && !mutedThreadIds.has(p.id) && !mutedUserIds.has(p.author_id) && !blockedUserIds.has(p.author_id));
+      }
+
+      const postIds = filtered.map((p) => p.id);
+      if (postIds.length === 0) return [];
       const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
@@ -59,7 +76,7 @@ export default function Home() {
       (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
       (repliesRes.data || []).forEach((r) => { if (r.parent_id) replyCounts[r.parent_id] = (replyCounts[r.parent_id] || 0) + 1; });
 
-      return data.map((post) => {
+      return filtered.map((post) => {
         const p = post.profiles as any;
         return {
           id: post.id,

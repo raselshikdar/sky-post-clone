@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import PostCardMenu from "@/components/PostCardMenu";
 
 interface PostCardProps {
   id: string;
@@ -34,18 +36,10 @@ export default function PostCard({
   const [reposted, setReposted] = useState(isReposted);
   const [reposts, setReposts] = useState(repostCount);
   const [animating, setAnimating] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  const isOwner = user?.id === authorId;
-
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user || !isOwner) return;
-    await supabase.from("posts").delete().eq("id", id);
-    queryClient.invalidateQueries({ queryKey: ["posts"] });
-  };
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -87,7 +81,7 @@ export default function PostCard({
       );
     }
     return (
-      <div className={`mt-2 grid gap-0.5 overflow-hidden rounded-xl border border-border ${count === 2 ? "grid-cols-2" : count === 3 ? "grid-cols-2" : "grid-cols-2"}`}>
+      <div className={`mt-2 grid gap-0.5 overflow-hidden rounded-xl border border-border grid-cols-2`}>
         {images.slice(0, 4).map((img, i) => (
           <img key={i} src={img} alt="" className="aspect-square w-full object-cover" />
         ))}
@@ -95,7 +89,6 @@ export default function PostCard({
     );
   };
 
-  // Auto-linkify URLs
   const renderContent = () => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = content.split(urlRegex);
@@ -110,12 +103,13 @@ export default function PostCard({
     );
   };
 
+  if (hidden) return null;
+
   return (
     <article
       className="flex gap-3 px-4 py-3 bsky-hover cursor-pointer bsky-divider"
       onClick={() => navigate(`/post/${id}`)}
     >
-      {/* Avatar */}
       <div className="flex-shrink-0 pt-0.5" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>
         <Avatar className="h-11 w-11">
           <AvatarImage src={authorAvatar} />
@@ -125,9 +119,7 @@ export default function PostCard({
         </Avatar>
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1">
-        {/* Header */}
         <div className="flex items-center gap-1 text-sm">
           <span className="truncate font-semibold text-foreground">{authorName}</span>
           <span className="truncate bsky-text-secondary">@{authorHandle}</span>
@@ -135,116 +127,28 @@ export default function PostCard({
           <span className="flex-shrink-0 bsky-text-secondary">{timeAgo(createdAt)}</span>
         </div>
 
-        {/* Body */}
         <p className="mt-0.5 whitespace-pre-wrap break-words text-[15px] leading-snug text-foreground">
           {renderContent()}
         </p>
 
         {renderImages()}
 
-        {/* Action bar */}
         <div className="mt-2 flex items-center justify-between -ml-1.5">
           <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); navigate(`/post/${id}`); }} />
+          <ActionButton icon={Repeat2} count={reposts} active={reposted} activeColor="text-bsky-repost" onClick={handleRepost} />
           <ActionButton
-            icon={Repeat2}
-            count={reposts}
-            active={reposted}
-            activeColor="text-bsky-repost"
-            onClick={handleRepost}
-          />
-          <ActionButton
-            icon={Heart}
-            count={likes}
-            active={liked}
-            activeColor="text-bsky-like"
-            animate={animating}
-            onAnimationEnd={() => setAnimating(false)}
-            onClick={handleLike}
-            fill={liked}
+            icon={Heart} count={likes} active={liked} activeColor="text-bsky-like"
+            animate={animating} onAnimationEnd={() => setAnimating(false)} onClick={handleLike} fill={liked}
           />
           <ActionButton icon={Bookmark} onClick={(e) => { e.stopPropagation(); }} />
-          <ActionButton icon={Share} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/post/${id}`); }} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-                <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={1.75} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 z-50 bg-background border border-border shadow-lg">
-              {isOwner ? (
-                <>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Pin to your profile</span>
-                    <Pin className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Translate</span>
-                    <Languages className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Copy post text</span>
-                    <Copy className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Mute thread</span>
-                    <BellOff className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Mute words & tags</span>
-                    <Filter className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Edit interaction settings</span>
-                    <Settings className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDelete} className="flex items-center justify-between py-3 px-4 cursor-pointer text-destructive">
-                    <span>Delete post</span>
-                    <Trash2 className="h-5 w-5" />
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Translate</span>
-                    <Languages className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(content); }} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Copy post text</span>
-                    <Copy className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Mute thread</span>
-                    <BellOff className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Mute words & tags</span>
-                    <Filter className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Hide post for me</span>
-                    <EyeOff className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Mute account</span>
-                    <VolumeX className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Block account</span>
-                    <UserX className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()} className="flex items-center justify-between py-3 px-4 cursor-pointer">
-                    <span>Report post</span>
-                    <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ActionButton icon={Share} onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/post/${id}`); toast.success("Link copied!"); }} />
+          <PostCardMenu
+            postId={id}
+            authorId={authorId}
+            authorHandle={authorHandle}
+            content={content}
+            onHide={() => setHidden(true)}
+          />
         </div>
       </div>
     </article>
@@ -252,23 +156,10 @@ export default function PostCard({
 }
 
 function ActionButton({
-  icon: Icon,
-  count,
-  active,
-  activeColor,
-  animate,
-  onAnimationEnd,
-  onClick,
-  fill,
+  icon: Icon, count, active, activeColor, animate, onAnimationEnd, onClick, fill,
 }: {
-  icon: any;
-  count?: number;
-  active?: boolean;
-  activeColor?: string;
-  animate?: boolean;
-  onAnimationEnd?: () => void;
-  onClick?: (e: React.MouseEvent) => void;
-  fill?: boolean;
+  icon: any; count?: number; active?: boolean; activeColor?: string;
+  animate?: boolean; onAnimationEnd?: () => void; onClick?: (e: React.MouseEvent) => void; fill?: boolean;
 }) {
   return (
     <button
