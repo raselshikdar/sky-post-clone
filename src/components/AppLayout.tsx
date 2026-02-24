@@ -4,7 +4,7 @@ import MobileTopBar from "@/components/MobileTopBar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import RightSidebar from "@/components/RightSidebar";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import Composer from "@/components/Composer";
 
 export default function AppLayout() {
@@ -33,7 +33,7 @@ export default function AppLayout() {
           className="fab-button"
           onClick={() => setComposerOpen(true)}
         >
-          <Plus className="h-6 w-6" strokeWidth={2} />
+          <SquarePen className="h-6 w-6" strokeWidth={1.75} />
         </button>
       )}
 
