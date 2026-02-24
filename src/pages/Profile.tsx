@@ -140,23 +140,29 @@ export default function Profile() {
       if (!data || data.length === 0) return [];
 
       const postIds = data.map((p) => p.id);
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
+        supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
       ]);
 
       const likeCounts: Record<string, number> = {};
       const repostCounts: Record<string, number> = {};
       const replyCounts: Record<string, number> = {};
+      const postImages: Record<string, string[]> = {};
       const userLikedSet = new Set((userLikesRes.data || []).map((l) => l.post_id));
       const userRepostedSet = new Set((userRepostsRes.data || []).map((r) => r.post_id));
 
       (likesRes.data || []).forEach((l) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
       (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
       (repliesRes.data || []).forEach((r) => { if (r.parent_id) replyCounts[r.parent_id] = (replyCounts[r.parent_id] || 0) + 1; });
+      (imagesRes.data || []).forEach((img) => {
+        if (!postImages[img.post_id]) postImages[img.post_id] = [];
+        postImages[img.post_id].push(img.url);
+      });
 
       return data.map((post) => {
         const p = post.profiles as any;
@@ -165,6 +171,7 @@ export default function Profile() {
           authorName: p?.display_name || "", authorHandle: p?.username || "",
           authorAvatar: p?.avatar_url || "", content: post.content,
           createdAt: post.created_at,
+          images: postImages[post.id],
           likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
           isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
