@@ -12,6 +12,7 @@ import PostDetail from "@/pages/PostDetail";
 import Notifications from "@/pages/Notifications";
 import SearchPage from "@/pages/SearchPage";
 import Feeds from "@/pages/Feeds";
+import FeedSettings from "@/pages/FeedSettings";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/feeds" element={<Feeds />} />
+              <Route path="/feeds/settings" element={<FeedSettings />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/post/:postId" element={<PostDetail />} />
