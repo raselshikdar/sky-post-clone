@@ -4,18 +4,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Send, MoreHorizontal } from "lucide-react";
-import { timeAgo } from "@/lib/time";
+import { ArrowLeft, MoreHorizontal } from "lucide-react";
+import MessageBubble from "@/components/chat/MessageBubble";
+import ChatInput from "@/components/chat/ChatInput";
 
 export default function Conversation() {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Get conversation details
   const { data: conversation } = useQuery({
@@ -54,37 +52,53 @@ export default function Conversation() {
     enabled: !!conversationId,
   });
 
-  // Mark messages as read
+  // Mark messages as read + delivered
   useEffect(() => {
     if (!user || !conversationId || messages.length === 0) return;
-    const unread = messages.filter((m: any) => m.sender_id !== user.id && !m.read);
-    if (unread.length === 0) return;
+    const otherMsgs = messages.filter((m: any) => m.sender_id !== user.id);
+    const unread = otherMsgs.filter((m: any) => !m.read);
+    const undelivered = otherMsgs.filter((m: any) => !m.delivered);
 
-    supabase
-      .from("messages")
-      .update({ read: true })
-      .eq("conversation_id", conversationId)
-      .neq("sender_id", user.id)
-      .eq("read", false)
-      .then(() => {
+    const updates: PromiseLike<any>[] = [];
+
+    if (unread.length > 0) {
+      updates.push(
+        supabase
+          .from("messages")
+          .update({ read: true, delivered: true } as any)
+          .eq("conversation_id", conversationId)
+          .neq("sender_id", user.id)
+          .eq("read", false)
+          .then()
+      );
+    } else if (undelivered.length > 0) {
+      updates.push(
+        supabase
+          .from("messages")
+          .update({ delivered: true } as any)
+          .eq("conversation_id", conversationId)
+          .neq("sender_id", user.id)
+          .eq("delivered", false)
+          .then()
+      );
+    }
+
+    if (updates.length > 0) {
+      Promise.all(updates).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
         queryClient.invalidateQueries({ queryKey: ["conversations"] });
       });
+    }
   }, [messages, user, conversationId]);
 
   // Realtime subscription
   useEffect(() => {
     if (!conversationId) return;
-
     const channel = supabase
       .channel(`messages-${conversationId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${conversationId}`,
-        },
+        { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
           queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -100,31 +114,34 @@ export default function Conversation() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!message.trim() || !user || !conversationId || sending) return;
-    setSending(true);
+  const handleSend = async (content: string, imageFile?: File) => {
+    if (!user || !conversationId) return;
+
+    let imageUrl: string | undefined;
+
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("chat-images").upload(path, imageFile);
+      if (error) {
+        console.error("Upload error:", error);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("chat-images").getPublicUrl(path);
+      imageUrl = urlData.publicUrl;
+    }
 
     await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_id: user.id,
-      content: message.trim(),
-    });
+      content: content || "",
+      image_url: imageUrl || null,
+    } as any);
 
     await supabase
       .from("conversations")
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", conversationId);
-
-    setMessage("");
-    setSending(false);
-    inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
   };
 
   if (!conversation) {
@@ -146,9 +163,9 @@ export default function Conversation() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-49px)] lg:h-screen">
+    <div className="flex flex-col h-[calc(100dvh-49px)] lg:h-dvh">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm flex-shrink-0">
         <button onClick={() => navigate("/messages")} className="text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -172,8 +189,8 @@ export default function Conversation() {
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Avatar className="h-16 w-16 mb-3">
@@ -195,53 +212,25 @@ export default function Conversation() {
                 {group.date}
               </span>
             </div>
-            {group.msgs.map((msg: any) => {
-              const isMine = msg.sender_id === user?.id;
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex mb-1.5 ${isMine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-[15px] ${
-                      isMine
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                    <p className={`text-[10px] mt-0.5 ${isMine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+            {group.msgs.map((msg: any) => (
+              <MessageBubble
+                key={msg.id}
+                content={msg.content}
+                imageUrl={msg.image_url}
+                isMine={msg.sender_id === user?.id}
+                time={new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                delivered={msg.delivered}
+                read={msg.read}
+              />
+            ))}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border bg-background px-4 py-3">
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Write a message..."
-            className="flex-1 rounded-full border border-border bg-muted px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!message.trim() || sending}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Fixed chat input */}
+      <div className="flex-shrink-0">
+        <ChatInput onSend={handleSend} sending={false} />
       </div>
     </div>
   );
