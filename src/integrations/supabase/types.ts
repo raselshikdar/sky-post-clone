@@ -506,6 +506,39 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          created_at: string
+          from_who: string
+          id: string
+          in_app: boolean
+          notification_type: string
+          push: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_who?: string
+          id?: string
+          in_app?: boolean
+          notification_type: string
+          push?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_who?: string
+          id?: string
+          in_app?: boolean
+          notification_type?: string
+          push?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string
