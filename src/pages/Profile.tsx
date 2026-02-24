@@ -469,7 +469,12 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
   };
 
   const uploadImage = async (file: File, path: string) => {
-    const { error } = await supabase.storage.from("profiles").upload(path, file, { upsert: true });
+    // Remove old file first to avoid extension conflicts
+    await supabase.storage.from("profiles").remove([path]);
+    const { error } = await supabase.storage.from("profiles").upload(path, file, { 
+      upsert: true,
+      contentType: file.type,
+    });
     if (error) throw error;
     const { data } = supabase.storage.from("profiles").getPublicUrl(path);
     return `${data.publicUrl}?t=${Date.now()}`;
@@ -481,12 +486,10 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
       const updates: any = { display_name: displayName, bio };
 
       if (avatarFile) {
-        const ext = avatarFile.name.split(".").pop();
-        updates.avatar_url = await uploadImage(avatarFile, `${profile.id}/avatar.${ext}`);
+        updates.avatar_url = await uploadImage(avatarFile, `${profile.id}/avatar`);
       }
       if (bannerFile) {
-        const ext = bannerFile.name.split(".").pop();
-        updates.banner_url = await uploadImage(bannerFile, `${profile.id}/banner.${ext}`);
+        updates.banner_url = await uploadImage(bannerFile, `${profile.id}/banner`);
       }
 
       const { error } = await supabase.from("profiles").update(updates).eq("id", profile.id);
