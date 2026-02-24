@@ -7,7 +7,7 @@ export default function DoyelLogo({ className = "h-8 w-8" }: DoyelLogoProps) {
     <img
       src="/doyel-logo.png"
       alt="Doyel"
-      className={className}
+      className={`${className} dark:brightness-150 dark:contrast-125`}
       draggable={false}
     />
   );
