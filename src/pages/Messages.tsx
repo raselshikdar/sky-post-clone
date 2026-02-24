@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Settings, Plus, Search, X } from "lucide-react";
+import { MessageCircle, Settings, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,12 +134,12 @@ export default function Messages() {
         </div>
       )}
 
-      {/* FAB */}
+      {/* FAB - New Chat */}
       <button
         onClick={() => setNewChatOpen(true)}
         className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 z-30"
       >
-        <Plus className="h-7 w-7" />
+        <MessageCircle className="h-6 w-6" fill="currentColor" />
       </button>
 
       <NewChatDialog open={newChatOpen} onOpenChange={setNewChatOpen} />
