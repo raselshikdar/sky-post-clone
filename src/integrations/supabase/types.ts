@@ -50,6 +50,45 @@ export type Database = {
           },
         ]
       }
+      feeds: {
+        Row: {
+          author_handle: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          liked_count: number | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          author_handle?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          liked_count?: number | null
+          name: string
+          slug: string
+        }
+        Update: {
+          author_handle?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          liked_count?: number | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -496,6 +535,41 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_feeds: {
+        Row: {
+          created_at: string
+          feed_id: string
+          id: string
+          is_pinned: boolean | null
+          pin_position: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feed_id: string
+          id?: string
+          is_pinned?: boolean | null
+          pin_position?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feed_id?: string
+          id?: string
+          is_pinned?: boolean | null
+          pin_position?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feeds_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "feeds"
             referencedColumns: ["id"]
           },
         ]
