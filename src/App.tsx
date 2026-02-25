@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import PostDetail from "@/pages/PostDetail";
+import HashtagPage from "@/pages/HashtagPage";
 import Notifications from "@/pages/Notifications";
 import SearchPage from "@/pages/SearchPage";
 import Feeds from "@/pages/Feeds";
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="/notifications/settings" element={<NotificationSettings />} />
                 <Route path="/profile/:username" element={<Profile />} />
                 <Route path="/post/:postId" element={<PostDetail />} />
+                <Route path="/hashtag/:tag" element={<HashtagPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/messages/settings" element={<ChatSettings />} />
