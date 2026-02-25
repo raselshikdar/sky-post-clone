@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { useState } from "react";
 import Composer from "@/components/Composer";
 import ImageGrid from "@/components/ImageGrid";
+import RichContent from "@/components/RichContent";
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
@@ -141,7 +142,9 @@ export default function PostDetail() {
           </div>
         </div>
 
-        <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">{post.content}</p>
+        <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">
+          <RichContent content={post.content} />
+        </p>
 
         {post.images && post.images.length > 0 && (
           <div className="mt-3">

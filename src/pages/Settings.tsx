@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import {
-  ChevronRight, User, Shield, Bell, Palette, Eye, VolumeX, UserX, LogOut,
+  ChevronRight, User, Bell, Palette, Eye, VolumeX, UserX, LogOut,
   ChevronLeft, BadgeCheck, HelpCircle, Globe, Accessibility, FileText, Info,
-  ShieldCheck, Lock, UserPlus
+  ShieldCheck, Lock, Sun, Moon, Monitor, Type, Languages
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { useTheme } from "next-themes";
 
 interface MutedAccount { id: string; muted_user_id: string; profiles?: { username: string; display_name: string } }
 interface BlockedAccount { id: string; blocked_user_id: string; profiles?: { username: string; display_name: string } }
@@ -63,7 +64,7 @@ export default function SettingsPage() {
     </div>
   );
 
-  // Sub-sections
+  // === Account ===
   if (section === "account") {
     return (
       <div className="flex flex-col h-full">
@@ -78,8 +79,19 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Username</p>
               <p className="font-medium">@{profile?.username}</p>
             </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium">{user?.email || "Not set"}</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Member since</p>
+              <p className="font-medium">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}</p>
+            </div>
             <Button variant="outline" className="w-full rounded-full" onClick={() => navigate(`/profile/${profile?.username}`)}>
               Edit Profile
+            </Button>
+            <Button variant="outline" className="w-full rounded-full" onClick={() => navigate("/reset-password")}>
+              Change Password
             </Button>
           </div>
         </ScrollArea>
@@ -87,6 +99,7 @@ export default function SettingsPage() {
     );
   }
 
+  // === Muted ===
   if (section === "muted") {
     return (
       <div className="flex flex-col h-full">
@@ -114,6 +127,7 @@ export default function SettingsPage() {
     );
   }
 
+  // === Blocked ===
   if (section === "blocked") {
     return (
       <div className="flex flex-col h-full">
@@ -141,38 +155,91 @@ export default function SettingsPage() {
     );
   }
 
+  // === Moderation / Privacy ===
   if (section === "moderation") {
     return (
       <div className="flex flex-col h-full">
-        {renderBack("Moderation")}
+        {renderBack("Privacy & Security")}
         <ScrollArea className="flex-1">
           <div className="py-2">
             <SettingsRow icon={VolumeX} label="Muted Accounts" onClick={() => setSection("muted")} />
             <SettingsRow icon={UserX} label="Blocked Accounts" onClick={() => setSection("blocked")} />
+            <SettingsRow icon={Bell} label="Chat Privacy" onClick={() => navigate("/messages/settings")} />
           </div>
         </ScrollArea>
       </div>
     );
   }
 
-  // Main settings page
+  // === Appearance ===
+  if (section === "appearance") {
+    return <AppearanceSection onBack={() => setSection(null)} renderBack={renderBack} />;
+  }
+
+  // === Accessibility ===
+  if (section === "accessibility") {
+    return <AccessibilitySection onBack={() => setSection(null)} renderBack={renderBack} />;
+  }
+
+  // === Languages ===
+  if (section === "languages") {
+    return <LanguagesSection onBack={() => setSection(null)} renderBack={renderBack} />;
+  }
+
+  // === About ===
+  if (section === "about") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack("About")}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            <div className="flex flex-col items-center py-4">
+              <img src="/doyel-logo.png" alt="Doyel" className="h-16 w-16 rounded-2xl" />
+              <h3 className="mt-3 text-xl font-bold text-foreground">Doyel</h3>
+              <p className="text-sm text-muted-foreground">Version 1.0.0</p>
+            </div>
+            <div className="space-y-3">
+              <div className="rounded-xl bg-muted p-4">
+                <p className="font-medium text-foreground">About Doyel</p>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                  Doyel is a social platform built for meaningful connections. Share your thoughts, discover new ideas, and connect with people who matter.
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted p-4">
+                <p className="font-medium text-foreground">Contact</p>
+                <p className="mt-1 text-sm text-muted-foreground">support@doyel.app</p>
+              </div>
+              <div className="rounded-xl bg-muted p-4">
+                <p className="font-medium text-foreground">Legal</p>
+                <div className="mt-1 space-y-1">
+                  <p className="text-sm text-primary cursor-pointer hover:underline">Terms of Service</p>
+                  <p className="text-sm text-primary cursor-pointer hover:underline">Privacy Policy</p>
+                  <p className="text-sm text-primary cursor-pointer hover:underline">Community Guidelines</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  // === Main settings ===
   const mainItems = [
     { label: "Account", icon: User, action: () => setSection("account") },
     { label: "Privacy and security", icon: Lock, action: () => setSection("moderation") },
-    { label: "Moderation", icon: ShieldCheck, action: () => setSection("moderation") },
     { label: "Notifications", icon: Bell, action: () => navigate("/notifications/settings") },
     { label: "Content and media", icon: FileText, action: () => navigate("/feeds/settings") },
-    { label: "Appearance", icon: Palette, action: () => {} },
-    { label: "Accessibility", icon: Accessibility, action: () => {} },
-    { label: "Languages", icon: Globe, action: () => {} },
+    { label: "Appearance", icon: Palette, action: () => setSection("appearance") },
+    { label: "Accessibility", icon: Accessibility, action: () => setSection("accessibility") },
+    { label: "Languages", icon: Globe, action: () => setSection("languages") },
     { label: "Apply for Verification", icon: BadgeCheck, action: () => navigate("/verification/apply") },
-    { label: "Help", icon: HelpCircle, action: () => navigate("/support") },
-    { label: "About", icon: Info, action: () => {} },
+    { label: "Help & Support", icon: HelpCircle, action: () => navigate("/support") },
+    { label: "About", icon: Info, action: () => setSection("about") },
   ];
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="sticky top-[49px] lg:top-0 z-20 flex items-center gap-4 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
         <button onClick={() => navigate(-1)} className="p-1">
           <ChevronLeft className="h-5 w-5 text-foreground" />
@@ -181,7 +248,6 @@ export default function SettingsPage() {
       </div>
 
       <ScrollArea className="flex-1">
-        {/* Profile card */}
         <div className="flex flex-col items-center py-6 border-b border-border">
           <Avatar className="h-20 w-20 cursor-pointer" onClick={() => navigate(`/profile/${profile?.username}`)}>
             <AvatarImage src={profile?.avatar_url || ""} />
@@ -196,7 +262,6 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">@{profile?.username || "handle"}</p>
         </div>
 
-        {/* Menu items */}
         <div className="py-2">
           {mainItems.map(({ label, icon: Icon, action }) => (
             <SettingsRow key={label} icon={Icon} label={label} onClick={action} />
@@ -205,7 +270,6 @@ export default function SettingsPage() {
 
         <div className="border-t border-border" />
 
-        {/* Sign out */}
         <button
           onClick={handleSignOut}
           className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-destructive hover:bg-accent transition-colors"
@@ -220,6 +284,178 @@ export default function SettingsPage() {
   );
 }
 
+// === Appearance Section ===
+function AppearanceSection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
+  const { theme, setTheme } = useTheme();
+  const [fontSize, setFontSize] = useState(() => {
+    return localStorage.getItem("doyel-font-size") || "medium";
+  });
+
+  const themes = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Monitor },
+  ];
+
+  const fontSizes = [
+    { value: "small", label: "Small", size: "text-sm" },
+    { value: "medium", label: "Medium", size: "text-base" },
+    { value: "large", label: "Large", size: "text-lg" },
+  ];
+
+  const handleFontSize = (size: string) => {
+    setFontSize(size);
+    localStorage.setItem("doyel-font-size", size);
+    document.documentElement.setAttribute("data-font-size", size);
+    toast.success(`Font size set to ${size}`);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {renderBack("Appearance")}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-6">
+          {/* Theme */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">Theme</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {themes.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={`flex flex-col items-center gap-2 rounded-xl p-4 border-2 transition-colors ${
+                    theme === value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-accent"
+                  }`}
+                >
+                  <Icon className={`h-6 w-6 ${theme === value ? "text-primary" : "text-muted-foreground"}`} />
+                  <span className={`text-sm font-medium ${theme === value ? "text-primary" : "text-foreground"}`}>
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Font Size */}
+          <div>
+            <h3 className="font-semibold text-foreground mb-3">Font Size</h3>
+            <div className="space-y-2">
+              {fontSizes.map(({ value, label, size }) => (
+                <button
+                  key={value}
+                  onClick={() => handleFontSize(value)}
+                  className={`flex w-full items-center justify-between rounded-xl p-3 border-2 transition-colors ${
+                    fontSize === value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-accent"
+                  }`}
+                >
+                  <span className={`${size} font-medium ${fontSize === value ? "text-primary" : "text-foreground"}`}>
+                    {label}
+                  </span>
+                  <span className={`${size} text-muted-foreground`}>Aa</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// === Accessibility Section ===
+function AccessibilitySection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
+  const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("doyel-reduce-motion") === "true");
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("doyel-high-contrast") === "true");
+
+  const toggle = (key: string, value: boolean, setter: (v: boolean) => void) => {
+    setter(value);
+    localStorage.setItem(key, String(value));
+    if (key === "doyel-reduce-motion") {
+      document.documentElement.classList.toggle("reduce-motion", value);
+    }
+    if (key === "doyel-high-contrast") {
+      document.documentElement.classList.toggle("high-contrast", value);
+    }
+    toast.success("Setting updated");
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {renderBack("Accessibility")}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          <ToggleSettingRow
+            label="Reduce motion"
+            description="Minimize animations throughout the app"
+            checked={reduceMotion}
+            onChange={(v) => toggle("doyel-reduce-motion", v, setReduceMotion)}
+          />
+          <ToggleSettingRow
+            label="High contrast"
+            description="Increase contrast for better readability"
+            checked={highContrast}
+            onChange={(v) => toggle("doyel-high-contrast", v, setHighContrast)}
+          />
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// === Languages Section ===
+function LanguagesSection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
+  const [language, setLanguage] = useState(() => localStorage.getItem("doyel-language") || "en");
+
+  const languages = [
+    { code: "en", label: "English", native: "English" },
+    { code: "bn", label: "Bengali", native: "বাংলা" },
+    { code: "hi", label: "Hindi", native: "हिन्दी" },
+    { code: "es", label: "Spanish", native: "Español" },
+    { code: "fr", label: "French", native: "Français" },
+    { code: "ar", label: "Arabic", native: "العربية" },
+    { code: "zh", label: "Chinese", native: "中文" },
+    { code: "ja", label: "Japanese", native: "日本語" },
+  ];
+
+  const handleLanguage = (code: string) => {
+    setLanguage(code);
+    localStorage.setItem("doyel-language", code);
+    toast.success(`Language set to ${languages.find((l) => l.code === code)?.label}`);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {renderBack("Languages")}
+      <ScrollArea className="flex-1">
+        <div className="py-2">
+          {languages.map(({ code, label, native }) => (
+            <button
+              key={code}
+              onClick={() => handleLanguage(code)}
+              className={`flex w-full items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent ${
+                language === code ? "bg-primary/5" : ""
+              }`}
+            >
+              <div>
+                <p className="font-medium text-foreground text-[15px]">{label}</p>
+                <p className="text-sm text-muted-foreground">{native}</p>
+              </div>
+              {language === code && (
+                <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
+            </button>
+          ))}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+// === Reusable Components ===
 function SettingsRow({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) {
   return (
     <button
@@ -232,5 +468,24 @@ function SettingsRow({ icon: Icon, label, onClick }: { icon: any; label: string;
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </button>
+  );
+}
+
+function ToggleSettingRow({ label, description, checked, onChange }: {
+  label: string; description: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border p-4">
+      <div className="flex-1 mr-3">
+        <p className="font-medium text-foreground">{label}</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? "bg-primary" : "bg-muted-foreground/30"}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform shadow-sm ${checked ? "translate-x-5" : ""}`} />
+      </button>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import PostCardMenu from "@/components/PostCardMenu";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import ImageGrid from "@/components/ImageGrid";
+import RichContent from "@/components/RichContent";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface PostCardProps {
@@ -124,19 +125,7 @@ export default function PostCard({
     return <ImageGrid images={images} />;
   };
 
-  const renderContent = () => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = content.split(urlRegex);
-    return parts.map((part, i) =>
-      urlRegex.test(part) ? (
-        <a key={i} href={part} className="bsky-link" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-          {part}
-        </a>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
-  };
+  const renderContent = () => <RichContent content={content} />;
 
   if (hidden) return null;
 
