@@ -154,7 +154,7 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Tabs */}
       <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
-        <div className="flex border-b border-border px-4">
+        <div className="flex w-full items-center justify-between border-b border-border px-4">
           <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
           <TabButton label="Following" active={tab === "following"} onClick={() => setTab("following")} />
           <TabButton label="What's Hot Classic" active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
@@ -227,7 +227,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       onClick={onClick}
-      className={`relative flex-1 py-3 text-sm font-semibold transition-colors ${
+      className={`relative py-3 whitespace-nowrap text-sm font-semibold transition-colors ${
         active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       }`}
     >
