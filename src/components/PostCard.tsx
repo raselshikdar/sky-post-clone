@@ -69,6 +69,12 @@ export default function PostCard({
 
     if (newLiked) {
       await supabase.from("likes").insert({ user_id: user.id, post_id: id });
+      // Create notification for post author (not self)
+      if (authorId !== user.id) {
+        await supabase.from("notifications").insert({
+          user_id: authorId, actor_id: user.id, type: "like", post_id: id,
+        });
+      }
     } else {
       await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", id);
     }
@@ -83,6 +89,12 @@ export default function PostCard({
 
     if (newReposted) {
       await supabase.from("reposts").insert({ user_id: user.id, post_id: id });
+      // Create notification for post author (not self)
+      if (authorId !== user.id) {
+        await supabase.from("notifications").insert({
+          user_id: authorId, actor_id: user.id, type: "repost", post_id: id,
+        });
+      }
     } else {
       await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", id);
     }
