@@ -10,6 +10,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState } from "react";
+import FollowListDialog from "@/components/FollowListDialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +32,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ProfileTab>("Posts");
   const [editOpen, setEditOpen] = useState(false);
+  const [followListType, setFollowListType] = useState<"followers" | "following" | null>(null);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", username],
@@ -259,12 +261,16 @@ export default function Profile() {
         </div>
 
         <div className="mt-2 flex items-center gap-1 text-sm flex-wrap">
-          <span className="font-bold">{formatCount(followCounts?.followers || 0)}</span>
-          <span className="text-muted-foreground mr-2">followers</span>
-          <span className="font-bold">{formatCount(followCounts?.following || 0)}</span>
-          <span className="text-muted-foreground mr-2">following</span>
-          <span className="font-bold">{formatCount(postCount || 0)}</span>
-          <span className="text-muted-foreground">posts</span>
+          <button onClick={() => setFollowListType("followers")} className="hover:underline">
+            <span className="font-bold">{formatCount(followCounts?.followers || 0)}</span>
+            <span className="text-muted-foreground ml-0.5">followers</span>
+          </button>
+          <button onClick={() => setFollowListType("following")} className="hover:underline ml-2">
+            <span className="font-bold">{formatCount(followCounts?.following || 0)}</span>
+            <span className="text-muted-foreground ml-0.5">following</span>
+          </button>
+          <span className="ml-2"><span className="font-bold">{formatCount(postCount || 0)}</span>
+          <span className="text-muted-foreground ml-0.5">posts</span></span>
         </div>
 
         {profile.bio && (
@@ -322,6 +328,15 @@ export default function Profile() {
             refreshProfile();
             queryClient.invalidateQueries({ queryKey: ["profile", username] });
           }}
+        />
+      )}
+
+      {followListType && (
+        <FollowListDialog
+          open={!!followListType}
+          onOpenChange={(v) => !v && setFollowListType(null)}
+          userId={profile.id}
+          type={followListType}
         />
       )}
     </div>
