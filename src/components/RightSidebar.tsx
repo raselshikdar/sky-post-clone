@@ -70,6 +70,12 @@ export default function RightSidebar() {
     const { error } = await supabase.from("follows").insert({ follower_id: user.id, following_id: userId });
     if (error?.code === "23505") { toast.info("Already following"); return; }
     if (error) { toast.error("Failed to follow"); return; }
+    // Create follow notification
+    if (userId !== user.id) {
+      await supabase.from("notifications").insert({
+        user_id: userId, actor_id: user.id, type: "follow",
+      });
+    }
     toast.success("Followed!");
   };
 

@@ -112,6 +112,12 @@ export default function Profile() {
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", profile.id);
     } else {
       await supabase.from("follows").insert({ follower_id: user.id, following_id: profile.id });
+      // Create follow notification
+      if (profile.id !== user.id) {
+        await supabase.from("notifications").insert({
+          user_id: profile.id, actor_id: user.id, type: "follow",
+        });
+      }
     }
     queryClient.invalidateQueries({ queryKey: ["isFollowing", profile.id] });
     queryClient.invalidateQueries({ queryKey: ["followCounts", profile.id] });

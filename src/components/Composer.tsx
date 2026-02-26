@@ -92,6 +92,36 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         await supabase.from("post_images").insert(imageRows);
       }
 
+      // Create reply notification for parent post author
+      if (parentId) {
+        const { data: parentPost } = await supabase.from("posts").select("author_id").eq("id", parentId).single();
+        if (parentPost && parentPost.author_id !== user.id) {
+          await supabase.from("notifications").insert({
+            user_id: parentPost.author_id, actor_id: user.id, type: "reply", post_id: parentId,
+          });
+        }
+      }
+
+      // Create mention notifications for @username references
+      const mentionRegex = /@([\w\u0980-\u09FF]+)/g;
+      const mentions = [...content.matchAll(mentionRegex)].map(m => m[1]);
+      if (mentions.length > 0) {
+        const { data: mentionedUsers } = await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("username", mentions);
+        if (mentionedUsers) {
+          const mentionNotifs = mentionedUsers
+            .filter(u => u.id !== user.id)
+            .map(u => ({
+              user_id: u.id, actor_id: user.id, type: "mention" as const, post_id: post.id,
+            }));
+          if (mentionNotifs.length > 0) {
+            await supabase.from("notifications").insert(mentionNotifs);
+          }
+        }
+      }
+
       // Cleanup
       images.forEach((img) => URL.revokeObjectURL(img.preview));
       setContent("");
