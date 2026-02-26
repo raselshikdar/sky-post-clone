@@ -181,7 +181,10 @@ export default function Notifications() {
                     </AvatarFallback>
                   </Avatar>
                   <p className="text-[15px]">
-                    <strong>{actor?.display_name}</strong>{" "}
+                    <strong
+                      className="hover:underline cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${actor?.username}`); }}
+                    >{actor?.display_name}</strong>{" "}
                     <span className="text-muted-foreground">{typeText[n.type] || n.type}</span>
                     <span className="text-muted-foreground"> · {timeAgo(n.created_at)}</span>
                   </p>
@@ -271,7 +274,10 @@ function GroupedNotification({
           )}
         </div>
         <p className="text-[15px]">
-          <strong>{firstActor?.display_name}</strong>
+          <strong
+            className="hover:underline cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${firstActor?.username}`); }}
+          >{firstActor?.display_name}</strong>
           {othersCount > 0 && <> and <strong>{othersCount} {othersCount === 1 ? "other" : "others"}</strong></>}
           {" "}
           <span className="text-muted-foreground">
