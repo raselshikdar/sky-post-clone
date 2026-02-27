@@ -1,4 +1,4 @@
-# Doyel – Social Media Platform
+# Awaj – Social Media Platform
 
 A modern, real-time social media application built with React, TypeScript, and Tailwind CSS.
 
