@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom";
-import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun, ShieldCheck } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Home, Search, MessageCircle, Bell, Hash, List, Bookmark, User, Settings, Moon, Sun, ShieldCheck, LogOut } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,13 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const { isStaff, isAdmin } = useRole();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    onOpenChange(false);
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   const { data: followerCount = 0 } = useQuery({
     queryKey: ["follower_count", user?.id],
@@ -112,6 +119,13 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
               {isAdmin ? "Admin Panel" : "Mod Panel"}
             </NavLink>
           )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-semibold transition-colors text-destructive hover:bg-destructive/10 w-full"
+          >
+            <LogOut className="h-5 w-5" strokeWidth={1.75} />
+            Log out
+          </button>
         </nav>
 
         <div className="border-t border-border" />
