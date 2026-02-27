@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import DoyelLogo from "@/components/DoyelLogo";
+import AwajLogo from "@/components/AwajLogo";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -219,14 +219,14 @@ export default function Auth() {
       <div className="w-full max-w-sm">
         {/* Logo & Title */}
         <div className="mb-8 flex flex-col items-center">
-          <DoyelLogo className="mb-4 h-14 w-14" />
+          <AwajLogo className="mb-4 h-14 w-14" />
           <h1 className="text-2xl font-bold text-foreground">
-            {view === "signup" ? "Join Doyel" : "Welcome back"}
+            {view === "signup" ? "Join Awaj" : "Welcome back"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {view === "signup"
               ? "Create your account to get started"
-              : "Sign in to your Doyel account"}
+              : "Sign in to your Awaj account"}
           </p>
         </div>
 
@@ -241,7 +241,7 @@ export default function Auth() {
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Username (e.g. doyel_fan)"
+                  placeholder="Username (e.g. awaj_user)"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
