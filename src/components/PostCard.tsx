@@ -145,7 +145,7 @@ export default function PostCard({
 
   return (
     <article
-      className="flex gap-3 px-4 py-3 bsky-hover cursor-pointer bsky-divider"
+      className="flex gap-3 px-4 py-3 cursor-pointer bsky-divider"
       onClick={() => navigate(`/post/${id}`)}
     >
       <div className="flex-shrink-0 pt-0.5">
@@ -159,7 +159,7 @@ export default function PostCard({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1 text-sm">
-          <span className="truncate font-semibold text-foreground">{authorName}</span>
+          <span className="truncate font-semibold text-foreground hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>{authorName}</span>
           <VerifiedBadge userId={authorId} className="h-4 w-4" />
           <span className="truncate bsky-text-secondary">@{authorHandle}</span>
           <span className="bsky-text-secondary">·</span>

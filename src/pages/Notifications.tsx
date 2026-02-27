@@ -166,7 +166,7 @@ export default function Notifications() {
               <div
                 key={n.id}
                 className={`flex gap-3 px-4 py-3.5 border-b border-border cursor-pointer transition-colors hover:bg-accent/30 ${
-                  !n.read ? "bg-primary/5" : ""
+                  !n.read ? "bg-primary/5 border-l-2 border-l-primary" : ""
                 }`}
                 onClick={() => n.post_id ? navigate(`/post/${n.post_id}`) : navigate(`/profile/${actor?.username}`)}
               >
@@ -249,7 +249,7 @@ function GroupedNotification({
   return (
     <div
       className={`flex gap-3 px-4 py-3.5 border-b border-border cursor-pointer transition-colors hover:bg-accent/30 ${
-        isUnread ? "bg-primary/5" : ""
+        isUnread ? "bg-primary/5 border-l-2 border-l-primary" : ""
       }`}
       onClick={() => item.postId ? navigate(`/post/${item.postId}`) : navigate(`/profile/${firstActor?.username}`)}
     >
