@@ -13,7 +13,7 @@ import { useRole } from "@/hooks/use-role";
 const drawerNavItems = [
   { label: "Explore", path: "/search", icon: Search },
   { label: "Home", path: "/", icon: Home },
-  { label: "Chat", path: "/chat", icon: MessageCircle },
+  { label: "Chat", path: "/messages", icon: MessageCircle },
   { label: "Notifications", path: "/notifications", icon: Bell },
   { label: "Feeds", path: "/feeds", icon: Hash },
   { label: "Lists", path: "/lists", icon: List },
