@@ -194,20 +194,20 @@ export default function SettingsPage() {
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
             <div className="flex flex-col items-center py-4">
-              <img src="/doyel-logo.png" alt="Doyel" className="h-16 w-16 rounded-2xl" />
-              <h3 className="mt-3 text-xl font-bold text-foreground">Doyel</h3>
+              <img src="/awaj-logo.png" alt="Awaj" className="h-16 w-16 rounded-2xl" />
+              <h3 className="mt-3 text-xl font-bold text-foreground">Awaj</h3>
               <p className="text-sm text-muted-foreground">Version 1.0.0</p>
             </div>
             <div className="space-y-3">
               <div className="rounded-xl bg-muted p-4">
-                <p className="font-medium text-foreground">About Doyel</p>
+                <p className="font-medium text-foreground">About Awaj</p>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                  Doyel is a social platform built for meaningful connections. Share your thoughts, discover new ideas, and connect with people who matter.
+                  Awaj (আওয়াজ) is a social platform where every voice matters. Share your thoughts, discover new ideas, and connect with people who matter.
                 </p>
               </div>
               <div className="rounded-xl bg-muted p-4">
                 <p className="font-medium text-foreground">Contact</p>
-                <p className="mt-1 text-sm text-muted-foreground">support@doyel.app</p>
+                <p className="mt-1 text-sm text-muted-foreground">support@awaj.app</p>
               </div>
               <div className="rounded-xl bg-muted p-4">
                 <p className="font-medium text-foreground">Legal</p>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
 function AppearanceSection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
   const { theme, setTheme } = useTheme();
   const [fontSize, setFontSize] = useState(() => {
-    return localStorage.getItem("doyel-font-size") || "medium";
+    return localStorage.getItem("awaj-font-size") || "medium";
   });
 
   const themes = [
@@ -305,7 +305,7 @@ function AppearanceSection({ onBack, renderBack }: { onBack: () => void; renderB
 
   const handleFontSize = (size: string) => {
     setFontSize(size);
-    localStorage.setItem("doyel-font-size", size);
+    localStorage.setItem("awaj-font-size", size);
     document.documentElement.setAttribute("data-font-size", size);
     toast.success(`Font size set to ${size}`);
   };
@@ -368,16 +368,16 @@ function AppearanceSection({ onBack, renderBack }: { onBack: () => void; renderB
 
 // === Accessibility Section ===
 function AccessibilitySection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
-  const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("doyel-reduce-motion") === "true");
-  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("doyel-high-contrast") === "true");
+  const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("awaj-reduce-motion") === "true");
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("awaj-high-contrast") === "true");
 
   const toggle = (key: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
     localStorage.setItem(key, String(value));
-    if (key === "doyel-reduce-motion") {
+    if (key === "awaj-reduce-motion") {
       document.documentElement.classList.toggle("reduce-motion", value);
     }
-    if (key === "doyel-high-contrast") {
+    if (key === "awaj-high-contrast") {
       document.documentElement.classList.toggle("high-contrast", value);
     }
     toast.success("Setting updated");
@@ -392,13 +392,13 @@ function AccessibilitySection({ onBack, renderBack }: { onBack: () => void; rend
             label="Reduce motion"
             description="Minimize animations throughout the app"
             checked={reduceMotion}
-            onChange={(v) => toggle("doyel-reduce-motion", v, setReduceMotion)}
+            onChange={(v) => toggle("awaj-reduce-motion", v, setReduceMotion)}
           />
           <ToggleSettingRow
             label="High contrast"
             description="Increase contrast for better readability"
             checked={highContrast}
-            onChange={(v) => toggle("doyel-high-contrast", v, setHighContrast)}
+            onChange={(v) => toggle("awaj-high-contrast", v, setHighContrast)}
           />
         </div>
       </ScrollArea>

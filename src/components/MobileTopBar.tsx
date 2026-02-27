@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import MobileDrawer from "@/components/MobileDrawer";
 import { useNavigate } from "react-router-dom";
-import DoyelLogo from "@/components/DoyelLogo";
+import AwajLogo from "@/components/AwajLogo";
 
 export default function MobileTopBar() {
   const { profile } = useAuth();
@@ -17,7 +17,7 @@ export default function MobileTopBar() {
           <Menu className="h-6 w-6 text-foreground" strokeWidth={2} />
         </button>
 
-        <DoyelLogo className="h-8 w-8" />
+        <AwajLogo className="h-8 w-8" />
 
         <button onClick={() => navigate("/feeds")} className="p-1">
           <Hash className="h-6 w-6 text-foreground" strokeWidth={2} />
