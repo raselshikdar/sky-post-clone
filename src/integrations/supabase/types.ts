@@ -854,6 +854,7 @@ export type Database = {
           avatar_url: string | null
           banner_url: string | null
           bio: string | null
+          birthday: string | null
           created_at: string
           display_name: string
           id: string
@@ -864,6 +865,7 @@ export type Database = {
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
+          birthday?: string | null
           created_at?: string
           display_name?: string
           id: string
@@ -874,6 +876,7 @@ export type Database = {
           avatar_url?: string | null
           banner_url?: string | null
           bio?: string | null
+          birthday?: string | null
           created_at?: string
           display_name?: string
           id?: string

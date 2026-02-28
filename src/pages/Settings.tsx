@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import {
   ChevronRight, User, Bell, Palette, Eye, VolumeX, UserX, LogOut,
   ChevronLeft, BadgeCheck, HelpCircle, Globe, Accessibility, FileText, Info,
-  ShieldCheck, Lock, Sun, Moon, Monitor, Type, Languages
+  ShieldCheck, Lock, Sun, Moon, Monitor, Type, Languages, Mail, PenLine,
+  AtSign, Cake, Download, XCircle, Trash2, CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,37 +69,7 @@ export default function SettingsPage() {
 
   // === Account ===
   if (section === "account") {
-    return (
-      <div className="flex flex-col h-full">
-        {renderBack("Account")}
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Display name</p>
-              <p className="font-medium">{profile?.display_name}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Username</p>
-              <p className="font-medium">@{profile?.username}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{user?.email || "Not set"}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Member since</p>
-              <p className="font-medium">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "—"}</p>
-            </div>
-            <Button variant="outline" className="w-full rounded-full" onClick={() => navigate(`/profile/${profile?.username}`)}>
-              Edit Profile
-            </Button>
-            <Button variant="outline" className="w-full rounded-full" onClick={() => navigate("/reset-password")}>
-              Change Password
-            </Button>
-          </div>
-        </ScrollArea>
-      </div>
-    );
+    return <AccountSection renderBack={renderBack} />;
   }
 
   // === Muted ===
@@ -277,6 +250,178 @@ export default function SettingsPage() {
           <LogOut className="h-5 w-5" strokeWidth={1.75} />
           <span className="text-[15px] font-medium">Sign out</span>
         </button>
+
+        <div className="h-20" />
+      </ScrollArea>
+    </div>
+  );
+}
+
+// === Account Section ===
+function AccountSection({ renderBack }: { renderBack: (t: string) => React.ReactNode }) {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [subSection, setSubSection] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [newHandle, setNewHandle] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [editingBirthday, setEditingBirthday] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setNewHandle(profile.username || "");
+      setBirthday((profile as any).birthday || "");
+    }
+  }, [profile]);
+
+  // Update email
+  const handleUpdateEmail = async () => {
+    if (!newEmail.trim()) return;
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Confirmation email sent to your new address");
+    setSubSection(null);
+  };
+
+  // Update handle
+  const handleUpdateHandle = async () => {
+    const handle = newHandle.trim().toLowerCase();
+    if (!handle || handle.length < 3) { toast.error("Username must be at least 3 characters"); return; }
+    if (!/^[a-z0-9_]+$/.test(handle)) { toast.error("Only letters, numbers and underscores"); return; }
+    if (handle === profile?.username) { setSubSection(null); return; }
+    setSaving(true);
+    const { data: existing } = await supabase.from("profiles").select("id").eq("username", handle).neq("id", user!.id).maybeSingle();
+    if (existing) { setSaving(false); toast.error("Username already taken"); return; }
+    const { error } = await supabase.from("profiles").update({ username: handle }).eq("id", user!.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Handle updated");
+    setSubSection(null);
+  };
+
+  // Update birthday
+  const handleSaveBirthday = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("profiles").update({ birthday: birthday || null } as any).eq("id", user!.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Birthday updated");
+    setEditingBirthday(false);
+  };
+
+  // Sub-sections
+  if (subSection === "update-email") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack("Update Email")}
+        <div className="p-4 space-y-4">
+          <p className="text-sm text-muted-foreground">Current: {user?.email}</p>
+          <div className="space-y-2">
+            <Label>New email address</Label>
+            <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter new email" />
+          </div>
+          <Button className="w-full rounded-full" disabled={saving || !newEmail.trim()} onClick={handleUpdateEmail}>
+            {saving ? "Sending..." : "Update Email"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (subSection === "handle") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack("Handle")}
+        <div className="p-4 space-y-4">
+          <p className="text-sm text-muted-foreground">Your current handle is <span className="font-medium text-foreground">@{profile?.username}</span></p>
+          <div className="space-y-2">
+            <Label>New handle</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+              <Input className="pl-8" value={newHandle} onChange={(e) => setNewHandle(e.target.value.toLowerCase())} placeholder="username" />
+            </div>
+            <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only. Min 3 characters.</p>
+          </div>
+          <Button className="w-full rounded-full" disabled={saving || !newHandle.trim()} onClick={handleUpdateHandle}>
+            {saving ? "Saving..." : "Save Handle"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main account view
+  return (
+    <div className="flex flex-col h-full">
+      {renderBack("Account")}
+      <ScrollArea className="flex-1">
+        {/* Email group */}
+        <div className="border-b border-border">
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium text-foreground">Email</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground truncate max-w-[180px]">{user?.email}</span>
+              {user?.email_confirmed_at && <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />}
+            </div>
+          </div>
+          <SettingsRow icon={PenLine} label="Update email" onClick={() => { setNewEmail(""); setSubSection("update-email"); }} />
+        </div>
+
+        {/* Password & Handle group */}
+        <div className="border-b border-border">
+          <SettingsRow icon={Lock} label="Password" onClick={() => navigate("/reset-password")} />
+          <SettingsRow icon={AtSign} label="Handle" onClick={() => setSubSection("handle")} />
+          {/* Birthday */}
+          <div className="flex items-center justify-between px-4 py-3.5 hover:bg-accent transition-colors">
+            <div className="flex items-center gap-3">
+              <Cake className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium text-foreground">Birthday</span>
+            </div>
+            {editingBirthday ? (
+              <div className="flex items-center gap-2">
+                <Input type="date" className="h-8 w-auto text-sm" value={birthday} onChange={(e) => setBirthday(e.target.value)} />
+                <Button size="sm" variant="ghost" className="h-8 text-primary" disabled={saving} onClick={handleSaveBirthday}>
+                  {saving ? "..." : "Save"}
+                </Button>
+              </div>
+            ) : (
+              <button onClick={() => setEditingBirthday(true)} className="text-sm font-medium text-primary">
+                {birthday ? new Date(birthday + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Edit"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Danger zone */}
+        <div className="border-b border-border">
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info("This feature is coming soon")}>
+            <div className="flex items-center gap-3">
+              <Download className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium text-foreground">Export my data</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info("This feature is coming soon")}>
+            <div className="flex items-center gap-3">
+              <XCircle className="h-5 w-5 text-destructive" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium text-destructive">Deactivate account</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info("This feature is coming soon")}>
+            <div className="flex items-center gap-3">
+              <Trash2 className="h-5 w-5 text-destructive" strokeWidth={1.75} />
+              <span className="text-[15px] font-medium text-destructive">Delete account</span>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
 
         <div className="h-20" />
       </ScrollArea>
