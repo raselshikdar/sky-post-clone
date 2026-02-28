@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign } from "lucide-react";
+import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
@@ -132,8 +133,10 @@ export default function Notifications() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <NotificationSkeleton key={i} />
+          ))}
         </div>
       ) : grouped.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12">

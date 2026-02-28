@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { timeAgo } from "@/lib/time";
+import ConversationSkeleton from "@/components/ConversationSkeleton";
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -101,6 +102,8 @@ export default function Messages() {
     enabled: !!user,
   });
 
+  const isLoading = !user;
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-49px)]">
       {/* Header */}
@@ -111,7 +114,7 @@ export default function Messages() {
         </button>
       </div>
 
-      {conversations.length === 0 ? (
+      {conversations.length === 0 && !isLoading ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
           <MessageCircle className="h-16 w-16 text-primary" strokeWidth={1.5} />
           <h3 className="text-xl font-bold">Nothing here</h3>

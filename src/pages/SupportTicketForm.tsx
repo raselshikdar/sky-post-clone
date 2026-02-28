@@ -149,16 +149,20 @@ export default function SupportTicketForm() {
               <h3 className="text-sm font-semibold text-muted-foreground mb-2">Your Tickets</h3>
               <div className="space-y-2">
                 {myTickets.map((t: any) => (
-                  <div key={t.id} className="rounded-xl border border-border p-3 space-y-1">
+                  <div key={t.id} className="rounded-xl border border-border p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium truncate">{t.subject}</p>
                       <span className={`text-xs font-medium capitalize ${statusColor(t.status)}`}>{t.status.replace("_", " ")}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">{t.type} · {new Date(t.created_at).toLocaleDateString()}</p>
-                    {t.admin_notes && (
-                      <p className="text-xs bg-accent rounded-lg p-2 mt-1">
-                        <span className="font-medium">Response:</span> {t.admin_notes}
-                      </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{t.message}</p>
+                    {t.admin_notes ? (
+                      <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5 mt-1">
+                        <p className="text-xs font-semibold text-primary mb-0.5">Admin Response</p>
+                        <p className="text-xs text-foreground leading-relaxed">{t.admin_notes}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Awaiting response...</p>
                     )}
                   </div>
                 ))}
