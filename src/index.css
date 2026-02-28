@@ -147,4 +147,10 @@
   .fab-button {
     @apply fixed bottom-20 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--bsky-blue))] text-white shadow-lg transition-transform hover:scale-105 active:scale-95 md:hidden;
   }
+
+  /* Fix mobile keyboard layout for conversation pages */
+  .conversation-container {
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
 }

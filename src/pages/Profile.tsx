@@ -473,6 +473,7 @@ function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, profileId }: {
 /* ---- Edit Profile Dialog (Bluesky style) ---- */
 function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
   const [displayName, setDisplayName] = useState(profile.display_name || "");
+  const [username, setUsername] = useState(profile.username || "");
   const [bio, setBio] = useState(profile.bio || "");
   const [saving, setSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>(profile.avatar_url || "");
@@ -509,9 +510,17 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
   };
 
   const handleSave = async () => {
+    if (!username.trim() || username.trim().length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
+      toast.error("Username can only contain letters, numbers, and underscores");
+      return;
+    }
     setSaving(true);
     try {
-      const updates: any = { display_name: displayName, bio };
+      const updates: any = { display_name: displayName, bio, username: username.trim().toLowerCase() };
 
       if (avatarFile) {
         updates.avatar_url = await uploadImage(avatarFile, `${profile.id}/avatar`);
@@ -533,7 +542,7 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
     }
   };
 
-  const hasChanges = displayName !== (profile.display_name || "") || bio !== (profile.bio || "") || avatarFile || bannerFile;
+  const hasChanges = displayName !== (profile.display_name || "") || username !== (profile.username || "") || bio !== (profile.bio || "") || avatarFile || bannerFile;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -583,6 +592,12 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
             <label className="text-sm font-medium text-muted-foreground">Display name</label>
             <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
               className="mt-1 bg-secondary/50 border-0 rounded-lg" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Username</label>
+            <Input value={username} onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
+              className="mt-1 bg-secondary/50 border-0 rounded-lg" maxLength={30} />
+            <p className="text-xs text-muted-foreground mt-1">@{username.toLowerCase() || "username"}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">Description</label>

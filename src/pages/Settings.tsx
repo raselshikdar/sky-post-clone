@@ -408,7 +408,7 @@ function AccessibilitySection({ onBack, renderBack }: { onBack: () => void; rend
 
 // === Languages Section ===
 function LanguagesSection({ onBack, renderBack }: { onBack: () => void; renderBack: (t: string) => React.ReactNode }) {
-  const [language, setLanguage] = useState(() => localStorage.getItem("doyel-language") || "en");
+  const [language, setLanguage] = useState(() => localStorage.getItem("awaj-language") || "en");
 
   const languages = [
     { code: "en", label: "English", native: "English" },
@@ -423,7 +423,7 @@ function LanguagesSection({ onBack, renderBack }: { onBack: () => void; renderBa
 
   const handleLanguage = (code: string) => {
     setLanguage(code);
-    localStorage.setItem("doyel-language", code);
+    localStorage.setItem("awaj-language", code);
     toast.success(`Language set to ${languages.find((l) => l.code === code)?.label}`);
   };
 
