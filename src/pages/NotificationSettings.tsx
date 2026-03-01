@@ -16,9 +16,9 @@ const NOTIFICATION_TYPES = [
   { key: "follows", label: "New followers", icon: UserPlus, defaults: { in_app: true, push: false, from_who: "everyone" } },
   { key: "replies", label: "Replies", icon: MessageCircle, defaults: { in_app: true, push: true, from_who: "everyone" } },
   { key: "mentions", label: "Mentions", icon: AtSign, defaults: { in_app: true, push: true, from_who: "everyone" } },
+  { key: "quotes", label: "Quotes", icon: Quote, defaults: { in_app: true, push: true, from_who: "everyone" } },
   { key: "reposts", label: "Reposts", icon: Repeat2, defaults: { in_app: true, push: true, from_who: "everyone" } },
   { key: "activity", label: "Activity from others", icon: Bell, defaults: { in_app: true, push: true, from_who: "everyone" } },
-  { key: "quotes", label: "Quotes", icon: Quote, defaults: { in_app: true, push: true, from_who: "everyone" } },
 ];
 
 const FROM_OPTIONS = [
@@ -112,7 +112,7 @@ export default function NotificationSettings() {
       </div>
 
       {/* Settings list */}
-      <div className="divide-y divide-border">
+      <div className="py-1">
         {NOTIFICATION_TYPES.map((type) => {
           const Icon = type.icon;
           return (
@@ -144,7 +144,6 @@ export default function NotificationSettings() {
 
           {selectedSetting && selectedType && (
             <div className="space-y-6">
-              {/* In-app toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">In-app notifications</p>
@@ -156,7 +155,6 @@ export default function NotificationSettings() {
                 />
               </div>
 
-              {/* Push toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Push notifications</p>
@@ -168,7 +166,6 @@ export default function NotificationSettings() {
                 />
               </div>
 
-              {/* From who */}
               <div>
                 <p className="font-medium mb-2">Receive from</p>
                 <div className="space-y-2">
