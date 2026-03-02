@@ -11,7 +11,7 @@ import PostCardMenu from "@/components/PostCardMenu";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import ImageGrid from "@/components/ImageGrid";
 import RichContent from "@/components/RichContent";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 interface PostCardProps {
   id: string;
@@ -120,17 +120,10 @@ export default function PostCard({
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const postUrl = `${window.location.origin}/post/${id}`;
+    navigator.clipboard.writeText(postUrl);
+    toast.success("Link copied!");
   };
-
-  const postUrl = `${window.location.origin}/post/${id}`;
-
-  const shareOptions = [
-    { label: "Copy link", onClick: () => { navigator.clipboard.writeText(postUrl); toast.success("Link copied!"); } },
-    { label: "Share on X/Twitter", onClick: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(content.slice(0, 100))}`, "_blank") },
-    { label: "Share on Facebook", onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, "_blank") },
-    { label: "Share on WhatsApp", onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(content.slice(0, 100) + " " + postUrl)}`, "_blank") },
-    { label: "Share on Telegram", onClick: () => window.open(`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(content.slice(0, 100))}`, "_blank") },
-  ];
 
   const renderImages = () => {
     if (!images || images.length === 0) return null;
@@ -186,21 +179,12 @@ export default function PostCard({
             onClick={handleBookmark}
             fill={bookmarked || isBookmarked}
           />
-          {/* Share dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={handleShare}>
-              <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-                <Share className="h-[18px] w-[18px]" strokeWidth={1.75} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 z-50 bg-background border border-border shadow-lg">
-              {shareOptions.map((opt) => (
-                <DropdownMenuItem key={opt.label} onClick={(e) => { e.stopPropagation(); opt.onClick(); }} className="cursor-pointer py-2.5 px-3 text-sm">
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
+            onClick={handleShare}
+          >
+            <Share className="h-[18px] w-[18px]" strokeWidth={1.75} />
+          </button>
           <PostCardMenu
             postId={id}
             authorId={authorId}
