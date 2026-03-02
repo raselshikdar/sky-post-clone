@@ -814,6 +814,7 @@ export type Database = {
           created_at: string
           id: string
           parent_id: string | null
+          quote_post_id: string | null
           updated_at: string
         }
         Insert: {
@@ -822,6 +823,7 @@ export type Database = {
           created_at?: string
           id?: string
           parent_id?: string | null
+          quote_post_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -830,6 +832,7 @@ export type Database = {
           created_at?: string
           id?: string
           parent_id?: string | null
+          quote_post_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -843,6 +846,13 @@ export type Database = {
           {
             foreignKeyName: "posts_parent_id_fkey"
             columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_quote_post_id_fkey"
+            columns: ["quote_post_id"]
             isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]

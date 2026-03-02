@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { X, TrendingUp, ArrowUp, Loader2 } from "lucide-react";
+import { X, TrendingUp, ArrowUp } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -19,11 +19,6 @@ export default function Home() {
   const [composerAutoImage, setComposerAutoImage] = useState(false);
   const [showTopics, setShowTopics] = useState(true);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isPulling, setIsPulling] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const touchStartY = useRef(0);
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -41,33 +36,6 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Pull to refresh
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.scrollY <= 0) {
-      touchStartY.current = e.touches[0].clientY;
-      setIsPulling(true);
-    }
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isPulling) return;
-    const diff = e.touches[0].clientY - touchStartY.current;
-    if (diff > 0 && window.scrollY <= 0) {
-      setPullDistance(Math.min(diff * 0.4, 80));
-    }
-  }, [isPulling]);
-
-  const handleTouchEnd = useCallback(async () => {
-    if (pullDistance > 60) {
-      setIsRefreshing(true);
-      setPullDistance(50);
-      await queryClient.invalidateQueries({ queryKey: ["posts", tab] });
-      await queryClient.invalidateQueries({ queryKey: ["home_trending_topics"] });
-      setIsRefreshing(false);
-    }
-    setPullDistance(0);
-    setIsPulling(false);
-  }, [pullDistance, queryClient, tab]);
 
   // Trending topics from actual post content (extract top words)
   const { data: trendingTopics = [] } = useQuery({
@@ -107,7 +75,7 @@ export default function Home() {
       let query = supabase
         .from("posts")
         .select(`
-          id, content, created_at, parent_id, author_id,
+          id, content, created_at, parent_id, author_id, quote_post_id,
           profiles!posts_author_id_fkey (id, username, display_name, avatar_url)
         `)
         .is("parent_id", null)
@@ -144,13 +112,23 @@ export default function Home() {
 
       const postIds = filtered.map((p) => p.id);
       if (postIds.length === 0) return [];
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
+      
+      // Collect quote post IDs
+      const quotePostIds = filtered.map((p) => (p as any).quote_post_id).filter(Boolean) as string[];
+      
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        quotePostIds.length > 0
+          ? supabase.from("posts").select("id, content, created_at, author_id, profiles!posts_author_id_fkey (username, display_name, avatar_url)").in("id", quotePostIds)
+          : { data: [] },
+        quotePostIds.length > 0
+          ? supabase.from("post_images").select("post_id, url, position").in("post_id", quotePostIds).order("position")
+          : { data: [] },
       ]);
 
       const likeCounts: Record<string, number> = {};
@@ -166,6 +144,26 @@ export default function Home() {
       (imagesRes.data || []).forEach((img) => {
         if (!postImages[img.post_id]) postImages[img.post_id] = [];
         postImages[img.post_id].push(img.url);
+      });
+
+      // Build quote posts map
+      const quotePostMap: Record<string, any> = {};
+      const quoteImages: Record<string, string[]> = {};
+      (quoteImagesRes.data || []).forEach((img: any) => {
+        if (!quoteImages[img.post_id]) quoteImages[img.post_id] = [];
+        quoteImages[img.post_id].push(img.url);
+      });
+      (quotePostsRes.data || []).forEach((qp: any) => {
+        const qProfile = qp.profiles as any;
+        quotePostMap[qp.id] = {
+          id: qp.id,
+          content: qp.content,
+          authorName: qProfile?.display_name || "",
+          authorHandle: qProfile?.username || "",
+          authorAvatar: qProfile?.avatar_url || "",
+          createdAt: qp.created_at,
+          images: quoteImages[qp.id],
+        };
       });
 
       let result = filtered.map((post) => {
@@ -184,6 +182,7 @@ export default function Home() {
           repostCount: repostCounts[post.id] || 0,
           isLiked: userLikedSet.has(post.id),
           isReposted: userRepostedSet.has(post.id),
+          quotePost: (post as any).quote_post_id ? quotePostMap[(post as any).quote_post_id] || null : null,
         };
       });
 
@@ -196,13 +195,7 @@ export default function Home() {
   });
 
   return (
-    <div
-      ref={containerRef}
-      className="flex flex-col"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="flex flex-col">
       {/* Sticky: tabs only */}
       <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="flex w-full items-center justify-between border-b border-border px-4">
@@ -211,19 +204,6 @@ export default function Home() {
           <TabButton label="What's Hot Classic" active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
         </div>
       </div>
-
-      {/* Pull to refresh indicator */}
-      {(pullDistance > 0 || isRefreshing) && (
-        <div
-          className="flex items-center justify-center overflow-hidden transition-all"
-          style={{ height: isRefreshing ? 50 : pullDistance }}
-        >
-          <Loader2
-            className={`h-5 w-5 text-primary ${isRefreshing ? "animate-spin" : ""}`}
-            style={{ opacity: Math.min(pullDistance / 60, 1), transform: `rotate(${pullDistance * 3}deg)` }}
-          />
-        </div>
-      )}
 
       {/* Trending topics row - scrolls with content, NOT sticky */}
       {tab === "discover" && showTopics && trendingTopics.length > 0 && (

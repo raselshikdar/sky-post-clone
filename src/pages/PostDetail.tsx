@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { timeAgo } from "@/lib/time";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +24,7 @@ export default function PostDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("posts")
-        .select(`id, content, created_at, parent_id, author_id, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
+        .select(`id, content, created_at, parent_id, author_id, quote_post_id, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
         .eq("id", postId!)
         .single();
       if (!data) return null;
@@ -32,7 +33,27 @@ export default function PostDetail() {
         .select("url, position")
         .eq("post_id", postId!)
         .order("position");
-      return { ...data, images: (imgs || []).map((i) => i.url) };
+      
+      // Fetch quote post if present
+      let quotePost = null;
+      if ((data as any).quote_post_id) {
+        const { data: qp } = await supabase
+          .from("posts")
+          .select("id, content, created_at, author_id, profiles!posts_author_id_fkey (username, display_name, avatar_url)")
+          .eq("id", (data as any).quote_post_id)
+          .single();
+        if (qp) {
+          const qProfile = qp.profiles as any;
+          const { data: qImgs } = await supabase.from("post_images").select("url, position").eq("post_id", qp.id).order("position");
+          quotePost = {
+            id: qp.id, content: qp.content, createdAt: qp.created_at,
+            authorName: qProfile?.display_name || "", authorHandle: qProfile?.username || "",
+            authorAvatar: qProfile?.avatar_url || "", images: (qImgs || []).map(i => i.url),
+          };
+        }
+      }
+      
+      return { ...data, images: (imgs || []).map((i) => i.url), quotePost };
     },
     enabled: !!postId,
   });
@@ -149,6 +170,35 @@ export default function PostDetail() {
         {post.images && post.images.length > 0 && (
           <div className="mt-3">
             <ImageGrid images={post.images} />
+          </div>
+        )}
+
+        {/* Quoted post embed */}
+        {(post as any).quotePost && (
+          <div
+            className="mt-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+            onClick={() => navigate(`/post/${(post as any).quotePost.id}`)}
+          >
+            <div className="flex items-center gap-1.5 text-sm">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={(post as any).quotePost.authorAvatar} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                  {(post as any).quotePost.authorName[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-semibold text-foreground truncate">{(post as any).quotePost.authorName}</span>
+              <span className="text-muted-foreground truncate">@{(post as any).quotePost.authorHandle}</span>
+              <span className="text-muted-foreground">·</span>
+              <span className="text-muted-foreground flex-shrink-0">{timeAgo((post as any).quotePost.createdAt)}</span>
+            </div>
+            <p className="mt-1 text-sm whitespace-pre-wrap break-words text-foreground line-clamp-3">
+              <RichContent content={(post as any).quotePost.content} />
+            </p>
+            {(post as any).quotePost.images && (post as any).quotePost.images.length > 0 && (
+              <div className="mt-1.5">
+                <ImageGrid images={(post as any).quotePost.images} />
+              </div>
+            )}
           </div>
         )}
 

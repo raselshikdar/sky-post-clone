@@ -8,17 +8,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import InteractionSettings from "@/components/InteractionSettings";
+import { timeAgo } from "@/lib/time";
+import RichContent from "@/components/RichContent";
+
+interface QuotePostData {
+  id: string;
+  content: string;
+  authorName: string;
+  authorHandle: string;
+  authorAvatar: string;
+  createdAt: string;
+  images?: string[];
+}
 
 interface ComposerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   parentId?: string;
   autoOpenImagePicker?: boolean;
+  quotePost?: QuotePostData;
 }
 
 const MAX_CHARS = 300;
 
-export default function Composer({ open, onOpenChange, parentId, autoOpenImagePicker }: ComposerProps) {
+export default function Composer({ open, onOpenChange, parentId, autoOpenImagePicker, quotePost }: ComposerProps) {
   const [content, setContent] = useState("");
   const [posting, setPosting] = useState(false);
   const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
@@ -81,6 +94,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         author_id: user.id,
         content: content.trim(),
         parent_id: parentId || null,
+        quote_post_id: quotePost?.id || null,
       }).select("id").single();
 
       if (error || !post) { toast.error("Failed to create post"); return; }
@@ -98,6 +112,16 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         if (parentPost && parentPost.author_id !== user.id) {
           await supabase.from("notifications").insert({
             user_id: parentPost.author_id, actor_id: user.id, type: "reply", post_id: parentId,
+          });
+        }
+      }
+
+      // Create quote notification
+      if (quotePost) {
+        const { data: quotedPost } = await supabase.from("posts").select("author_id").eq("id", quotePost.id).single();
+        if (quotedPost && quotedPost.author_id !== user.id) {
+          await supabase.from("notifications").insert({
+            user_id: quotedPost.author_id, actor_id: user.id, type: "quote", post_id: post.id,
           });
         }
       }
@@ -155,7 +179,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-lg gap-0 p-0 [&>button]:hidden">
-          {/* Header: Cancel / Drafts / Post */}
+          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3">
             <button onClick={handleClose} className="text-sm font-semibold text-primary">
               Cancel
@@ -185,8 +209,8 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
 
             <div className="flex-1">
               <textarea
-                className="min-h-[150px] w-full resize-none bg-transparent text-[17px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
-                placeholder={parentId ? "Write your reply" : "What's up?"}
+                className="min-h-[120px] w-full resize-none bg-transparent text-[17px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
+                placeholder={quotePost ? "Add your comment" : parentId ? "Write your reply" : "What's up?"}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 autoFocus
@@ -206,6 +230,27 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Quote post preview */}
+              {quotePost && (
+                <div className="mt-2 rounded-xl border border-border p-3">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={quotePost.authorAvatar} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                        {quotePost.authorName[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-semibold text-foreground truncate">{quotePost.authorName}</span>
+                    <span className="text-muted-foreground truncate">@{quotePost.authorHandle}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-muted-foreground flex-shrink-0">{timeAgo(quotePost.createdAt)}</span>
+                  </div>
+                  <p className="mt-1 text-sm whitespace-pre-wrap break-words text-foreground line-clamp-3">
+                    <RichContent content={quotePost.content} />
+                  </p>
                 </div>
               )}
             </div>
@@ -251,7 +296,6 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
               <span className={`text-sm font-medium ${overLimit ? "text-destructive" : remaining <= 20 ? "text-orange-500" : "text-muted-foreground"}`}>
                 {remaining}
               </span>
-              {/* Character ring */}
               <svg width="26" height="26" className="-rotate-90">
                 <circle cx="13" cy="13" r={ringRadius} fill="none" stroke="hsl(var(--border))" strokeWidth="2.5" />
                 <circle
