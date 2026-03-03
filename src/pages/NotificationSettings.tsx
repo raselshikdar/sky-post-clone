@@ -102,9 +102,9 @@ export default function NotificationSettings() {
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-49px)]">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <div className="sticky top-[49px] lg:top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
         <button onClick={() => navigate(-1)} className="text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>

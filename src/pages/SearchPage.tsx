@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search as SearchIcon, X, Sparkles, Flame, Pin, ListFilter, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import MobileDrawer from "@/components/MobileDrawer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -402,6 +403,7 @@ function SearchResults({ query }: { query: string }) {
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const isSearching = query.trim().length >= 2;
 
   useEffect(() => {
@@ -410,11 +412,15 @@ export default function SearchPage() {
   }, [searchParams]);
 
   return (
+    <>
+    <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
     <div className="flex flex-col">
       {/* Header */}
-      <div className="sticky top-[49px] lg:top-0 z-20 border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="flex items-center gap-2 px-4 py-2.5">
-          <Menu className="h-5 w-5 text-foreground lg:hidden flex-shrink-0" />
+          <button onClick={() => setDrawerOpen(true)} className="p-1 lg:hidden">
+            <Menu className="h-5 w-5 text-foreground flex-shrink-0" />
+          </button>
           <h2 className="text-lg font-bold lg:hidden flex-shrink-0 mr-1">Explore</h2>
           <div className="relative flex-1">
             <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -446,5 +452,6 @@ export default function SearchPage() {
         </>
       )}
     </div>
+    </>
   );
 }

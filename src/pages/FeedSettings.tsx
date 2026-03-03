@@ -101,7 +101,7 @@ export default function FeedSettings() {
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="sticky top-[49px] lg:top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate("/feeds")} className="p-1">
             <ArrowLeft className="h-5 w-5 text-foreground" />

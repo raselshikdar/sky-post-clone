@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign } from "lucide-react";
+import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu } from "lucide-react";
+import MobileDrawer from "@/components/MobileDrawer";
 import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
@@ -37,6 +38,7 @@ export default function Notifications() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<"all" | "mentions">("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications", tab, user?.id],
@@ -117,11 +119,17 @@ export default function Notifications() {
   const grouped = groupNotifications(notifications);
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-49px)]">
+    <div className="flex flex-col min-h-screen">
+      <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       {/* Header */}
-      <div className="sticky top-[49px] lg:top-0 z-20 border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between px-4 py-3">
-          <h2 className="text-xl font-bold">Notifications</h2>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setDrawerOpen(true)} className="p-1 lg:hidden">
+              <Menu className="h-6 w-6 text-foreground" strokeWidth={2} />
+            </button>
+            <h2 className="text-xl font-bold">Notifications</h2>
+          </div>
           <button onClick={() => navigate("/notifications/settings")} className="text-muted-foreground hover:text-foreground">
             <Settings className="h-5 w-5" />
           </button>

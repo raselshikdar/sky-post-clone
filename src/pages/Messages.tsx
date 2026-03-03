@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MessageCircle, Settings, Search, X } from "lucide-react";
+import { MessageCircle, Settings, Search, X, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import MobileDrawer from "@/components/MobileDrawer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,6 +15,7 @@ export default function Messages() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [newChatOpen, setNewChatOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -105,10 +107,17 @@ export default function Messages() {
   const isLoading = !user;
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-49px)]">
+    <>
+    <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <div className="sticky top-[49px] lg:top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
-        <h2 className="text-xl font-bold">Chats</h2>
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setDrawerOpen(true)} className="p-1 lg:hidden">
+            <Menu className="h-6 w-6 text-foreground" strokeWidth={2} />
+          </button>
+          <h2 className="text-xl font-bold">Chats</h2>
+        </div>
         <button onClick={() => navigate("/messages/settings")} className="text-muted-foreground hover:text-foreground">
           <Settings className="h-5 w-5" />
         </button>
@@ -171,6 +180,7 @@ export default function Messages() {
 
       <NewChatDialog open={newChatOpen} onOpenChange={setNewChatOpen} />
     </div>
+    </>
   );
 }
 

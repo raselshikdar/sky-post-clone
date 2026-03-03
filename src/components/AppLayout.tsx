@@ -7,6 +7,8 @@ import { useState } from "react";
 import { SquarePen } from "lucide-react";
 import Composer from "@/components/Composer";
 
+
+
 export default function AppLayout() {
   const [composerOpen, setComposerOpen] = useState(false);
   const { pathname } = useLocation();
@@ -19,7 +21,7 @@ export default function AppLayout() {
       <DesktopSidebar />
 
       <div className="flex w-full max-w-feed flex-col border-x border-border min-h-screen">
-        {!isConversation && <MobileTopBar />}
+        {pathname === "/" && <MobileTopBar />}
         <Outlet />
         {/* Mobile bottom padding - not on conversation pages */}
         {!isConversation && <div className="h-16 lg:hidden" />}
