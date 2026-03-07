@@ -211,7 +211,8 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
               <Input className="pl-8" value={newHandle} onChange={(e) => setNewHandle(e.target.value.toLowerCase())} placeholder="username" />
             </div>
-            <p className="text-xs text-muted-foreground">{t("account.handle_rules")}</p>
+           <p className="text-xs text-muted-foreground">{t("account.handle_rules")}</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">{t("account.handle_cooldown_info")}</p>
           </div>
           <Button className="w-full rounded-full" disabled={saving || !newHandle.trim()} onClick={handleUpdateHandle}>
             {saving ? t("account.saving") : t("account.save_handle")}
