@@ -71,7 +71,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-foreground truncate flex items-center gap-1">
               {profile?.display_name || "User"}
-              {user && <VerifiedBadge userId={user.id} className="h-3.5 w-3.5" />}
+              {user && <VerifiedBadge userId={user.id} />}
             </p>
             <p className="text-xs text-muted-foreground truncate">@{profile?.username || "handle"}</p>
             <p className="text-xs mt-0.5">

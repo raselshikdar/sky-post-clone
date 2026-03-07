@@ -251,7 +251,7 @@ export default function Profile() {
 
         <h1 className="mt-2 text-[22px] font-extrabold leading-tight flex items-center gap-1.5">
           {profile.display_name}
-          <VerifiedBadge userId={profile.id} className="h-5 w-5" />
+          <VerifiedBadge userId={profile.id} />
         </h1>
         <div className="flex items-center gap-1.5 mt-0.5">
           <p className="text-sm text-muted-foreground">@{profile.username}</p>

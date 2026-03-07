@@ -91,7 +91,7 @@ export default function RightSidebar() {
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">{u.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/profile/${u.username}`)}>
-                <p className="truncate text-sm font-semibold flex items-center gap-1">{u.display_name}<VerifiedBadge userId={u.id} className="h-3.5 w-3.5" /></p>
+                <p className="truncate text-sm font-semibold flex items-center gap-1">{u.display_name}<VerifiedBadge userId={u.id} /></p>
                 <p className="truncate text-xs text-muted-foreground">@{u.username}</p>
               </div>
               <Button size="sm" variant="outline" className="h-8 rounded-full text-xs font-semibold" onClick={() => handleFollow(u.id)}>{t("common.follow")}</Button>

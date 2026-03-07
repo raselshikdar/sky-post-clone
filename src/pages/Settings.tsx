@@ -74,7 +74,7 @@ export default function SettingsPage() {
           </Avatar>
           <h3 className="mt-3 text-lg font-bold text-foreground flex items-center gap-1">
             {profile?.display_name || "User"}
-            {user && <VerifiedBadge userId={user.id} className="h-4 w-4" />}
+            {user && <VerifiedBadge userId={user.id} />}
           </h3>
           <p className="text-sm text-primary">@{profile?.username || "handle"}</p>
         </div>
