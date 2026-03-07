@@ -161,6 +161,8 @@ const en = {
   "account.save_handle": "Save Handle",
   "account.saving": "Saving...",
   "account.handle_updated": "Handle updated",
+  "account.handle_cooldown": "You can only change your username once every 6 months. Try again after {date}.",
+  "account.handle_cooldown_info": "You can change your username once every 6 months.",
   "account.username_taken": "Username already taken",
   "account.birthday_updated": "Birthday updated",
   "account.export_data": "Export my data",
