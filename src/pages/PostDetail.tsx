@@ -159,7 +159,7 @@ export default function PostDetail() {
           <div>
             <p className="font-bold flex items-center gap-1">
               {profile?.display_name}
-              <VerifiedBadge userId={post.author_id} className="h-5 w-5" />
+              <VerifiedBadge userId={post.author_id} />
             </p>
             <p className="text-sm text-muted-foreground">@{profile?.username}</p>
           </div>
