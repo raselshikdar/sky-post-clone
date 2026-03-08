@@ -330,7 +330,74 @@ export default function PostDetail() {
           </div>
         ) : null}
 
-        {/* Reply button */}
+        {/* Action buttons */}
+        {user && (
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            {/* Comment */}
+            <button onClick={() => setReplyOpen(true)} className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+              <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
+            </button>
+
+            {/* Repost dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-repost))] ${isReposted ? "text-[hsl(var(--bsky-repost))]" : "text-muted-foreground"}`}>
+                  <Repeat2 className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44 z-50 bg-background border border-border shadow-lg">
+                <DropdownMenuItem onClick={handleRepost} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
+                  <Repeat2 className="h-4 w-4" />
+                  {isReposted ? "Undo repost" : "Repost"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setQuoteComposerOpen(true)} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
+                  <Quote className="h-4 w-4" />
+                  Quote post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Like */}
+            <button onClick={handleLike} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-like))] ${isLiked ? "text-[hsl(var(--bsky-like))]" : "text-muted-foreground"}`}>
+              <Heart className="h-5 w-5" strokeWidth={1.75} fill={isLiked ? "currentColor" : "none"} />
+            </button>
+
+            {/* Bookmark */}
+            <button onClick={handleBookmark} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-primary ${isBookmarked ? "text-primary" : "text-muted-foreground"}`}>
+              {isBookmarked ? <BookmarkCheck className="h-5 w-5" strokeWidth={1.75} fill="currentColor" /> : <Bookmark className="h-5 w-5" strokeWidth={1.75} />}
+            </button>
+
+            {/* Share dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+                  <Forward className="h-5 w-5" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 z-50 bg-background border border-border shadow-lg">
+                <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
+                  <Link2 className="h-4 w-4" />
+                  Copy link to post
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShareDialogOpen(true)} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
+                  <Send className="h-4 w-4" />
+                  Send via direct message
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* 3-dot menu */}
+            <PostCardMenu
+              postId={postId!}
+              authorId={post.author_id}
+              authorHandle={profile?.username || ""}
+              content={post.content}
+              onHide={() => setHidden(true)}
+            />
+          </div>
+        )}
+
+        {/* Reply text input */}
         {user && (
           <button
             onClick={() => setReplyOpen(true)}
@@ -347,6 +414,21 @@ export default function PostDetail() {
       ))}
 
       <Composer open={replyOpen} onOpenChange={setReplyOpen} parentId={postId} />
+
+      {/* Quote composer */}
+      <Composer
+        open={quoteComposerOpen}
+        onOpenChange={setQuoteComposerOpen}
+        quotePost={{
+          id: postId!, content: post.content,
+          authorName: profile?.display_name || "", authorHandle: profile?.username || "",
+          authorAvatar: profile?.avatar_url || "", createdAt: post.created_at,
+          images: post.images,
+        }}
+      />
+
+      {/* Share via DM */}
+      <SharePostDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} postId={postId!} />
     </div>
   );
 }
