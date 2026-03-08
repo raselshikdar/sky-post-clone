@@ -111,31 +111,31 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             <LogOut className="h-5 w-5" strokeWidth={1.75} />
             {t("drawer.log_out")}
           </button>
-        </nav>
 
-        <div className="border-t border-border" />
-        <div className="flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            <span className="text-sm font-medium">{t("drawer.dark_mode")}</span>
+          <div className="border-t border-border my-1" />
+
+          <div className="flex items-center justify-between px-3 py-2">
+            <div className="flex items-center gap-3">
+              {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              <span className="text-sm font-medium">{t("drawer.dark_mode")}</span>
+            </div>
+            <Switch checked={isDark} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
           </div>
-          <Switch checked={isDark} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
-        </div>
 
-        <div className="border-t border-border" />
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <div className="flex gap-3 text-xs">
+          <div className="flex gap-3 text-xs px-3 py-1.5">
             <a href="#" className="text-primary hover:underline">{t("drawer.terms")}</a>
             <a href="#" className="text-primary hover:underline">{t("drawer.privacy")}</a>
           </div>
-          <div className="flex gap-1.5">
-            <NavLink to="/support" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
-              <MessageCircle className="h-3 w-3" /> {t("drawer.feedback")}
-            </NavLink>
-            <NavLink to="/support" onClick={() => onOpenChange(false)} className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
-              {t("settings.help")}
-            </NavLink>
-          </div>
+        </nav>
+
+        <div className="border-t border-border" />
+        <div className="flex items-center justify-center gap-1.5 px-4 py-2.5">
+          <NavLink to="/support" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
+            <MessageCircle className="h-3 w-3" /> {t("drawer.feedback")}
+          </NavLink>
+          <NavLink to="/support" onClick={() => onOpenChange(false)} className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
+            {t("settings.help")}
+          </NavLink>
         </div>
       </SheetContent>
     </Sheet>
