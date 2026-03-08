@@ -38,6 +38,8 @@ import AdminSupport from "@/pages/admin/AdminSupport";
 import AdminRoles from "@/pages/admin/AdminRoles";
 import LandingPage from "@/pages/LandingPage";
 import PublicFeed from "@/pages/PublicFeed";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +96,8 @@ const App = () => (
               <Route path="/explore" element={<ExploreRoute />} />
               <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/feeds" element={<Feeds />} />

@@ -120,8 +120,8 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
           </div>
 
           <div className="flex gap-3 text-sm px-3 py-1.5">
-            <a href="#" className="text-primary hover:underline">{t("drawer.terms")}</a>
-            <a href="#" className="text-primary hover:underline">{t("drawer.privacy")}</a>
+            <NavLink to="/terms" onClick={() => onOpenChange(false)} className="text-primary hover:underline">{t("drawer.terms")}</NavLink>
+            <NavLink to="/privacy" onClick={() => onOpenChange(false)} className="text-primary hover:underline">{t("drawer.privacy")}</NavLink>
           </div>
         </nav>
 
