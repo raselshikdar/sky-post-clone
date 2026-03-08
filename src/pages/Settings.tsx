@@ -110,7 +110,7 @@ export default function SettingsPage() {
 // Account Section
 // ===========================
 function AccountSection({ renderBack, setSection }: { renderBack: (t: string, onBack?: () => void) => React.ReactNode; setSection: (s: string | null) => void }) {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [subSection, setSubSection] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
@@ -118,6 +118,13 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
   const [birthday, setBirthday] = useState("");
   const [editingBirthday, setEditingBirthday] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deactivateConfirm, setDeactivateConfirm] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -142,15 +149,8 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
     if (!handle || handle.length < 3) { toast.error(t("account.handle_rules")); return; }
     if (!/^[a-z0-9_]+$/.test(handle)) { toast.error(t("account.handle_rules")); return; }
     if (handle === profile?.username) { setSubSection(null); return; }
-
-    // Check 6-month cooldown
     setSaving(true);
-    const { data: currentProfile } = await supabase
-      .from("profiles")
-      .select("username_changed_at")
-      .eq("id", user!.id)
-      .single();
-
+    const { data: currentProfile } = await supabase.from("profiles").select("username_changed_at").eq("id", user!.id).single();
     if (currentProfile?.username_changed_at) {
       const lastChanged = new Date(currentProfile.username_changed_at);
       const sixMonthsLater = new Date(lastChanged);
@@ -162,7 +162,6 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
         return;
       }
     }
-
     const { data: existing } = await supabase.from("profiles").select("id").eq("username", handle).neq("id", user!.id).maybeSingle();
     if (existing) { setSaving(false); toast.error(t("account.username_taken")); return; }
     const { error } = await supabase.from("profiles").update({ username: handle, username_changed_at: new Date().toISOString() } as any).eq("id", user!.id);
@@ -179,6 +178,83 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
     if (error) { toast.error(error.message); return; }
     toast.success(t("account.birthday_updated"));
     setEditingBirthday(false);
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (newPassword !== confirmPassword) { toast.error("Passwords do not match"); return; }
+    setSaving(true);
+    // Verify current password by re-signing in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user!.email!,
+      password: currentPassword,
+    });
+    if (signInError) { setSaving(false); toast.error("Current password is incorrect"); return; }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Password updated successfully");
+    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    setSubSection(null);
+  };
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const [profileRes, postsRes, likesRes, followsRes, bookmarksRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user!.id).single(),
+        supabase.from("posts").select("id, content, created_at, parent_id").eq("author_id", user!.id).order("created_at", { ascending: false }),
+        supabase.from("likes").select("post_id, created_at").eq("user_id", user!.id),
+        supabase.from("follows").select("following_id, created_at").eq("follower_id", user!.id),
+        supabase.from("bookmarks").select("post_id, created_at").eq("user_id", user!.id),
+      ]);
+      const exportData = {
+        exported_at: new Date().toISOString(),
+        profile: profileRes.data,
+        posts: postsRes.data || [],
+        likes: likesRes.data || [],
+        following: followsRes.data || [],
+        bookmarks: bookmarksRes.data || [],
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `awaj-data-${new Date().toISOString().split("T")[0]}.json`;
+      a.click(); URL.revokeObjectURL(url);
+      toast.success("Data exported successfully");
+    } catch { toast.error("Failed to export data"); }
+    setExporting(false);
+  };
+
+  const handleDeactivate = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("user_suspensions").insert({
+      user_id: user!.id,
+      reason: "Self-deactivated",
+      suspended_by: user!.id,
+      is_active: true,
+    });
+    setSaving(false);
+    if (error) { toast.error("Failed to deactivate"); return; }
+    toast.success("Account deactivated");
+    await signOut();
+    navigate("/auth");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") { toast.error("Please type DELETE to confirm"); return; }
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("delete-account", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (res.error) throw new Error(res.error.message || "Failed to delete account");
+      toast.success("Account deleted successfully");
+      await signOut();
+      navigate("/auth");
+    } catch (err: any) { toast.error(err.message || "Failed to delete account"); }
+    setSaving(false);
   };
 
   if (subSection === "update-email") {
@@ -222,6 +298,95 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
     );
   }
 
+  if (subSection === "password") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack(t("account.password"), () => setSubSection(null))}
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <Label>Current Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input type={showPassword ? "text" : "password"} className="pl-10 pr-10" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>New Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input type={showPassword ? "text" : "password"} className="pl-10" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="At least 6 characters" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Confirm New Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input type={showPassword ? "text" : "password"} className="pl-10" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" />
+            </div>
+          </div>
+          <Button className="w-full rounded-full" disabled={saving || !currentPassword || !newPassword || !confirmPassword} onClick={handleChangePassword}>
+            {saving ? "Updating..." : "Update Password"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (subSection === "deactivate") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack(t("account.deactivate"), () => setSubSection(null))}
+        <div className="p-4 space-y-4">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h3 className="text-sm font-bold text-destructive">Deactivate your account?</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Your account will be temporarily suspended. Your profile and posts will be hidden from other users. You can contact support to reactivate your account later.
+            </p>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox checked={deactivateConfirm} onCheckedChange={(c) => setDeactivateConfirm(!!c)} className="mt-0.5" />
+            <p className="text-sm text-foreground">I understand that my account will be temporarily deactivated</p>
+          </label>
+          <Button variant="destructive" className="w-full rounded-full" disabled={saving || !deactivateConfirm} onClick={handleDeactivate}>
+            {saving ? "Deactivating..." : "Deactivate Account"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (subSection === "delete") {
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack(t("account.delete_account"), () => setSubSection(null))}
+        <div className="p-4 space-y-4">
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h3 className="text-sm font-bold text-destructive">Permanently delete your account?</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This action is irreversible. All your posts, followers, likes, and data will be permanently removed. You will not be able to recover your account.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-destructive">Type "DELETE" to confirm</Label>
+            <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" className="border-destructive/30" />
+          </div>
+          <Button variant="destructive" className="w-full rounded-full" disabled={saving || deleteConfirm !== "DELETE"} onClick={handleDeleteAccount}>
+            {saving ? "Deleting..." : "Permanently Delete Account"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {renderBack(t("settings.account"), () => setSection(null))}
@@ -241,7 +406,7 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
         </div>
 
         <div className="border-b border-border">
-          <SettingsRow icon={Lock} label={t("account.password")} onClick={() => navigate("/reset-password")} />
+          <SettingsRow icon={Lock} label={t("account.password")} onClick={() => { setCurrentPassword(""); setNewPassword(""); setConfirmPassword(""); setSubSection("password"); }} />
           <SettingsRow icon={AtSign} label={t("account.handle")} onClick={() => setSubSection("handle")} />
           <div className="flex items-center justify-between px-4 py-3.5 hover:bg-accent transition-colors">
             <div className="flex items-center gap-3">
@@ -268,21 +433,21 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
         </div>
 
         <div className="border-b border-border">
-          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info(t("account.coming_soon"))}>
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={handleExportData} disabled={exporting}>
             <div className="flex items-center gap-3">
               <Download className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
-              <span className="text-[15px] font-medium text-foreground">{t("account.export_data")}</span>
+              <span className="text-[15px] font-medium text-foreground">{exporting ? "Exporting..." : t("account.export_data")}</span>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
-          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info(t("account.coming_soon"))}>
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => { setDeactivateConfirm(false); setSubSection("deactivate"); }}>
             <div className="flex items-center gap-3">
               <XCircle className="h-5 w-5 text-destructive" strokeWidth={1.75} />
               <span className="text-[15px] font-medium text-destructive">{t("account.deactivate")}</span>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
-          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => toast.info(t("account.coming_soon"))}>
+          <button className="flex w-full items-center justify-between px-4 py-3.5 text-left hover:bg-accent transition-colors" onClick={() => { setDeleteConfirm(""); setSubSection("delete"); }}>
             <div className="flex items-center gap-3">
               <Trash2 className="h-5 w-5 text-destructive" strokeWidth={1.75} />
               <span className="text-[15px] font-medium text-destructive">{t("account.delete_account")}</span>
