@@ -16,6 +16,7 @@ import EmbedPlayer from "@/components/EmbedPlayer";
 import LiveAvatar from "@/components/LiveAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Composer from "@/components/Composer";
+import SharePostDialog from "@/components/SharePostDialog";
 
 interface PostCardProps {
   id: string;
