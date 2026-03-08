@@ -467,12 +467,29 @@ function AccountSection({ renderBack, setSection }: { renderBack: (t: string, on
 // ===========================
 function PrivacySection({ renderBack, setSection }: { renderBack: (t: string, onBack?: () => void) => React.ReactNode; setSection: (s: string | null) => void }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
-  const [loggedOutVisibility, setLoggedOutVisibility] = useState(() => localStorage.getItem("awaj-logged-out-visibility") === "true");
+  const [loggedOutVisibility, setLoggedOutVisibility] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  const toggleLoggedOutVisibility = (v: boolean) => {
+  // Load from DB on mount
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("hide_from_logged_out").eq("id", user.id).single().then(({ data }) => {
+      if (data) {
+        const val = !!(data as any).hide_from_logged_out;
+        setLoggedOutVisibility(val);
+        localStorage.setItem("awaj-logged-out-visibility", String(val));
+      }
+      setLoaded(true);
+    });
+  }, [user]);
+
+  const toggleLoggedOutVisibility = async (v: boolean) => {
     setLoggedOutVisibility(v);
     localStorage.setItem("awaj-logged-out-visibility", String(v));
+    const { error } = await supabase.from("profiles").update({ hide_from_logged_out: v } as any).eq("id", user!.id);
+    if (error) { toast.error("Failed to save setting"); setLoggedOutVisibility(!v); return; }
     toast.success(t("privacy.setting_updated"));
   };
 
@@ -486,14 +503,14 @@ function PrivacySection({ renderBack, setSection }: { renderBack: (t: string, on
               <Shield className="h-5 w-5 text-primary" strokeWidth={1.75} />
               <span className="text-[15px] font-medium text-foreground">{t("privacy.email_2fa")} {user?.email_confirmed_at ? t("privacy.enabled").toLowerCase() : t("privacy.disabled").toLowerCase()}</span>
             </div>
-            <span className="text-sm font-medium text-primary cursor-pointer" onClick={() => toast.info(t("account.coming_soon"))}>
-              {user?.email_confirmed_at ? t("privacy.enabled") : t("privacy.change")}
+            <span className="text-sm font-medium text-primary">
+              {user?.email_confirmed_at ? t("privacy.enabled") : t("privacy.disabled")}
             </span>
           </div>
         </div>
 
         <div className="border-b border-border">
-          <SettingsRow icon={MessageSquare} label={t("privacy.chat_privacy")} onClick={() => { window.location.href = "/messages/settings"; }} />
+          <SettingsRow icon={MessageSquare} label={t("privacy.chat_privacy")} onClick={() => navigate("/messages/settings")} />
         </div>
 
         <div className="border-b border-border px-4 py-4 space-y-3">
@@ -502,7 +519,7 @@ function PrivacySection({ renderBack, setSection }: { renderBack: (t: string, on
             <span className="text-[15px] font-semibold text-foreground">{t("privacy.logged_out")}</span>
           </div>
           <label className="flex items-start gap-3 cursor-pointer">
-            <Checkbox checked={loggedOutVisibility} onCheckedChange={(c) => toggleLoggedOutVisibility(!!c)} className="mt-0.5" />
+            <Checkbox checked={loggedOutVisibility} onCheckedChange={(c) => toggleLoggedOutVisibility(!!c)} className="mt-0.5" disabled={!loaded} />
             <div>
               <p className="text-sm font-medium text-foreground">{t("privacy.discourage")}</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t("privacy.note")}</p>
