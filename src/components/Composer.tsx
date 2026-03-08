@@ -188,7 +188,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
       const { data: post, error } = await supabase.from("posts").insert(insertData).select("id").single();
       if (error || !post) { toast.error(t("composer.failed_post")); return; }
       if (images.length > 0) {
-        const urls = await Promise.all(images.map((img, i) => uploadImage(img.file, post.id, i)));
+        const urls = await Promise.all(images.map((img) => uploadImage(img.file)));
         const imageRows = urls.map((url, i) => ({ post_id: post.id, url, position: i }));
         await supabase.from("post_images").insert(imageRows);
       }
