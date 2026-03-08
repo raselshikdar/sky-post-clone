@@ -30,7 +30,7 @@ export default function DesktopSidebar() {
           const isActive = path === "/" ? pathname === "/" : pathname.startsWith(path === "/profile" ? "/profile" : path);
           return (
             <NavLink key={label} to={profilePath}
-              className={`flex items-center gap-3 rounded-full px-3 py-3 text-lg transition-colors bsky-hover ${isActive ? "font-bold text-foreground" : "text-foreground"}`}>
+              className={`flex items-center gap-3 rounded-full px-3 py-3 text-[20px] transition-colors bsky-hover ${isActive ? "font-bold text-foreground" : "text-foreground"}`}>
               <Icon className="h-6 w-6" strokeWidth={isActive ? 2.25 : 1.75} />
               <span className="hidden xl:inline">{label}</span>
             </NavLink>
