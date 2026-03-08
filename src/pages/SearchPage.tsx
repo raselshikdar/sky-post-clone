@@ -199,7 +199,7 @@ export default function SearchPage() {
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-1.5 border-b border-border">
           <button onClick={() => setDrawerOpen(true)} className="p-1 lg:hidden"><Menu className="h-6 w-6 text-foreground flex-shrink-0" /></button>
-          <h2 className="text-xl font-bold">{t("nav.explore")}</h2>
+          <h2 className="text-lg font-bold">{t("nav.explore")}</h2>
         </div>
         <div className="px-4 py-2.5 border-b border-border">
           <div className="relative">
