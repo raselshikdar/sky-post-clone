@@ -302,7 +302,7 @@ export default function Home() {
 function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`relative py-3 whitespace-nowrap text-[16px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      className={`relative py-3 whitespace-nowrap text-[15px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
       <span className="relative">
         {label}
         {active && <div className="absolute -bottom-[11px] left-0 right-0 h-[3px] rounded-full bg-primary" />}
