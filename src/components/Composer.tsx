@@ -84,7 +84,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     const files = Array.from(e.target.files || []);
     if (images.length + files.length > 4) { toast.error(t("composer.max_images")); return; }
     try {
-      const converted = await Promise.all(files.map((f) => convertToWebP(f)));
+      const converted = await Promise.all(files.map((f) => convertToAvif(f)));
       const newImages = converted.map((file) => ({ file, preview: URL.createObjectURL(file) }));
       setImages((prev) => [...prev, ...newImages]);
     } catch { toast.error(t("composer.failed_image")); }
@@ -154,12 +154,8 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     setConfirmedEmbedUrl(null);
   };
 
-  const uploadImage = async (file: File, postId: string, position: number) => {
-    const path = `${user!.id}/${postId}/${position}.webp`;
-    const { error } = await supabase.storage.from("profiles").upload(path, file, { contentType: "image/webp" });
-    if (error) throw error;
-    const { data } = supabase.storage.from("profiles").getPublicUrl(path);
-    return data.publicUrl;
+  const uploadImage = async (file: File): Promise<string> => {
+    return await uploadToCloudinary(file);
   };
 
   const handlePost = async () => {
