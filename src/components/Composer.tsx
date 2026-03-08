@@ -292,6 +292,41 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                 </div>
               )}
 
+              {/* Embed URL input */}
+              {embedInputOpen && !confirmedEmbedUrl && (
+                <div className="mt-2 rounded-xl border border-border p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Paste a video URL from YouTube, Facebook, Twitch, Vimeo, VDO.Ninja, Kick, Rumble, Dailymotion, or Streamable</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={embedUrl}
+                      onChange={(e) => setEmbedUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddEmbed(); } }}
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="flex-1 rounded-lg border border-border bg-muted px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+                      autoFocus
+                    />
+                    <button onClick={handleAddEmbed} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
+                      Add
+                    </button>
+                    <button onClick={() => { setEmbedInputOpen(false); setEmbedUrl(""); }} className="rounded-lg border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Embed preview */}
+              {confirmedEmbedUrl && (
+                <div className="mt-2 relative">
+                  <EmbedPlayer url={confirmedEmbedUrl} />
+                  <button onClick={removeEmbed}
+                    className="absolute top-2.5 right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
               {quotePost && (
                 <div className="mt-2 rounded-xl border border-border p-3">
                   <div className="flex items-center gap-1.5 text-sm">
