@@ -11,7 +11,7 @@ export default function DesktopSidebar() {
   const { t } = useTranslation();
 
   const navItems = [
-    { label: t("nav.home"), path: "/home", icon: Home },
+    { label: t("nav.home"), path: "/", icon: Home },
     { label: t("nav.search"), path: "/search", icon: Search },
     { label: t("nav.feeds"), path: "/feeds", icon: Compass },
     { label: t("nav.notifications"), path: "/notifications", icon: Bell },
@@ -27,7 +27,7 @@ export default function DesktopSidebar() {
       <nav className="flex w-full flex-1 flex-col gap-1 overflow-y-auto">
         {navItems.map(({ label, path, icon: Icon }) => {
           const profilePath = path === "/profile" ? `/profile/${profile?.username || ""}` : path;
-          const isActive = path === "/home" ? pathname === "/home" : pathname.startsWith(path === "/profile" ? "/profile" : path);
+          const isActive = path === "/" ? pathname === "/" : pathname.startsWith(path === "/profile" ? "/profile" : path);
           return (
             <NavLink key={label} to={profilePath}
               className={`flex items-center gap-3 rounded-full px-3 py-3 text-[15px] transition-colors bsky-hover ${isActive ? "font-bold text-foreground" : "text-foreground"}`}>

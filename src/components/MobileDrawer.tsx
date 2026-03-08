@@ -26,7 +26,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
 
   const drawerNavItems = [
     { label: t("nav.explore"), path: "/search", icon: Search },
-    { label: t("nav.home"), path: "/home", icon: Home },
+    { label: t("nav.home"), path: "/", icon: Home },
     { label: t("nav.chat"), path: "/messages", icon: MessageCircle },
     { label: t("nav.notifications"), path: "/notifications", icon: Bell },
     { label: t("nav.feeds"), path: "/feeds", icon: Hash },

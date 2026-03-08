@@ -80,8 +80,11 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<RootRoute />}>
-                <Route index element={<Home />} />
+              <Route path="/explore" element={<ExploreRoute />} />
+              <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="/" element={<Home />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/feeds" element={<Feeds />} />
                 <Route path="/feeds/settings" element={<FeedSettings />} />

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
 const mobileNavItems = [
-  { label: "Home", path: "/home", icon: Home },
+  { label: "Home", path: "/", icon: Home },
   { label: "Search", path: "/search", icon: Search },
   { label: "Chat", path: "/messages", icon: MessageCircle },
   { label: "Notifications", path: "/notifications", icon: Bell },
