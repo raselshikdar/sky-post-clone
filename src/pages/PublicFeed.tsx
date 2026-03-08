@@ -8,6 +8,7 @@ import PostCardSkeleton from "@/components/PostCardSkeleton";
 import AwajLogo from "@/components/AwajLogo";
 import MobileTopBarPublic from "@/components/MobileTopBarPublic";
 import PublicDrawer from "@/components/PublicDrawer";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 type FeedTab = "discover" | "feeds";
 
@@ -16,6 +17,7 @@ export default function PublicFeed() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const headerHidden = useScrollDirection();
 
   useEffect(() => {
     const handleScroll = () => setShowBackToTop(window.scrollY > 600);
@@ -106,15 +108,15 @@ export default function PublicFeed() {
       <PublicDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       <div className="flex w-full max-w-feed flex-col border-x border-border min-h-screen">
         {/* Mobile top bar */}
-        <MobileTopBarPublic onMenuClick={() => setDrawerOpen(true)} />
+        <MobileTopBarPublic onMenuClick={() => setDrawerOpen(true)} hidden={headerHidden} />
 
         {/* Desktop header - logo centered */}
-        <div className="hidden lg:flex items-center justify-center border-b border-border py-3">
+        <div className={`hidden lg:flex items-center justify-center border-b border-border py-3 sticky top-0 z-30 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-full" : "translate-y-0"}`}>
           <AwajLogo className="h-8 w-8" />
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <div className={`sticky top-[49px] lg:top-[49px] z-20 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-[calc(100%+49px)] lg:-translate-y-[calc(100%+49px)]" : "translate-y-0"}`}>
           <div className="flex w-full items-center justify-between border-b border-border px-14">
             <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
             <TabButton label="Feeds ✨" active={tab === "feeds"} onClick={() => setTab("feeds")} />
