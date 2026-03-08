@@ -91,60 +91,71 @@ export default function ConversationOptions({
   const toggleMute = useMutation({
     mutationFn: async () => {
       if (isMuted) {
-        await supabase.from("muted_conversations").delete()
+        const { error } = await supabase.from("muted_conversations").delete()
           .eq("user_id", user!.id).eq("conversation_id", conversationId);
+        if (error) throw error;
       } else {
-        await supabase.from("muted_conversations").insert({
+        const { error } = await supabase.from("muted_conversations").insert({
           user_id: user!.id, conversation_id: conversationId
         } as any);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["muted_conversation", conversationId] });
       toast.success(isMuted ? "Chat unmuted" : "Chat muted");
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update mute setting"),
   });
 
   const toggleBlock = useMutation({
     mutationFn: async () => {
       if (isBlocked) {
-        await supabase.from("blocked_accounts").delete()
+        const { error } = await supabase.from("blocked_accounts").delete()
           .eq("user_id", user!.id).eq("blocked_user_id", otherUserId);
+        if (error) throw error;
       } else {
-        await supabase.from("blocked_accounts").insert({
+        const { error } = await supabase.from("blocked_accounts").insert({
           user_id: user!.id, blocked_user_id: otherUserId
         });
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["blocked_account", otherUserId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
       toast.success(isBlocked ? `@${otherUsername} unblocked` : `@${otherUsername} blocked`);
       if (!isBlocked) { onOpenChange(false); navigate("/messages"); }
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update block setting"),
   });
 
   const toggleRestrict = useMutation({
     mutationFn: async () => {
       if (isRestricted) {
-        await supabase.from("restricted_accounts").delete()
+        const { error } = await supabase.from("restricted_accounts").delete()
           .eq("user_id", user!.id).eq("restricted_user_id", otherUserId);
+        if (error) throw error;
       } else {
-        await supabase.from("restricted_accounts").insert({
+        const { error } = await supabase.from("restricted_accounts").insert({
           user_id: user!.id, restricted_user_id: otherUserId
         } as any);
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restricted_account", otherUserId] });
       toast.success(isRestricted ? "Restriction removed" : `@${otherUsername} restricted`);
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update restriction"),
   });
 
   const deleteConversation = useMutation({
     mutationFn: async () => {
-      await supabase.from("conversation_deletions").insert({
+      const { error } = await supabase.from("conversation_deletions").insert({
         user_id: user!.id, conversation_id: conversationId
       } as any);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -152,44 +163,52 @@ export default function ConversationOptions({
       onOpenChange(false);
       navigate("/messages");
     },
+    onError: (err: any) => toast.error(err.message || "Failed to delete conversation"),
   });
 
   const reportUser = useMutation({
     mutationFn: async () => {
-      await supabase.from("account_reports").insert({
+      const { error } = await supabase.from("account_reports").insert({
         reporter_id: user!.id, reported_user_id: otherUserId, reason: "inappropriate_messages"
       });
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Report submitted");
       setConfirmAction(null);
     },
+    onError: (err: any) => toast.error(err.message || "Failed to submit report"),
   });
 
   const setDisappearing = useMutation({
     mutationFn: async (seconds: number | null) => {
-      await supabase.from("conversations").update({
+      const { error } = await supabase.from("conversations").update({
         disappear_after: seconds
       } as any).eq("id", conversationId);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversation_settings", conversationId] });
+      queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
       toast.success(disappearTime ? "Disappearing messages enabled" : "Disappearing messages disabled");
       setConfirmAction(null);
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update disappearing messages"),
   });
 
   const toggleEncryption = useMutation({
     mutationFn: async () => {
-      await supabase.from("conversations").update({
+      const { error } = await supabase.from("conversations").update({
         is_encrypted: !(conversation?.is_encrypted)
       } as any).eq("id", conversationId);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversation_settings", conversationId] });
       queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
       toast.success(conversation?.is_encrypted ? "Encryption disabled" : "End-to-end encryption enabled");
     },
+    onError: (err: any) => toast.error(err.message || "Failed to update encryption setting"),
   });
 
   const disappearOptions = [
