@@ -4,15 +4,17 @@ import { useState } from "react";
 import MobileDrawer from "@/components/MobileDrawer";
 import { useNavigate } from "react-router-dom";
 import AwajLogo from "@/components/AwajLogo";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 export default function MobileTopBar() {
   const { profile } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const headerHidden = useScrollDirection();
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-sm lg:hidden">
+      <header className={`sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur-sm lg:hidden transition-transform duration-300 ${headerHidden ? "-translate-y-full" : "translate-y-0"}`}>
         <button onClick={() => setDrawerOpen(true)} className="p-1">
           <Menu className="h-6 w-6 text-foreground" strokeWidth={2} />
         </button>
