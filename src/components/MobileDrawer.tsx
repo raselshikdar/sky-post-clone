@@ -129,7 +129,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
         </nav>
 
         <div className="border-t border-border" />
-        <div className="flex items-center gap-1.5 px-5 py-2.5">
+        <div className="flex items-center gap-1.5 px-5 py-1.5">
           <NavLink to="/support" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-accent">
             <MessageCircle className="h-3 w-3" /> {t("drawer.feedback")}
           </NavLink>
