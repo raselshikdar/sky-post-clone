@@ -54,6 +54,9 @@ jobs:
           npx bubblewrap init --manifest="https://sky-post-clone.lovable.app/manifest.json" --directory=. 2>/dev/null || \
           npx bubblewrap init --manifest twa-manifest.json --directory=. 2>/dev/null || true
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew || true
+
       - name: Build TWA (APK + AAB)
         run: |
           yes | npx bubblewrap build --skipPwaValidation \
