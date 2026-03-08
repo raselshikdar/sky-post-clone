@@ -118,7 +118,7 @@ export default function PublicFeed() {
         </div>
 
         {/* Tabs */}
-        <div className={`sticky top-[49px] lg:top-[49px] z-20 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-[calc(100%+49px)] lg:-translate-y-[calc(100%+49px)]" : "translate-y-0"}`}>
+        <div className={`sticky top-[41px] lg:top-[41px] z-20 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-[calc(100%+41px)] lg:-translate-y-[calc(100%+41px)]" : "translate-y-0"}`}>
           <div className="flex w-full items-center justify-between border-b border-border px-14">
             <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
             <TabButton label="Feeds ✨" active={tab === "feeds"} onClick={() => setTab("feeds")} />
