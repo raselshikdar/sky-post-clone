@@ -203,4 +203,11 @@
     height: 100dvh;
     height: -webkit-fill-available;
   }
+
+  /* Ensure all sticky page headers match MobileTopBar height (44px) */
+  .sticky.top-0.border-b {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
 }
