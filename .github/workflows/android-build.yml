@@ -8,7 +8,10 @@ on:
       - '.github/workflows/android-build.yml'
 
 env:
-  MANIFEST_URL: "https://sky-post-clone.lovable.app/manifest.json"
+  # লোকাল ম্যানিফেস্ট ফাইল (প্রাথমিক)
+  LOCAL_MANIFEST: "twa-manifest.json"
+  # রিমোট ম্যানিফেস্ট URL (যদি লোকাল না থাকে তবেই ব্যবহার হবে)
+  REMOTE_MANIFEST_URL: "https://sky-post-clone.lovable.app/manifest.json"
   TWA_DIR: "android-twa"
 
 jobs:
@@ -79,15 +82,31 @@ jobs:
       - name: Install expect
         run: sudo apt-get update && sudo apt-get install -y expect
 
-      # ---------- INITIALIZE TWA PROJECT USING EXPECT ----------
+      # ---------- DETERMINE MANIFEST SOURCE (LOCAL FIRST) ----------
+      - name: Determine manifest source
+        id: manifest
+        run: |
+          if [ -f "${{ env.LOCAL_MANIFEST }}" ]; then
+            echo "✅ Using local manifest: ${{ env.LOCAL_MANIFEST }}"
+            echo "source=${{ env.LOCAL_MANIFEST }}" >> $GITHUB_OUTPUT
+          elif curl --output /dev/null --silent --head --fail "${{ env.REMOTE_MANIFEST_URL }}"; then
+            echo "⚠️ Local manifest not found, but remote manifest is accessible."
+            echo "source=${{ env.REMOTE_MANIFEST_URL }}" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Neither local manifest nor remote manifest available."
+            exit 1
+          fi
+
+      # ---------- INITIALIZE TWA PROJECT (WITH EXPECT) ----------
       - name: Initialize TWA project from manifest
         run: |
           expect << EOF
           set timeout 30
-          spawn bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --skipPwaValidation --directory=.
+          spawn bubblewrap init --manifest="${{ steps.manifest.outputs.source }}" --skipPwaValidation --directory=.
           expect {
             "*install the JDK*" { send "n\r"; exp_continue }
             "*Path to your existing JDK*" { send "$JAVA_HOME\r"; exp_continue }
+            "*Path to your existing Android SDK*" { send "$ANDROID_HOME\r"; exp_continue }
             eof
           }
           EOF
