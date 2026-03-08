@@ -34,6 +34,9 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("Posts");
   const [editOpen, setEditOpen] = useState(false);
   const [followListType, setFollowListType] = useState<"followers" | "following" | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [listsOpen, setListsOpen] = useState(false);
+  const [liveOpen, setLiveOpen] = useState(false);
 
   const { data: profile } = useQuery({
     queryKey: ["profile", username],
