@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, BellOff, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
@@ -126,6 +126,34 @@ export default function Profile() {
   const [liveViewerOpen, setLiveViewerOpen] = useState(false);
 
   const queryClient = useQueryClient();
+
+  // Profile subscription (bell icon)
+  const { data: isSubscribed } = useQuery({
+    queryKey: ["profileSubscription", profile?.id],
+    queryFn: async () => {
+      if (!user || !profile) return false;
+      const { data } = await supabase
+        .from("profile_subscriptions")
+        .select("id")
+        .eq("subscriber_id", user.id)
+        .eq("subscribed_to_id", profile.id)
+        .maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!profile?.id && !isOwnProfile,
+  });
+
+  const handleToggleSubscription = async () => {
+    if (!user || !profile) return;
+    if (isSubscribed) {
+      await supabase.from("profile_subscriptions").delete().eq("subscriber_id", user.id).eq("subscribed_to_id", profile.id);
+      toast.success("Notifications turned off");
+    } else {
+      await supabase.from("profile_subscriptions").insert({ subscriber_id: user.id, subscribed_to_id: profile.id });
+      toast.success("You'll be notified about new posts");
+    }
+    queryClient.invalidateQueries({ queryKey: ["profileSubscription", profile.id] });
+  };
 
   const handleFollow = async () => {
     if (!user || !profile) return;
