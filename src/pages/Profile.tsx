@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban, X, Globe, Info } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
@@ -109,6 +109,19 @@ export default function Profile() {
     },
     enabled: !!user && !!profile?.id && !isOwnProfile,
   });
+
+  // Live status for this profile
+  const { data: profileLiveStatus } = useQuery({
+    queryKey: ["liveStatus", profile?.id],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data } = await supabase.from("live_status").select("*").eq("user_id", profile.id).eq("is_live", true).maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.id,
+    refetchInterval: 30000, // poll every 30s
+  });
+  const [liveViewerOpen, setLiveViewerOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -224,12 +237,17 @@ export default function Profile() {
       {/* Profile info */}
       <div className="relative px-4 pb-3">
         <div className="flex items-start justify-between">
-          <Avatar className="-mt-12 h-20 w-20 border-[3px] border-background lg:h-24 lg:w-24 lg:-mt-14">
-            <AvatarImage src={profile.avatar_url || ""} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-              {profile.display_name?.[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="-mt-12 h-20 w-20 border-[3px] border-background lg:h-24 lg:w-24 lg:-mt-14 cursor-pointer" onClick={() => profileLiveStatus ? setLiveViewerOpen(true) : undefined}>
+              <AvatarImage src={profile.avatar_url || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                {profile.display_name?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {profileLiveStatus && (
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded cursor-pointer animate-pulse" onClick={() => setLiveViewerOpen(true)}>LIVE</span>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 mt-2">
             {isOwnProfile ? (
@@ -301,6 +319,28 @@ export default function Profile() {
         )}
       </div>
 
+      {/* Live Stream Banner */}
+      {profileLiveStatus && (
+        <button
+          onClick={() => setLiveViewerOpen(true)}
+          className="mx-4 mb-3 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 text-left transition-colors hover:bg-destructive/10"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive text-destructive-foreground">
+            <Tv className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground animate-pulse">● LIVE</span>
+              <p className="text-sm font-semibold text-foreground truncate">
+                {detectPlatform(profileLiveStatus.live_link)?.name || "Live Stream"}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{profileLiveStatus.live_link}</p>
+          </div>
+          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        </button>
+      )}
+
       {/* Tabs */}
       <div className="border-b border-border">
         <ScrollArea className="w-full">
@@ -353,6 +393,11 @@ export default function Profile() {
       {/* Go Live Dialog */}
       {isOwnProfile && (
         <GoLiveDialog open={liveOpen} onOpenChange={setLiveOpen} profile={profile} />
+      )}
+
+      {/* Live Stream Viewer Dialog */}
+      {profileLiveStatus && (
+        <LiveViewerDialog open={liveViewerOpen} onOpenChange={setLiveViewerOpen} liveStatus={profileLiveStatus} profile={profile} />
       )}
     </div>
   );
@@ -722,6 +767,116 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
     </Dialog>
   );
 }
+
+/* ---- Live Stream Viewer Dialog ---- */
+function getEmbedUrl(link: string): string | null {
+  try {
+    const url = new URL(link.startsWith("http") ? link : `https://${link}`);
+    const host = url.hostname.replace("www.", "");
+    // YouTube
+    if (host === "youtube.com" || host === "youtu.be") {
+      const videoId = host === "youtu.be" ? url.pathname.slice(1) : url.searchParams.get("v") || url.pathname.split("/").pop();
+      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    // Twitch
+    if (host === "twitch.tv") {
+      const channel = url.pathname.split("/").filter(Boolean)[0];
+      if (channel) return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`;
+    }
+    // Facebook
+    if (host === "facebook.com" || host === "fb.watch") {
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(link)}&autoplay=true`;
+    }
+    // Kick
+    if (host === "kick.com") {
+      const channel = url.pathname.split("/").filter(Boolean)[0];
+      if (channel) return `https://player.kick.com/${channel}`;
+    }
+    // VDO.Ninja
+    if (host === "vdo.ninja") {
+      return link.startsWith("http") ? link : `https://${link}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function LiveViewerDialog({ open, onOpenChange, liveStatus, profile }: {
+  open: boolean; onOpenChange: (v: boolean) => void; liveStatus: any; profile: any;
+}) {
+  const link = liveStatus?.live_link || "";
+  const platform = detectPlatform(link);
+  const embedUrl = getEmbedUrl(link);
+  const fullLink = link.startsWith("http") ? link : `https://${link}`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile.avatar_url || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">{profile.display_name?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-bold leading-tight">{profile.display_name}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive animate-pulse">● LIVE</span>
+                {platform && (
+                  <>
+                    <span className="text-muted-foreground text-[10px]">on</span>
+                    <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+                      <span className={`h-2 w-2 rounded-full ${platform.color}`} />
+                      {platform.name}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => onOpenChange(false)} className="p-1 rounded-full hover:bg-accent">
+            <X className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Embed or fallback */}
+        {embedUrl ? (
+          <div className="aspect-video w-full bg-black">
+            <iframe
+              src={embedUrl}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title={`${profile.display_name}'s live stream`}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <Tv className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground mb-1">{profile.display_name} is live!</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              This stream can't be embedded directly. Click the button below to watch on {platform?.name || "the streaming platform"}.
+            </p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+          <p className="text-xs text-muted-foreground truncate flex-1 mr-3">{link}</p>
+          <Button size="sm" className="rounded-full gap-1.5" onClick={() => window.open(fullLink, "_blank", "noopener,noreferrer")}>
+            <ExternalLink className="h-3.5 w-3.5" />
+            Watch on {platform?.name || "site"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, onAddToLists, onGoLive, profileId }: {
   isOwner: boolean; onCopyLink: () => void; onSearchPosts: () => void; onAddToLists: () => void; onGoLive?: () => void; profileId?: string;
 }) {
