@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Image as ImageIcon, Globe, ChevronDown, Video, Loader2, Link2 } from "lucide-react";
-import { convertToWebP } from "@/lib/imageUtils";
+import { convertToAvif } from "@/lib/imageUtils";
 import { processVideo, uploadVideo } from "@/lib/videoUtils";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
