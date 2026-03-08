@@ -47,6 +47,9 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
+      - name: Install expect
+        run: sudo apt-get update && sudo apt-get install -y expect
+
       # ---------- টেম্পোরারি সাইনিং কী ----------
       - name: Generate temporary keystore
         run: |
@@ -61,25 +64,37 @@ jobs:
             -keysize 2048
           echo "✅ Temporary keystore created."
 
-      # ---------- শুধু বিল্ড ফাইল মুছি ----------
-      - name: Clean previous build files
+      # ---------- প্রজেক্ট ফাইল আছে কিনা চেক ----------
+      - name: Check if Android project exists
+        id: check_project
         run: |
-          rm -rf ./app/build ./build ./.gradle ./gradle ./local.properties 2>/dev/null || true
-          echo "🧹 Old build files removed."
+          if [ -f "app/build.gradle" ]; then
+            echo "project_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "project_exists=false" >> $GITHUB_OUTPUT
+          fi
 
-      # ---------- ম্যানিফেস্ট URL চেক ----------
-      - name: Check manifest URL
+      # ---------- প্রজেক্ট না থাকলে init চালাও (expect দিয়ে) ----------
+      - name: Initialize TWA project (if needed)
+        if: steps.check_project.outputs.project_exists == 'false'
         run: |
-          curl -fI "${{ env.MANIFEST_URL }}" || (echo "❌ Manifest URL is not accessible" && exit 1)
-
-      # ---------- TWA প্রজেক্ট ইনিশিয়ালাইজ (একবারে তিনটি উত্তর) ----------
-      - name: Initialize TWA project from manifest
-        run: |
-          printf "n\n$JAVA_HOME\n$ANDROID_HOME\n" | bubblewrap init \
-            --manifest="${{ env.MANIFEST_URL }}" \
-            --skipPwaValidation \
-            --directory="."
+          expect -c "
+            set timeout 30
+            spawn bubblewrap init --manifest=\"$MANIFEST_URL\" --skipPwaValidation --directory=.
+            expect {
+              \"*install the JDK*\" { send \"n\r\"; exp_continue }
+              \"*Path to your existing JDK*\" { send \"$env(JAVA_HOME)\r\"; exp_continue }
+              \"*Path to your existing Android SDK*\" { send \"$env(ANDROID_HOME)\r\"; exp_continue }
+              eof
+            }
+          "
           echo "✅ TWA project initialized."
+
+      # ---------- বিল্ড ফাইল পরিষ্কার (শুধু বিল্ড ডিরেক্টরি) ----------
+      - name: Clean build files
+        run: |
+          rm -rf ./app/build ./app/.gradle ./build ./.gradle ./local.properties 2>/dev/null || true
+          echo "🧹 Old build files removed."
 
       # ---------- বিল্ড (APK + AAB) ----------
       - name: Build TWA (APK + AAB)
