@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
@@ -732,12 +732,39 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
           </div>
         </div>
 
+        {/* Stream type selector */}
         <div className="px-5 pb-3">
-          <label className="text-sm font-medium text-foreground">Live stream link</label>
+          <label className="text-sm font-medium text-foreground mb-2 block">Stream type</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStreamType("video")}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                streamType === "video" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-muted-foreground"
+              }`}
+            >
+              <Tv className="h-4 w-4" />
+              Video
+            </button>
+            <button
+              onClick={() => setStreamType("audio")}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                streamType === "audio" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-muted-foreground"
+              }`}
+            >
+              <Headphones className="h-4 w-4" />
+              Audio / Podcast
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pb-3">
+          <label className="text-sm font-medium text-foreground">
+            {streamType === "audio" ? "Audio / Podcast link" : "Live stream link"}
+          </label>
           <Input
             value={liveLink}
             onChange={(e) => setLiveLink(e.target.value)}
-            placeholder="https://youtube.com/live/... or any streaming URL"
+            placeholder={streamType === "audio" ? "https://open.spotify.com/... or podcast URL" : "https://youtube.com/live/... or any streaming URL"}
             className="mt-1.5"
           />
           {detectedPlatform && liveLink.trim() && (
@@ -747,14 +774,16 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
             </div>
           )}
           {liveLink.trim() && !detectedPlatform && (
-            <p className="text-xs text-muted-foreground mt-2">Custom streaming link — viewers will be redirected to this URL.</p>
+            <p className="text-xs text-muted-foreground mt-2">Custom {streamType === "audio" ? "audio" : "streaming"} link — viewers will be redirected to this URL.</p>
           )}
         </div>
 
         <div className="px-5 pb-3">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Supported platforms</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            {streamType === "audio" ? "Audio platforms" : "Video platforms"}
+          </p>
           <div className="flex flex-wrap gap-1.5">
-            {SUPPORTED_PLATFORMS.map(p => (
+            {SUPPORTED_PLATFORMS.filter(p => p.type === streamType).map(p => (
               <span key={p.name} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                 <span className={`h-2 w-2 rounded-full ${p.color}`} />
                 {p.name}
@@ -767,7 +796,11 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
         <div className="px-5 pb-3">
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
             <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">You can use any live streaming service — just paste the viewer link. Your followers will see a LIVE badge on your avatar.</p>
+            <p className="text-xs text-muted-foreground">
+              {streamType === "audio"
+                ? "Share your podcast or audio stream link. Listeners will see an audio visualizer with your profile and can tune in directly."
+                : "Paste any live streaming link. Your followers will see a LIVE badge on your avatar."}
+            </p>
           </div>
         </div>
 
