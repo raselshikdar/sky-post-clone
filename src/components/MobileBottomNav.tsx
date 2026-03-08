@@ -80,8 +80,8 @@ export default function MobileBottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-background py-2 lg:hidden">
       {mobileNavItems.map(({ label, path, icon: Icon }) => {
-        const isActive = path === "/"
-          ? pathname === "/"
+        const isActive = path === "/home"
+          ? pathname === "/home"
           : pathname.startsWith(path);
         const badge = getBadge(label);
 
@@ -97,7 +97,7 @@ export default function MobileBottomNav() {
               <Icon
                 className="h-6 w-6"
                 strokeWidth={isActive ? 2.25 : 1.75}
-                fill={isActive && path === "/" ? "currentColor" : "none"}
+                fill={isActive && path === "/home" ? "currentColor" : "none"}
               />
               {badge > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
