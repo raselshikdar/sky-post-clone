@@ -54,52 +54,102 @@
     --bsky-hover: 210 20% 97%;
   }
 
+  /* Dim: softer dark-blue background (like Twitter's Dim) */
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 220 30% 14%;
+    --foreground: 210 40% 96%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 30% 16%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 30% 16%;
+    --popover-foreground: 210 40% 96%;
 
     --primary: 209 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 25% 22%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 25% 22%;
+    --muted-foreground: 215 20% 62%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 25% 22%;
+    --accent-foreground: 210 40% 96%;
 
     --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 210 40% 96%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 220 25% 22%;
+    --input: 220 25% 22%;
     --ring: 209 100% 50%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-background: 220 30% 14%;
+    --sidebar-foreground: 210 40% 96%;
     --sidebar-primary: 209 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-accent: 220 25% 22%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 220 25% 22%;
     --sidebar-ring: 209 100% 50%;
 
     --bsky-blue: 209 100% 50%;
     --bsky-like: 350 80% 55%;
     --bsky-repost: 152 69% 40%;
-    --bsky-text-primary: 210 40% 98%;
-    --bsky-text-secondary: 215 20% 65%;
+    --bsky-text-primary: 210 40% 96%;
+    --bsky-text-secondary: 215 20% 62%;
     --bsky-text-link: 209 100% 60%;
-    --bsky-divider: 217 33% 17%;
-    --bsky-hover: 217 33% 14%;
+    --bsky-divider: 220 25% 22%;
+    --bsky-hover: 220 25% 19%;
+  }
+
+  /* Dark: true AMOLED black */
+  .dark[data-dark-theme="dark"] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 209 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 209 100% 50%;
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 209 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 209 100% 50%;
+
+    --bsky-blue: 209 100% 50%;
+    --bsky-like: 350 80% 55%;
+    --bsky-repost: 152 69% 40%;
+    --bsky-text-primary: 0 0% 95%;
+    --bsky-text-secondary: 0 0% 60%;
+    --bsky-text-link: 209 100% 60%;
+    --bsky-divider: 0 0% 15%;
+    --bsky-hover: 0 0% 8%;
   }
 }
 
