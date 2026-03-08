@@ -237,7 +237,7 @@ export default function Profile() {
                 <Button variant="outline" className="rounded-full font-semibold text-sm h-9 px-4" onClick={() => setEditOpen(true)}>
                   Edit Profile
                 </Button>
-                <ProfileMoreMenu isOwner onCopyLink={handleCopyLink} onSearchPosts={() => navigate("/search")} />
+                <ProfileMoreMenu isOwner onCopyLink={handleCopyLink} onSearchPosts={() => setSearchOpen(true)} onAddToLists={() => setListsOpen(true)} onGoLive={() => setLiveOpen(true)} />
               </>
             ) : user ? (
               <>
@@ -247,7 +247,7 @@ export default function Profile() {
                 <Button variant={isFollowing ? "outline" : "default"} className="rounded-full font-semibold text-sm h-9 px-5" onClick={handleFollow}>
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <ProfileMoreMenu isOwner={false} onCopyLink={handleCopyLink} onSearchPosts={() => navigate("/search")} profileId={profile.id} />
+                <ProfileMoreMenu isOwner={false} onCopyLink={handleCopyLink} onSearchPosts={() => setSearchOpen(true)} onAddToLists={() => setListsOpen(true)} profileId={profile.id} />
               </>
             ) : null}
           </div>
