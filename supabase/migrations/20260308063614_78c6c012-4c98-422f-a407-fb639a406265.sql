@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN hide_from_logged_out boolean NOT NULL DEFAULT false;

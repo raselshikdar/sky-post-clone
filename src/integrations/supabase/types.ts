@@ -867,6 +867,7 @@ export type Database = {
           birthday: string | null
           created_at: string
           display_name: string
+          hide_from_logged_out: boolean
           id: string
           updated_at: string
           username: string
@@ -879,6 +880,7 @@ export type Database = {
           birthday?: string | null
           created_at?: string
           display_name?: string
+          hide_from_logged_out?: boolean
           id: string
           updated_at?: string
           username: string
@@ -891,6 +893,7 @@ export type Database = {
           birthday?: string | null
           created_at?: string
           display_name?: string
+          hide_from_logged_out?: boolean
           id?: string
           updated_at?: string
           username?: string
