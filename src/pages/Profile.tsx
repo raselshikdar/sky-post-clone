@@ -571,6 +571,24 @@ function ProfileListsDialog({ open, onOpenChange, targetUserId, targetDisplayNam
 }
 
 /* ---- Go Live Dialog ---- */
+const SUPPORTED_PLATFORMS = [
+  { name: "YouTube", domain: ["youtube.com", "youtu.be"], color: "bg-red-600" },
+  { name: "Facebook", domain: ["facebook.com", "fb.watch"], color: "bg-blue-600" },
+  { name: "Twitch", domain: ["twitch.tv"], color: "bg-purple-600" },
+  { name: "VDO.Ninja", domain: ["vdo.ninja"], color: "bg-emerald-600" },
+  { name: "Kick", domain: ["kick.com"], color: "bg-green-500" },
+  { name: "Instagram", domain: ["instagram.com"], color: "bg-pink-600" },
+  { name: "TikTok", domain: ["tiktok.com"], color: "bg-foreground" },
+  { name: "Rumble", domain: ["rumble.com"], color: "bg-green-700" },
+  { name: "Streamyard", domain: ["streamyard.com"], color: "bg-blue-500" },
+  { name: "Restream", domain: ["restream.io"], color: "bg-indigo-600" },
+];
+
+function detectPlatform(url: string) {
+  const lower = url.toLowerCase();
+  return SUPPORTED_PLATFORMS.find(p => p.domain.some(d => lower.includes(d)));
+}
+
 function GoLiveDialog({ open, onOpenChange, profile }: {
   open: boolean; onOpenChange: (v: boolean) => void; profile: any;
 }) {
@@ -589,6 +607,8 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
   });
 
   const queryClient = useQueryClient();
+
+  const detectedPlatform = detectPlatform(liveLink);
 
   const handleGoLive = async () => {
     if (!user || !liveLink.trim()) return;
@@ -627,7 +647,7 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
 
         <div className="px-5 pb-2">
           <p className="text-sm text-muted-foreground">
-            Add a temporary live status to your profile. When someone clicks on your avatar, they'll see information about your live event.
+            Paste a link from any live streaming platform. When someone visits your profile, they'll see your live status and can join your stream.
           </p>
         </div>
 
@@ -649,19 +669,41 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
         </div>
 
         <div className="px-5 pb-3">
-          <label className="text-sm font-medium text-foreground">Live link</label>
+          <label className="text-sm font-medium text-foreground">Live stream link</label>
           <Input
             value={liveLink}
             onChange={(e) => setLiveLink(e.target.value)}
-            placeholder="www.mylivestream.tv"
+            placeholder="https://youtube.com/live/... or any streaming URL"
             className="mt-1.5"
           />
+          {detectedPlatform && liveLink.trim() && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${detectedPlatform.color}`} />
+              <span className="text-xs text-muted-foreground">Detected: <span className="font-medium text-foreground">{detectedPlatform.name}</span></span>
+            </div>
+          )}
+          {liveLink.trim() && !detectedPlatform && (
+            <p className="text-xs text-muted-foreground mt-2">Custom streaming link — viewers will be redirected to this URL.</p>
+          )}
+        </div>
+
+        <div className="px-5 pb-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">Supported platforms</p>
+          <div className="flex flex-wrap gap-1.5">
+            {SUPPORTED_PLATFORMS.map(p => (
+              <span key={p.name} className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                <span className={`h-2 w-2 rounded-full ${p.color}`} />
+                {p.name}
+              </span>
+            ))}
+            <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">+ any URL</span>
+          </div>
         </div>
 
         <div className="px-5 pb-3">
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
             <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">The following services are enabled for your account: Twitch, Streamplace, Bluecast</p>
+            <p className="text-xs text-muted-foreground">You can use any live streaming service — just paste the viewer link. Your followers will see a LIVE badge on your avatar.</p>
           </div>
         </div>
 
