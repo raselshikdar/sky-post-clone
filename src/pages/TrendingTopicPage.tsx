@@ -12,6 +12,7 @@ export default function TrendingTopicPage() {
   const { topic } = useParams<{ topic: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["trending_topic_posts", topic],
@@ -95,10 +96,13 @@ export default function TrendingTopicPage() {
         <button onClick={() => navigate(-1)} className="rounded-full p-1.5 transition-colors hover:bg-accent">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <TrendingUp className="h-5 w-5 text-primary flex-shrink-0" />
           <h2 className="text-lg font-bold truncate">{topic}</h2>
         </div>
+        <button onClick={() => setInfoOpen(true)} className="rounded-full p-1.5 transition-colors hover:bg-accent">
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
       </div>
 
       {isLoading ? (
