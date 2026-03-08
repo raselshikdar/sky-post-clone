@@ -13,6 +13,8 @@ import { useRef, useState, useEffect } from "react";
 import FollowListDialog from "@/components/FollowListDialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useLiveViewerCount, useLiveViewerPresence } from "@/hooks/use-live-viewers";
+import LiveViewerCount from "@/components/LiveViewerCount";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -862,6 +864,8 @@ function LiveViewerDialog({ open, onOpenChange, liveStatus, profile }: {
   const platform = detectPlatform(link);
   const embedUrl = getEmbedUrl(link);
   const fullLink = link.startsWith("http") ? link : `https://${link}`;
+  const { data: viewerCount = 0 } = useLiveViewerCount(liveStatus?.id);
+  useLiveViewerPresence(liveStatus?.id, open);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
