@@ -290,7 +290,7 @@ export default function Home() {
 
       {showBackToTop && (
         <button onClick={scrollToTop}
-          className="fixed bottom-20 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-105 active:scale-95 lg:bottom-6 lg:left-[calc(50%-340px)]"
+          className="fixed bottom-20 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-background/60 backdrop-blur-md text-primary border border-border shadow-lg transition-all hover:scale-105 active:scale-95 lg:bottom-6 lg:left-[calc(50%-340px)]"
           aria-label="Back to top">
           <ArrowUp className="h-5 w-5" />
         </button>
