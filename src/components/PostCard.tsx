@@ -24,6 +24,7 @@ interface PostCardProps {
   content: string;
   createdAt: string;
   images?: string[];
+  videoUrl?: string | null;
   likeCount: number;
   replyCount: number;
   repostCount: number;
