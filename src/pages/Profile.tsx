@@ -153,7 +153,7 @@ export default function Profile() {
       if (!profile) return [];
       let query = supabase
         .from("posts")
-        .select(`id, content, created_at, parent_id, author_id, video_url, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
+        .select(`id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
         .eq("author_id", profile.id)
         .order("created_at", { ascending: false })
         .limit(50);
