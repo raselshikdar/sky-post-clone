@@ -127,7 +127,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
 
         <div className="border-t border-border" />
         <div className="flex items-center gap-1.5 px-5 py-1.5">
-          <NavLink to="/support" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-sm text-foreground hover:bg-accent">
+          <NavLink to="/feedback" onClick={() => onOpenChange(false)} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-sm text-foreground hover:bg-accent">
             <MessageCircle className="h-3.5 w-3.5" /> {t("drawer.feedback")}
           </NavLink>
           <NavLink to="/support" onClick={() => onOpenChange(false)} className="rounded-full border border-border px-2.5 py-1 text-sm text-foreground hover:bg-accent">
