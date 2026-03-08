@@ -210,7 +210,7 @@ export default function PostCard({
           )}
 
           <div className="mt-2 flex items-center justify-between -ml-1.5">
-            <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
+            <ActionButton icon={MessageSquare} count={replyCount} onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
             
             {/* Repost dropdown with quote option */}
             <DropdownMenu>
