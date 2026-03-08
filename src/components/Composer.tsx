@@ -14,6 +14,7 @@ import RichContent from "@/components/RichContent";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { Progress } from "@/components/ui/progress";
 import EmbedPlayer, { isEmbeddableUrl, getEmbedInfo } from "@/components/EmbedPlayer";
+import GifPicker from "@/components/GifPicker";
 
 interface QuotePostData {
   id: string; content: string; authorName: string; authorHandle: string;
@@ -51,9 +52,14 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
   const [embedInputOpen, setEmbedInputOpen] = useState(false);
   const [confirmedEmbedUrl, setConfirmedEmbedUrl] = useState<string | null>(null);
 
+  // GIF state
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
+  const [selectedGif, setSelectedGif] = useState<string | null>(null);
+
   const hasVideo = !!videoFile;
   const hasImages = images.length > 0;
   const hasEmbed = !!confirmedEmbedUrl;
+  const hasGif = !!selectedGif;
 
   // Set default interaction label
   useEffect(() => {
@@ -71,7 +77,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     }
   }, [open, autoOpenImagePicker]);
 
-  const canPost = (content.trim().length > 0 || images.length > 0 || hasVideo || hasEmbed) && !overLimit && !videoProcessing;
+  const canPost = (content.trim().length > 0 || images.length > 0 || hasVideo || hasEmbed || hasGif) && !overLimit && !videoProcessing;
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -189,6 +195,10 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         const imageRows = urls.map((url, i) => ({ post_id: post.id, url, position: i }));
         await supabase.from("post_images").insert(imageRows);
       }
+      // Store selected GIF as a post image (external URL, no upload needed)
+      if (selectedGif) {
+        await supabase.from("post_images").insert([{ post_id: post.id, url: selectedGif, position: 0 }]);
+      }
       if (parentId) {
         const { data: parentPost } = await supabase.from("posts").select("author_id").eq("id", parentId).single();
         if (parentPost && parentPost.author_id !== user.id) {
@@ -214,7 +224,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
       }
       images.forEach((img) => URL.revokeObjectURL(img.preview));
       if (videoPreview) URL.revokeObjectURL(videoPreview);
-      setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false);
+      setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); setSelectedGif(null);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["profilePosts"] });
       onOpenChange(false);
@@ -226,7 +236,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     if (videoProcessing) return; // Don't close while processing
     images.forEach((img) => URL.revokeObjectURL(img.preview));
     if (videoPreview) URL.revokeObjectURL(videoPreview);
-    setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); onOpenChange(false);
+    setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); setSelectedGif(null); onOpenChange(false);
   };
 
   const ringRadius = 10;
@@ -325,6 +335,17 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
+               )}
+
+              {/* GIF preview */}
+              {selectedGif && (
+                <div className="mt-2 relative rounded-xl overflow-hidden border border-border">
+                  <img src={selectedGif} alt="Selected GIF" className="w-full max-h-[300px] object-contain bg-muted" />
+                  <button onClick={() => setSelectedGif(null)}
+                    className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               )}
 
               {quotePost && (
@@ -369,7 +390,11 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
               >
                 <Link2 className="h-5 w-5" strokeWidth={1.75} />
               </button>
-              <button className="rounded-full p-2 text-primary transition-colors hover:bg-primary/10">
+              <button
+                onClick={() => setGifPickerOpen(true)}
+                className={`rounded-full p-2 transition-colors ${hasVideo || hasImages || hasGif ? "text-muted-foreground/40 cursor-not-allowed" : "text-primary hover:bg-primary/10"}`}
+                disabled={hasVideo || hasImages || hasGif}
+              >
                 <span className="text-xs font-bold border-2 border-primary rounded px-1">GIF</span>
               </button>
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp,image/tiff" multiple className="hidden" onChange={handleImageSelect} />
@@ -388,6 +413,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         </DialogContent>
       </Dialog>
       <InteractionSettings open={interactionOpen} onOpenChange={setInteractionOpen} onSave={(label) => setInteractionLabel(label)} />
+      <GifPicker open={gifPickerOpen} onOpenChange={setGifPickerOpen} onSelect={(url) => setSelectedGif(url)} />
     </>
   );
 }
