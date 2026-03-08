@@ -110,6 +110,7 @@ export default function PostDetail() {
           createdAt: r.created_at,
           images: postImages[r.id],
           videoUrl: (r as any).video_url || null,
+          embedUrl: (r as any).embed_url || null,
           likeCount: likeCounts[r.id] || 0,
           replyCount: replyCounts[r.id] || 0,
           repostCount: repostCounts[r.id] || 0,
@@ -184,7 +185,12 @@ export default function PostDetail() {
           </div>
         )}
 
-        {/* Quoted post embed */}
+        {(post as any).embed_url && (
+          <div className="mt-3">
+            <EmbedPlayer url={(post as any).embed_url} />
+          </div>
+        )}
+
         {(post as any).quotePost && (
           <div
             className="mt-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-accent/50 transition-colors"
