@@ -110,6 +110,19 @@ export default function Profile() {
     enabled: !!user && !!profile?.id && !isOwnProfile,
   });
 
+  // Live status for this profile
+  const { data: profileLiveStatus } = useQuery({
+    queryKey: ["liveStatus", profile?.id],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data } = await supabase.from("live_status").select("*").eq("user_id", profile.id).eq("is_live", true).maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.id,
+    refetchInterval: 30000, // poll every 30s
+  });
+  const [liveViewerOpen, setLiveViewerOpen] = useState(false);
+
   const queryClient = useQueryClient();
 
   const handleFollow = async () => {
