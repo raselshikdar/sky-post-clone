@@ -7,29 +7,29 @@ import { useState } from "react";
 import { SquarePen } from "lucide-react";
 import Composer from "@/components/Composer";
 
+interface AppLayoutProps {
+  homeOverride?: React.ReactNode;
+}
 
-
-export default function AppLayout() {
+export default function AppLayout({ homeOverride }: AppLayoutProps = {}) {
   const [composerOpen, setComposerOpen] = useState(false);
   const { pathname } = useLocation();
   const isMessagesPage = pathname.startsWith("/messages");
-  // Detect if we're inside a specific conversation (not /messages or /messages/settings)
   const isConversation = /^\/messages\/[^/]+$/.test(pathname) && pathname !== "/messages/settings";
+  const isHome = pathname === "/" || !!homeOverride;
 
   return (
     <div className="flex min-h-screen w-full justify-center bg-background">
       <DesktopSidebar />
 
       <div className="flex w-full max-w-feed flex-col border-x border-border min-h-screen">
-        {pathname === "/home" && <MobileTopBar />}
-        <Outlet />
-        {/* Mobile bottom padding - not on conversation pages */}
+        {isHome && <MobileTopBar />}
+        {homeOverride || <Outlet />}
         {!isConversation && <div className="h-16 lg:hidden" />}
       </div>
 
       <RightSidebar />
 
-      {/* Mobile FAB - Post Composer (hidden on messages pages) */}
       {!isMessagesPage && (
         <button
           className="fab-button"
@@ -41,7 +41,6 @@ export default function AppLayout() {
 
       <Composer open={composerOpen} onOpenChange={setComposerOpen} />
 
-      {/* Hide bottom nav on conversation pages (like WhatsApp) */}
       {!isConversation && <MobileBottomNav />}
     </div>
   );
