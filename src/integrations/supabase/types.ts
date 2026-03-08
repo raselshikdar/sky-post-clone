@@ -1019,6 +1019,7 @@ export type Database = {
           author_id: string
           content: string
           created_at: string
+          embed_url: string | null
           id: string
           parent_id: string | null
           quote_post_id: string | null
@@ -1029,6 +1030,7 @@ export type Database = {
           author_id: string
           content: string
           created_at?: string
+          embed_url?: string | null
           id?: string
           parent_id?: string | null
           quote_post_id?: string | null
@@ -1039,6 +1041,7 @@ export type Database = {
           author_id?: string
           content?: string
           created_at?: string
+          embed_url?: string | null
           id?: string
           parent_id?: string | null
           quote_post_id?: string | null

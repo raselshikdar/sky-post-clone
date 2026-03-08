@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS embed_url text DEFAULT NULL;
