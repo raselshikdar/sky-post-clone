@@ -1221,6 +1221,7 @@ export type Database = {
           document_type: string
           document_url: string
           id: string
+          reason: string | null
           reviewed_by: string | null
           status: string
           updated_at: string
@@ -1232,6 +1233,7 @@ export type Database = {
           document_type?: string
           document_url: string
           id?: string
+          reason?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
@@ -1243,6 +1245,7 @@ export type Database = {
           document_type?: string
           document_url?: string
           id?: string
+          reason?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
