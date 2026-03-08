@@ -53,7 +53,7 @@ jobs:
 
       - name: Build TWA (APK + AAB)
         run: |
-          npx bubblewrap build --skipPwaValidation \
+          yes | npx bubblewrap build --skipPwaValidation \
             --signingKeyPath=android.keystore \
             --signingKeyAlias=awaj \
             --signingKeyPassword=android \
