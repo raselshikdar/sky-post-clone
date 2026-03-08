@@ -517,6 +517,42 @@ export type Database = {
           },
         ]
       }
+      moderation_settings: {
+        Row: {
+          adult_content_enabled: boolean
+          adult_filter: string
+          created_at: string
+          graphic_filter: string
+          id: string
+          nudity_filter: string
+          suggestive_filter: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adult_content_enabled?: boolean
+          adult_filter?: string
+          created_at?: string
+          graphic_filter?: string
+          id?: string
+          nudity_filter?: string
+          suggestive_filter?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adult_content_enabled?: boolean
+          adult_filter?: string
+          created_at?: string
+          graphic_filter?: string
+          id?: string
+          nudity_filter?: string
+          suggestive_filter?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       muted_accounts: {
         Row: {
           created_at: string
