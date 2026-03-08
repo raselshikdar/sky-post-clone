@@ -60,6 +60,7 @@ export default function PostCard({
   const [replyComposerOpen, setReplyComposerOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [repostMenuOpen, setRepostMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -221,11 +222,11 @@ export default function PostCard({
             <ActionButton icon={MessageSquare} count={replyCount} onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
             
             {/* Repost dropdown with quote option */}
-            <DropdownMenu>
+            <DropdownMenu open={repostMenuOpen} onOpenChange={setRepostMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button
                   className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : ""}`}
-                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setRepostMenuOpen(prev => !prev); }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
                   <Repeat2 className="h-[18px] w-[18px]" strokeWidth={1.75} />

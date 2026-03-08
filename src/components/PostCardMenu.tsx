@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle, Pin, Settings, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
   const { t } = useTranslation();
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleCopy = (e: React.MouseEvent) => { stop(e); navigator.clipboard.writeText(content); toast.success(t("menu.post_text_copied")); };
   const handleDelete = async (e: React.MouseEvent) => {
@@ -85,11 +87,11 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
       <DropdownMenuTrigger asChild>
         <button
           className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
-          onClick={stop}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); setMenuOpen(prev => !prev); }}
           onPointerDown={(e) => e.preventDefault()}
         >
           <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={1.75} />
