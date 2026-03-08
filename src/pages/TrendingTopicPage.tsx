@@ -112,6 +112,8 @@ export default function TrendingTopicPage() {
       ) : (
         posts.map((post: any) => <PostCard key={post.id} {...post} />)
       )}
+
+      {topic && <TrendingTopicInfoDialog open={infoOpen} onOpenChange={setInfoOpen} topicName={topic} />}
     </div>
   );
 }
