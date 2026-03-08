@@ -195,6 +195,10 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         const imageRows = urls.map((url, i) => ({ post_id: post.id, url, position: i }));
         await supabase.from("post_images").insert(imageRows);
       }
+      // Store selected GIF as a post image (external URL, no upload needed)
+      if (selectedGif) {
+        await supabase.from("post_images").insert([{ post_id: post.id, url: selectedGif, position: 0 }]);
+      }
       if (parentId) {
         const { data: parentPost } = await supabase.from("posts").select("author_id").eq("id", parentId).single();
         if (parentPost && parentPost.author_id !== user.id) {
@@ -220,7 +224,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
       }
       images.forEach((img) => URL.revokeObjectURL(img.preview));
       if (videoPreview) URL.revokeObjectURL(videoPreview);
-      setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false);
+      setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); setSelectedGif(null);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["profilePosts"] });
       onOpenChange(false);
