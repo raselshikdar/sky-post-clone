@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      appearance_settings: {
+        Row: {
+          color_mode: string
+          created_at: string
+          dark_theme: string
+          font_family: string
+          font_size: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color_mode?: string
+          created_at?: string
+          dark_theme?: string
+          font_family?: string
+          font_size?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color_mode?: string
+          created_at?: string
+          dark_theme?: string
+          font_family?: string
+          font_size?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_accounts: {
         Row: {
           blocked_user_id: string
