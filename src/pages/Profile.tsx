@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
 import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, BellOff, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic } from "lucide-react";
+import ImageCropDialog from "@/components/ImageCropDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
