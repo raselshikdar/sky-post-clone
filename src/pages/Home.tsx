@@ -299,11 +299,10 @@ export default function Home() {
   );
 }
 
-function TabButton({ label, active, onClick, align }: { label: string; active: boolean; onClick: () => void; align?: "left" | "center" | "right" }) {
-  const justifyClass = align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center";
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`relative flex-1 flex items-center ${justifyClass} py-3 whitespace-nowrap text-[15px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      className={`relative flex-1 flex items-center justify-center py-3 whitespace-nowrap text-[15px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
       <span className="relative">
         {label}
         {active && <div className="absolute -bottom-[11px] left-0 right-0 h-[3px] rounded-full bg-primary" />}
