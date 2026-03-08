@@ -127,6 +127,51 @@ export type Database = {
         }
         Relationships: []
       }
+      content_settings: {
+        Row: {
+          autoplay_media: boolean
+          created_at: string
+          enable_trending_in_discover: boolean
+          enable_trending_topics: boolean
+          external_media_enabled: boolean
+          following_feed_quotes: boolean
+          following_feed_replies: boolean
+          following_feed_reposts: boolean
+          id: string
+          thread_sort: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autoplay_media?: boolean
+          created_at?: string
+          enable_trending_in_discover?: boolean
+          enable_trending_topics?: boolean
+          external_media_enabled?: boolean
+          following_feed_quotes?: boolean
+          following_feed_replies?: boolean
+          following_feed_reposts?: boolean
+          id?: string
+          thread_sort?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autoplay_media?: boolean
+          created_at?: string
+          enable_trending_in_discover?: boolean
+          enable_trending_topics?: boolean
+          external_media_enabled?: boolean
+          following_feed_quotes?: boolean
+          following_feed_replies?: boolean
+          following_feed_reposts?: boolean
+          id?: string
+          thread_sort?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_deletions: {
         Row: {
           conversation_id: string
