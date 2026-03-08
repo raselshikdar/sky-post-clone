@@ -319,6 +319,28 @@ export default function Profile() {
         )}
       </div>
 
+      {/* Live Stream Banner */}
+      {profileLiveStatus && (
+        <button
+          onClick={() => setLiveViewerOpen(true)}
+          className="mx-4 mb-3 flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 text-left transition-colors hover:bg-destructive/10"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive text-destructive-foreground">
+            <Tv className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground animate-pulse">● LIVE</span>
+              <p className="text-sm font-semibold text-foreground truncate">
+                {detectPlatform(profileLiveStatus.live_link)?.name || "Live Stream"}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{profileLiveStatus.live_link}</p>
+          </div>
+          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        </button>
+      )}
+
       {/* Tabs */}
       <div className="border-b border-border">
         <ScrollArea className="w-full">
