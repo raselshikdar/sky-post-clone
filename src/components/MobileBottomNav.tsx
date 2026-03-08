@@ -114,7 +114,7 @@ export default function MobileBottomNav() {
         to={`/profile/${profile?.username || ""}`}
         className="flex flex-col items-center gap-0.5 px-3 py-1"
       >
-        <Avatar className="h-7 w-7">
+        <Avatar className="h-6 w-6">
           <AvatarImage src={profile?.avatar_url || ""} />
           <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
             {profile?.display_name?.[0]?.toUpperCase() || "?"}
