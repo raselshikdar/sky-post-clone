@@ -51,6 +51,7 @@ export default function PostCard({
   const [animating, setAnimating] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
+  const [replyComposerOpen, setReplyComposerOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -198,7 +199,7 @@ export default function PostCard({
           )}
 
           <div className="mt-2 flex items-center justify-between -ml-1.5">
-            <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); navigate(`/post/${id}`); }} />
+            <ActionButton icon={MessageCircle} count={replyCount} onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
             
             {/* Repost dropdown with quote option */}
             <DropdownMenu>
@@ -253,6 +254,13 @@ export default function PostCard({
           </div>
         </div>
       </article>
+
+      {/* Reply composer */}
+      <Composer
+        open={replyComposerOpen}
+        onOpenChange={setReplyComposerOpen}
+        parentId={id}
+      />
 
       {/* Quote composer */}
       <Composer
