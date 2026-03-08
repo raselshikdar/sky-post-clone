@@ -133,12 +133,23 @@ export type Database = {
           created_at: string
           enable_trending_in_discover: boolean
           enable_trending_topics: boolean
+          ext_apple_music: boolean
+          ext_flickr: boolean
+          ext_giphy: boolean
+          ext_soundcloud: boolean
+          ext_spotify: boolean
+          ext_twitch: boolean
+          ext_vimeo: boolean
+          ext_youtube: boolean
+          ext_youtube_shorts: boolean
           external_media_enabled: boolean
           following_feed_quotes: boolean
           following_feed_replies: boolean
           following_feed_reposts: boolean
+          following_feed_samples: boolean
           id: string
           thread_sort: string
+          tree_view: boolean
           updated_at: string
           user_id: string
         }
@@ -147,12 +158,23 @@ export type Database = {
           created_at?: string
           enable_trending_in_discover?: boolean
           enable_trending_topics?: boolean
+          ext_apple_music?: boolean
+          ext_flickr?: boolean
+          ext_giphy?: boolean
+          ext_soundcloud?: boolean
+          ext_spotify?: boolean
+          ext_twitch?: boolean
+          ext_vimeo?: boolean
+          ext_youtube?: boolean
+          ext_youtube_shorts?: boolean
           external_media_enabled?: boolean
           following_feed_quotes?: boolean
           following_feed_replies?: boolean
           following_feed_reposts?: boolean
+          following_feed_samples?: boolean
           id?: string
           thread_sort?: string
+          tree_view?: boolean
           updated_at?: string
           user_id: string
         }
@@ -161,12 +183,23 @@ export type Database = {
           created_at?: string
           enable_trending_in_discover?: boolean
           enable_trending_topics?: boolean
+          ext_apple_music?: boolean
+          ext_flickr?: boolean
+          ext_giphy?: boolean
+          ext_soundcloud?: boolean
+          ext_spotify?: boolean
+          ext_twitch?: boolean
+          ext_vimeo?: boolean
+          ext_youtube?: boolean
+          ext_youtube_shorts?: boolean
           external_media_enabled?: boolean
           following_feed_quotes?: boolean
           following_feed_replies?: boolean
           following_feed_reposts?: boolean
+          following_feed_samples?: boolean
           id?: string
           thread_sort?: string
+          tree_view?: boolean
           updated_at?: string
           user_id?: string
         }
