@@ -253,7 +253,7 @@ export default function PostCard({
               className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
               onClick={handleShare}
             >
-              <Forward className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              <Forward className="h-[18px] w-[18px]" strokeWidth={2.5} />
             </button>
             <PostCardMenu
               postId={id}
