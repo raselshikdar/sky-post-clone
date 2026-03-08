@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
 import PostCardSkeleton from "@/components/PostCardSkeleton";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { ArrowLeft, TrendingUp, MoreHorizontal } from "lucide-react";
+import TrendingTopicInfoDialog from "@/components/TrendingTopicInfoDialog";
 
 export default function TrendingTopicPage() {
   const { topic } = useParams<{ topic: string }>();
