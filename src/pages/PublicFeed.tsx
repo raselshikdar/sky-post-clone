@@ -115,7 +115,7 @@ export default function PublicFeed() {
 
         {/* Tabs */}
         <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
-          <div className="flex w-full items-center justify-between border-b border-border px-6">
+          <div className="flex w-full items-center justify-between border-b border-border px-14">
             <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
             <TabButton label="Feeds ✨" active={tab === "feeds"} onClick={() => setTab("feeds")} />
           </div>
