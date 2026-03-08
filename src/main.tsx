@@ -17,3 +17,10 @@ if (splash) {
     setTimeout(() => splash.remove(), 400);
   }, 800);
 }
+
+// Register service worker for PWA installability
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
