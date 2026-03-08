@@ -767,6 +767,116 @@ function GoLiveDialog({ open, onOpenChange, profile }: {
     </Dialog>
   );
 }
+
+/* ---- Live Stream Viewer Dialog ---- */
+function getEmbedUrl(link: string): string | null {
+  try {
+    const url = new URL(link.startsWith("http") ? link : `https://${link}`);
+    const host = url.hostname.replace("www.", "");
+    // YouTube
+    if (host === "youtube.com" || host === "youtu.be") {
+      const videoId = host === "youtu.be" ? url.pathname.slice(1) : url.searchParams.get("v") || url.pathname.split("/").pop();
+      if (videoId) return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    // Twitch
+    if (host === "twitch.tv") {
+      const channel = url.pathname.split("/").filter(Boolean)[0];
+      if (channel) return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`;
+    }
+    // Facebook
+    if (host === "facebook.com" || host === "fb.watch") {
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(link)}&autoplay=true`;
+    }
+    // Kick
+    if (host === "kick.com") {
+      const channel = url.pathname.split("/").filter(Boolean)[0];
+      if (channel) return `https://player.kick.com/${channel}`;
+    }
+    // VDO.Ninja
+    if (host === "vdo.ninja") {
+      return link.startsWith("http") ? link : `https://${link}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function LiveViewerDialog({ open, onOpenChange, liveStatus, profile }: {
+  open: boolean; onOpenChange: (v: boolean) => void; liveStatus: any; profile: any;
+}) {
+  const link = liveStatus?.live_link || "";
+  const platform = detectPlatform(link);
+  const embedUrl = getEmbedUrl(link);
+  const fullLink = link.startsWith("http") ? link : `https://${link}`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile.avatar_url || ""} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">{profile.display_name?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-bold leading-tight">{profile.display_name}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive animate-pulse">● LIVE</span>
+                {platform && (
+                  <>
+                    <span className="text-muted-foreground text-[10px]">on</span>
+                    <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+                      <span className={`h-2 w-2 rounded-full ${platform.color}`} />
+                      {platform.name}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => onOpenChange(false)} className="p-1 rounded-full hover:bg-accent">
+            <X className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Embed or fallback */}
+        {embedUrl ? (
+          <div className="aspect-video w-full bg-black">
+            <iframe
+              src={embedUrl}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              title={`${profile.display_name}'s live stream`}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+              <Tv className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground mb-1">{profile.display_name} is live!</h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+              This stream can't be embedded directly. Click the button below to watch on {platform?.name || "the streaming platform"}.
+            </p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30">
+          <p className="text-xs text-muted-foreground truncate flex-1 mr-3">{link}</p>
+          <Button size="sm" className="rounded-full gap-1.5" onClick={() => window.open(fullLink, "_blank", "noopener,noreferrer")}>
+            <ExternalLink className="h-3.5 w-3.5" />
+            Watch on {platform?.name || "site"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ProfileMoreMenu({ isOwner, onCopyLink, onSearchPosts, onAddToLists, onGoLive, profileId }: {
   isOwner: boolean; onCopyLink: () => void; onSearchPosts: () => void; onAddToLists: () => void; onGoLive?: () => void; profileId?: string;
 }) {
