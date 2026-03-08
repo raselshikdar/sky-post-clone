@@ -1,0 +1,77 @@
+name: Build Android TWA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android-twa/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-twa
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @nicedayfor/nicedayfor || npm install -g @nicedayfor/nicedayfor@latest || npm install -g @nicedayfor/nicedayfor 2>/dev/null; npm install -g @nicedayfor/nicedayfor || true
+
+      - name: Install Bubblewrap
+        run: npm install -g @nicedayfor/nicedayfor 2>/dev/null || npm install -g bubblewrap
+
+      - name: Generate signing keystore
+        run: |
+          keytool -genkeypair \
+            -alias awaj \
+            -keypass android \
+            -keystore android.keystore \
+            -storepass android \
+            -dname "CN=Awaj,O=Awaj,L=Dhaka,C=BD" \
+            -validity 10000 \
+            -keyalg RSA \
+            -keysize 2048
+
+      - name: Initialize TWA project
+        run: |
+          npx bubblewrap init --manifest="https://sky-post-clone.lovable.app/manifest.json" --directory=. 2>/dev/null || \
+          npx bubblewrap init --manifest twa-manifest.json --directory=. 2>/dev/null || true
+
+      - name: Build TWA (APK + AAB)
+        run: |
+          npx bubblewrap build --skipPwaValidation \
+            --signingKeyPath=android.keystore \
+            --signingKeyAlias=awaj \
+            --signingKeyPassword=android \
+            --signingKeyStorePassword=android
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: awaj-twa-apk
+          path: android-twa/app-release-signed.apk
+          if-no-files-found: warn
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: awaj-twa-aab
+          path: android-twa/app-release-bundle.aab
+          if-no-files-found: warn
