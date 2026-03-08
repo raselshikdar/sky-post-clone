@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { timeAgo } from "@/lib/time";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, MessageSquare, Repeat2, Forward, Bookmark, BookmarkCheck, Quote, Link2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { format } from "date-fns";
@@ -15,6 +15,10 @@ import RichContent from "@/components/RichContent";
 import VideoPlayer from "@/components/VideoPlayer";
 import EmbedPlayer from "@/components/EmbedPlayer";
 import { useTranslation } from "@/i18n/LanguageContext";
+import PostCardMenu from "@/components/PostCardMenu";
+import SharePostDialog from "@/components/SharePostDialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
