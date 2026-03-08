@@ -397,15 +397,6 @@ export default function PostDetail() {
           </div>
         )}
 
-        {/* Reply text input */}
-        {user && (
-          <button
-            onClick={() => setReplyOpen(true)}
-            className="mt-3 w-full border-t border-border pt-3 text-left text-sm text-muted-foreground transition-colors bsky-hover"
-          >
-            {t("detail.write_reply")}
-          </button>
-        )}
       </div>
 
       {/* Replies */}
