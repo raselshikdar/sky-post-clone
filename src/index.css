@@ -204,15 +204,12 @@
     height: -webkit-fill-available;
   }
 
-  /* Force all sticky page headers to exactly the same height */
-  .sticky.top-0.border-b > .flex {
-    height: 48px;
-    min-height: 48px;
-    max-height: 48px;
-  }
-  .sticky.top-0.border-b.flex {
-    height: 48px;
-    min-height: 48px;
-    max-height: 48px;
+  /* Force ALL sticky page headers to exactly the same fixed height as Chat page */
+  .sticky.top-0[class*="border-b"] > .flex,
+  .sticky.top-0[class*="border-b"].flex {
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    box-sizing: border-box;
   }
 }
