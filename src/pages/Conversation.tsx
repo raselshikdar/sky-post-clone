@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, MoreHorizontal, Lock, X } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Lock, X, Timer } from "lucide-react";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import ConversationOptions from "@/components/chat/ConversationOptions";
@@ -233,6 +233,16 @@ export default function Conversation() {
         <div className="flex items-center justify-center gap-1.5 py-1.5 bg-primary/5 border-b border-border text-xs text-primary flex-shrink-0">
           <Lock className="h-3 w-3" />
           <span>{t("conv.e2e")}</span>
+        </div>
+      )}
+
+      {/* Disappearing messages banner */}
+      {(conversation as any)?.disappear_after && (
+        <div className="flex items-center justify-center gap-1.5 py-1.5 bg-amber-500/10 border-b border-border text-xs text-amber-600 dark:text-amber-400 flex-shrink-0">
+          <Timer className="h-3 w-3" />
+          <span>
+            Disappearing messages: {(conversation as any).disappear_after === 86400 ? "24 hours" : (conversation as any).disappear_after === 604800 ? "7 days" : "30 days"}
+          </span>
         </div>
       )}
 
