@@ -87,7 +87,7 @@ export default function SettingsPage() {
           <SettingsRow icon={Bell} label={t("nav.notifications")} onClick={() => navigate("/notifications/settings")} />
           <SettingsRow icon={FileText} label={t("settings.content_media")} onClick={() => navigate("/feeds/settings")} />
           <SettingsRow icon={Palette} label={t("settings.appearance")} onClick={() => setSection("appearance")} />
-          <SettingsRow icon={Accessibility} label={t("settings.accessibility")} onClick={() => setSection("accessibility")} />
+          <SettingsRow icon={ScanEye} label={t("settings.accessibility")} onClick={() => setSection("accessibility")} />
           <SettingsRow icon={Globe} label={t("settings.languages")} onClick={() => setSection("languages")} />
           <SettingsRow icon={HelpCircle} label={t("settings.help")} onClick={() => navigate("/support")} />
           <SettingsRow icon={Info} label={t("settings.about")} onClick={() => setSection("about")} />
