@@ -85,7 +85,7 @@ export default function SettingsPage() {
           <SettingsRow icon={Lock} label={t("settings.privacy")} onClick={() => setSection("privacy")} />
           <SettingsRow icon={Shield} label={t("settings.moderation")} onClick={() => setSection("moderation")} />
           <SettingsRow icon={Bell} label={t("nav.notifications")} onClick={() => navigate("/notifications/settings")} />
-          <SettingsRow icon={FileText} label={t("settings.content_media")} onClick={() => navigate("/feeds/settings")} />
+          <SettingsRow icon={FileText} label={t("settings.content_media")} onClick={() => navigate("/settings/content-and-media")} />
           <SettingsRow icon={Palette} label={t("settings.appearance")} onClick={() => setSection("appearance")} />
           <SettingsRow icon={ScanEye} label={t("settings.accessibility")} onClick={() => setSection("accessibility")} />
           <SettingsRow icon={Globe} label={t("settings.languages")} onClick={() => setSection("languages")} />

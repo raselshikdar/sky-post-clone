@@ -103,6 +103,7 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/feeds" element={<Feeds />} />
                 <Route path="/feeds/settings" element={<FeedSettings />} />
+                <Route path="/settings/content-and-media" element={<ContentMediaSettings />} />
                 <Route path="/lists" element={<Lists />} />
                 <Route path="/saved" element={<SavedPosts />} />
                 <Route path="/notifications" element={<Notifications />} />
