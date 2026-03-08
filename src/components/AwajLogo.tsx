@@ -1,14 +1,18 @@
+import { Radio } from "lucide-react";
+
 interface AwajLogoProps {
   className?: string;
+  size?: number;
 }
 
-export default function AwajLogo({ className = "h-8 w-8" }: AwajLogoProps) {
+export default function AwajLogo({ className = "", size = 32 }: AwajLogoProps) {
   return (
-    <img
-      src="/awaj-logo.png"
-      alt="Awaj"
-      className={`${className} drop-shadow-[0_0_1px_hsl(var(--foreground)/0.3)]`}
-      draggable={false}
-    />
+    <div className={`flex items-center justify-center ${className}`}>
+      <Radio 
+        size={size} 
+        className="text-primary" 
+        strokeWidth={2}
+      />
+    </div>
   );
 }
