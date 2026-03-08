@@ -617,6 +617,35 @@ export type Database = {
         }
         Relationships: []
       }
+      live_viewers: {
+        Row: {
+          id: string
+          last_seen_at: string
+          live_status_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string
+          live_status_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string
+          live_status_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_viewers_live_status_id_fkey"
+            columns: ["live_status_id"]
+            isOneToOne: false
+            referencedRelation: "live_status"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reactions: {
         Row: {
           created_at: string
