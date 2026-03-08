@@ -288,6 +288,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                     <span>{videoProcessStage}</span>
                   </div>
                   <Progress value={videoProcessProgress} className="h-2" />
+                  <p className="text-[11px] text-muted-foreground mt-1.5">Max duration: 2 minutes · Resolution: 480p</p>
                 </div>
               )}
 
@@ -379,6 +380,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                 onClick={() => videoInputRef.current?.click()}
                 className={`rounded-full p-2 transition-colors ${hasImages || hasVideo || videoProcessing ? "text-muted-foreground/40 cursor-not-allowed" : "text-primary hover:bg-primary/10"}`}
                 disabled={hasImages || hasVideo || videoProcessing}
+                title="Upload video (max 2 min)"
               >
                 <Video className="h-5 w-5" strokeWidth={1.75} />
               </button>
