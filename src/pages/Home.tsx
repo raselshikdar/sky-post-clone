@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { X, TrendingUp, ArrowUp } from "lucide-react";
+import { X, TrendingUp, ArrowUp, Radio } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
+import { useAllLiveUsers } from "@/hooks/use-live-status";
 
 type FeedTab = "discover" | "following" | "whats-hot";
 
@@ -26,6 +27,7 @@ export default function Home() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const headerHidden = useScrollDirection();
+  const { data: liveUsers = [] } = useAllLiveUsers();
 
   // Back to top: track scroll
   useEffect(() => {
@@ -197,6 +199,37 @@ export default function Home() {
           <TabButton label={t("home.whats_hot")} active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
         </div>
       </div>
+
+      {/* Live Now Banner */}
+      {liveUsers.length > 0 && (
+        <div className="border-b border-border px-4 py-2.5">
+          <div className="flex items-center gap-2 mb-2">
+            <Radio className="h-4 w-4 text-destructive animate-pulse" />
+            <span className="text-sm font-bold">Live Now</span>
+          </div>
+          <ScrollArea className="w-full">
+            <div className="flex gap-3 pb-1">
+              {liveUsers.slice(0, 10).map((ls: any) => {
+                const p = ls.profiles;
+                if (!p) return null;
+                return (
+                  <button key={ls.id} onClick={() => navigate(`/profile/${p.username}`)} className="flex flex-col items-center gap-1 min-w-[60px]">
+                    <div className="relative">
+                      <Avatar className="h-12 w-12 ring-2 ring-destructive ring-offset-2 ring-offset-background">
+                        <AvatarImage src={p.avatar_url} />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">{p.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
+                      </Avatar>
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground text-[7px] font-bold px-1 rounded animate-pulse leading-none">LIVE</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-foreground truncate max-w-[60px]">{p.display_name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <ScrollBar orientation="horizontal" className="h-0" />
+          </ScrollArea>
+        </div>
+      )}
 
       {tab === "discover" && showTopics && trendingTopics.length > 0 && (
         <div className="flex items-center border-b border-border">
