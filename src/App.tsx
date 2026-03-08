@@ -7,39 +7,37 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import AppLayout from "@/components/AppLayout";
-import { lazy, Suspense } from "react";
-
-const Home = lazy(() => import("@/pages/Home"));
-const Auth = lazy(() => import("@/pages/Auth"));
-const Profile = lazy(() => import("@/pages/Profile"));
-const PostDetail = lazy(() => import("@/pages/PostDetail"));
-const HashtagPage = lazy(() => import("@/pages/HashtagPage"));
-const TrendingTopicPage = lazy(() => import("@/pages/TrendingTopicPage"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
-const SearchPage = lazy(() => import("@/pages/SearchPage"));
-const Feeds = lazy(() => import("@/pages/Feeds"));
-const Lists = lazy(() => import("@/pages/Lists"));
-const SavedPosts = lazy(() => import("@/pages/SavedPosts"));
-const FeedSettings = lazy(() => import("@/pages/FeedSettings"));
-const SettingsPage = lazy(() => import("@/pages/Settings"));
-const Messages = lazy(() => import("@/pages/Messages"));
-const Conversation = lazy(() => import("@/pages/Conversation"));
-const ChatSettings = lazy(() => import("@/pages/ChatSettings"));
-const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
-const SupportTicketForm = lazy(() => import("@/pages/SupportTicketForm"));
-const VerificationApply = lazy(() => import("@/pages/VerificationApply"));
-const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
-const AdminOverview = lazy(() => import("@/pages/admin/AdminOverview"));
-const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
-const AdminModeration = lazy(() => import("@/pages/admin/AdminModeration"));
-const AdminFeeds = lazy(() => import("@/pages/admin/AdminFeeds"));
-const AdminVerification = lazy(() => import("@/pages/admin/AdminVerification"));
-const AdminSupport = lazy(() => import("@/pages/admin/AdminSupport"));
-const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
-const LandingPage = lazy(() => import("@/pages/LandingPage"));
-const PublicFeed = lazy(() => import("@/pages/PublicFeed"));
+import Home from "@/pages/Home";
+import Auth from "@/pages/Auth";
+import Profile from "@/pages/Profile";
+import PostDetail from "@/pages/PostDetail";
+import HashtagPage from "@/pages/HashtagPage";
+import TrendingTopicPage from "@/pages/TrendingTopicPage";
+import Notifications from "@/pages/Notifications";
+import SearchPage from "@/pages/SearchPage";
+import Feeds from "@/pages/Feeds";
+import Lists from "@/pages/Lists";
+import SavedPosts from "@/pages/SavedPosts";
+import FeedSettings from "@/pages/FeedSettings";
+import SettingsPage from "@/pages/Settings";
+import Messages from "@/pages/Messages";
+import Conversation from "@/pages/Conversation";
+import ChatSettings from "@/pages/ChatSettings";
+import NotificationSettings from "@/pages/NotificationSettings";
+import NotFound from "@/pages/NotFound";
+import ResetPassword from "@/pages/ResetPassword";
+import SupportTicketForm from "@/pages/SupportTicketForm";
+import VerificationApply from "@/pages/VerificationApply";
+import AdminLayout from "@/pages/admin/AdminLayout";
+import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminModeration from "@/pages/admin/AdminModeration";
+import AdminFeeds from "@/pages/admin/AdminFeeds";
+import AdminVerification from "@/pages/admin/AdminVerification";
+import AdminSupport from "@/pages/admin/AdminSupport";
+import AdminRoles from "@/pages/admin/AdminRoles";
+import LandingPage from "@/pages/LandingPage";
+import PublicFeed from "@/pages/PublicFeed";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,7 +89,6 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}>
             <Routes>
               <Route path="/" element={<RootRoute />} />
               <Route path="/explore" element={<ExploreRoute />} />
@@ -126,7 +123,6 @@ const App = () => (
                 <Route path="roles" element={<AdminRoles />} />
               </Route>
             </Routes>
-            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
