@@ -47,7 +47,7 @@ export default function ResetPassword() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">{t("reset.updated")}</h1>
           <p className="text-muted-foreground text-sm mb-6">{t("reset.updated_desc")}</p>
-          <Button className="w-full" onClick={() => navigate("/")}>{t("reset.continue")}</Button>
+          <Button className="w-full" onClick={() => navigate("/home")}>{t("reset.continue")}</Button>
         </div>
       </div>
     );

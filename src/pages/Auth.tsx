@@ -13,7 +13,9 @@ import { useTranslation } from "@/i18n/LanguageContext";
 type View = "signin" | "signup" | "forgot" | "verify-email";
 
 export default function Auth() {
-  const [view, setView] = useState<View>("signin");
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialView = searchParams.get("view") === "signup" ? "signup" : "signin";
+  const [view, setView] = useState<View>(initialView);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -30,7 +32,7 @@ export default function Auth() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setLoading(true);
-    try { await signIn(email, password); navigate("/"); }
+    try { await signIn(email, password); navigate("/home"); }
     catch (err: any) { setError(err.message || "Invalid email or password"); }
     finally { setLoading(false); }
   };

@@ -34,7 +34,7 @@ export default function AdminLayout() {
         <Shield className="h-16 w-16 text-muted-foreground" />
         <h1 className="text-2xl font-bold">Access Denied</h1>
         <p className="text-muted-foreground">You don't have permission to access this area.</p>
-        <button onClick={() => navigate("/")} className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground">
+        <button onClick={() => navigate("/home")} className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground">
           Go Home
         </button>
       </div>
@@ -48,7 +48,7 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-[220px] flex-col border-r border-border bg-card lg:flex">
         <div className="flex items-center gap-2 border-b border-border px-4 py-4">
-          <button onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground">
+          <button onClick={() => navigate("/home")} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold">{isAdmin ? "Admin" : "Moderator"} Panel</h1>
@@ -75,7 +75,7 @@ export default function AdminLayout() {
       {/* Mobile header */}
       <div className="flex flex-1 flex-col">
         <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:hidden">
-          <button onClick={() => navigate("/")} className="text-foreground">
+          <button onClick={() => navigate("/home")} className="text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold">{isAdmin ? "Admin" : "Mod"} Panel</h1>

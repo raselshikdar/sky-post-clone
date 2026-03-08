@@ -54,7 +54,7 @@ export default function SavedPosts() {
         <div className="flex flex-col items-center justify-center py-20 text-center px-4">
           <BookmarkX className="h-12 w-12 text-muted-foreground mb-3" strokeWidth={1.5} />
           <p className="text-lg font-semibold text-foreground mb-1">{t("saved.nothing")}</p>
-          <Button variant="outline" className="mt-3 rounded-full" onClick={() => navigate("/")}>{t("saved.go_home")}</Button>
+          <Button variant="outline" className="mt-3 rounded-full" onClick={() => navigate("/home")}>{t("saved.go_home")}</Button>
         </div>
       ) : (
         savedPosts.map((post: any) => (
