@@ -25,6 +25,10 @@ export default function PostDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [replyOpen, setReplyOpen] = useState(false);
+  const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
 
   const { data: post } = useQuery({
