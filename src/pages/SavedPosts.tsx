@@ -61,6 +61,7 @@ export default function SavedPosts() {
           <PostCard key={post.id} id={post.id} authorId={post.profiles?.id} authorName={post.profiles?.display_name || ""} authorHandle={post.profiles?.username || ""}
             authorAvatar={post.profiles?.avatar_url || ""} content={post.content} createdAt={post.created_at} images={post.images}
             videoUrl={post.video_url || null}
+            embedUrl={post.embed_url || null}
             likeCount={post.likeCount} replyCount={post.replyCount} repostCount={post.repostCount} isLiked={post.isLiked} isReposted={post.isReposted} />
         ))
       )}
