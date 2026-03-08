@@ -31,6 +31,9 @@ jobs:
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses
+
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
@@ -50,6 +53,9 @@ jobs:
         run: |
           npx bubblewrap init --manifest="https://sky-post-clone.lovable.app/manifest.json" --directory=. 2>/dev/null || \
           npx bubblewrap init --manifest twa-manifest.json --directory=. 2>/dev/null || true
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew || true
 
       - name: Build TWA (APK + AAB)
         run: |
