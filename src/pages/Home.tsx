@@ -25,6 +25,7 @@ export default function Home() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const headerHidden = useScrollDirection();
 
   // Back to top: track scroll
   useEffect(() => {
@@ -187,7 +188,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col">
-      <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
+      <div className={`sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-[calc(100%+49px)] lg:-translate-y-full" : "translate-y-0"}`}>
         <div className="flex w-full items-center justify-between border-b border-border px-4">
           <TabButton label={t("home.discover")} active={tab === "discover"} onClick={() => setTab("discover")} />
           <TabButton label={t("home.following")} active={tab === "following"} onClick={() => setTab("following")} />
