@@ -114,7 +114,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
         </nav>
 
         <div className="border-t border-border" />
-        <div className="flex items-center justify-between px-4 py-1.5">
+        <div className="flex items-center justify-between px-4 py-0.5">
           <div className="flex items-center gap-3">
             {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             <span className="text-sm font-medium">{t("drawer.dark_mode")}</span>
