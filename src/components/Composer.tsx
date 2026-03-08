@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Image as ImageIcon, Globe, ChevronDown } from "lucide-react";
+import { X, Image as ImageIcon, Globe, ChevronDown, Video, Loader2 } from "lucide-react";
 import { convertToWebP } from "@/lib/imageUtils";
+import { processVideo, uploadVideo } from "@/lib/videoUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +12,7 @@ import InteractionSettings from "@/components/InteractionSettings";
 import { timeAgo } from "@/lib/time";
 import RichContent from "@/components/RichContent";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { Progress } from "@/components/ui/progress";
 
 interface QuotePostData {
   id: string; content: string; authorName: string; authorHandle: string;
@@ -31,9 +33,20 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
   const [interactionOpen, setInteractionOpen] = useState(false);
   const [interactionLabel, setInteractionLabel] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+
+  // Video state
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoProcessing, setVideoProcessing] = useState(false);
+  const [videoProcessStage, setVideoProcessStage] = useState("");
+  const [videoProcessProgress, setVideoProcessProgress] = useState(0);
+
+  const hasVideo = !!videoFile;
+  const hasImages = images.length > 0;
 
   // Set default interaction label
   useEffect(() => {
@@ -51,7 +64,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     }
   }, [open, autoOpenImagePicker]);
 
-  const canPost = (content.trim().length > 0 || images.length > 0) && !overLimit;
+  const canPost = (content.trim().length > 0 || images.length > 0 || hasVideo) && !overLimit && !videoProcessing;
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -68,6 +81,42 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     setImages((prev) => { URL.revokeObjectURL(prev[index].preview); return prev.filter((_, i) => i !== index); });
   };
 
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    if (!file.type.startsWith("video/")) {
+      toast.error("Please select a video file");
+      return;
+    }
+
+    setVideoProcessing(true);
+    setVideoProcessStage("Checking video...");
+    setVideoProcessProgress(0);
+
+    try {
+      const result = await processVideo(file, (stage, prog) => {
+        setVideoProcessStage(stage);
+        setVideoProcessProgress(prog * 100);
+      });
+      setVideoFile(result.file);
+      setVideoPreview(URL.createObjectURL(result.file));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to process video");
+    } finally {
+      setVideoProcessing(false);
+      setVideoProcessStage("");
+      setVideoProcessProgress(0);
+    }
+  };
+
+  const removeVideo = () => {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+  };
+
   const uploadImage = async (file: File, postId: string, position: number) => {
     const path = `${user!.id}/${postId}/${position}.webp`;
     const { error } = await supabase.storage.from("profiles").upload(path, file, { contentType: "image/webp" });
@@ -80,9 +129,29 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     if (!user || !canPost) return;
     setPosting(true);
     try {
-      const { data: post, error } = await supabase.from("posts").insert({
+      // Upload video first if present
+      let videoUrl: string | null = null;
+      if (videoFile) {
+        setVideoProcessStage("Uploading video...");
+        setVideoProcessProgress(0);
+        setVideoProcessing(true);
+        try {
+          videoUrl = await uploadVideo(videoFile, (prog) => {
+            setVideoProcessProgress(prog * 100);
+          });
+        } finally {
+          setVideoProcessing(false);
+          setVideoProcessStage("");
+          setVideoProcessProgress(0);
+        }
+      }
+
+      const insertData: any = {
         author_id: user.id, content: content.trim(), parent_id: parentId || null, quote_post_id: quotePost?.id || null,
-      }).select("id").single();
+      };
+      if (videoUrl) insertData.video_url = videoUrl;
+
+      const { data: post, error } = await supabase.from("posts").insert(insertData).select("id").single();
       if (error || !post) { toast.error(t("composer.failed_post")); return; }
       if (images.length > 0) {
         const urls = await Promise.all(images.map((img, i) => uploadImage(img.file, post.id, i)));
@@ -113,7 +182,8 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
         }
       }
       images.forEach((img) => URL.revokeObjectURL(img.preview));
-      setContent(""); setImages([]);
+      if (videoPreview) URL.revokeObjectURL(videoPreview);
+      setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null);
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["profilePosts"] });
       onOpenChange(false);
@@ -122,8 +192,10 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
   };
 
   const handleClose = () => {
+    if (videoProcessing) return; // Don't close while processing
     images.forEach((img) => URL.revokeObjectURL(img.preview));
-    setContent(""); setImages([]); onOpenChange(false);
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); onOpenChange(false);
   };
 
   const ringRadius = 10;
@@ -135,11 +207,11 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-lg gap-0 p-0 [&>button]:hidden">
           <div className="flex items-center justify-between px-4 py-3">
-            <button onClick={handleClose} className="text-sm font-semibold text-primary">{t("composer.cancel")}</button>
+            <button onClick={handleClose} disabled={videoProcessing} className="text-sm font-semibold text-primary">{t("composer.cancel")}</button>
             <div className="flex items-center gap-3">
               <button className="text-sm font-semibold text-primary">{t("composer.drafts")}</button>
-              <button onClick={handlePost} disabled={!canPost || posting}
-                className={`rounded-full px-5 py-1.5 text-sm font-semibold text-primary-foreground transition-colors ${canPost ? "bg-primary hover:bg-primary/90" : "bg-primary/40"}`}>
+              <button onClick={handlePost} disabled={!canPost || posting || videoProcessing}
+                className={`rounded-full px-5 py-1.5 text-sm font-semibold text-primary-foreground transition-colors ${canPost && !videoProcessing ? "bg-primary hover:bg-primary/90" : "bg-primary/40"}`}>
                 {posting ? t("composer.posting") : parentId ? t("composer.reply") : t("composer.post")}
               </button>
             </div>
@@ -166,6 +238,29 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                   ))}
                 </div>
               )}
+
+              {/* Video processing indicator */}
+              {videoProcessing && (
+                <div className="mt-2 rounded-xl border border-border p-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span>{videoProcessStage}</span>
+                  </div>
+                  <Progress value={videoProcessProgress} className="h-2" />
+                </div>
+              )}
+
+              {/* Video preview */}
+              {videoPreview && !videoProcessing && (
+                <div className="mt-2 relative rounded-xl overflow-hidden border border-border">
+                  <video src={videoPreview} controls playsInline preload="metadata" className="w-full max-h-[300px]" />
+                  <button onClick={removeVideo}
+                    className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
               {quotePost && (
                 <div className="mt-2 rounded-xl border border-border p-3">
                   <div className="flex items-center gap-1.5 text-sm">
@@ -188,13 +283,23 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
           </div>
           <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
             <div className="flex items-center gap-1">
-              <button onClick={() => fileInputRef.current?.click()} className="rounded-full p-2 text-primary transition-colors hover:bg-primary/10" disabled={images.length >= 4}>
+              <button onClick={() => fileInputRef.current?.click()}
+                className={`rounded-full p-2 transition-colors ${hasVideo ? "text-muted-foreground/40 cursor-not-allowed" : "text-primary hover:bg-primary/10"}`}
+                disabled={images.length >= 4 || hasVideo}>
                 <ImageIcon className="h-5 w-5" strokeWidth={1.75} />
+              </button>
+              <button
+                onClick={() => videoInputRef.current?.click()}
+                className={`rounded-full p-2 transition-colors ${hasImages || hasVideo || videoProcessing ? "text-muted-foreground/40 cursor-not-allowed" : "text-primary hover:bg-primary/10"}`}
+                disabled={hasImages || hasVideo || videoProcessing}
+              >
+                <Video className="h-5 w-5" strokeWidth={1.75} />
               </button>
               <button className="rounded-full p-2 text-primary transition-colors hover:bg-primary/10">
                 <span className="text-xs font-bold border-2 border-primary rounded px-1">GIF</span>
               </button>
               <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/avif,image/bmp,image/tiff" multiple className="hidden" onChange={handleImageSelect} />
+              <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
             </div>
             <div className="flex items-center gap-2">
               <span className={`text-sm font-medium ${overLimit ? "text-destructive" : remaining <= 20 ? "text-orange-500" : "text-muted-foreground"}`}>{remaining}</span>
