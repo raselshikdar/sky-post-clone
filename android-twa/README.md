@@ -4,7 +4,7 @@ This directory contains a Trusted Web Activity (TWA) wrapper that packages the A
 
 ## How it works
 
-The Android app loads `https://awaj.eu.cc` in fullscreen using Chrome's Trusted Web Activity. No website files are bundled — the app always loads the live site, so updates appear instantly.
+The Android app loads `https://awaj.eu.cc/` in fullscreen using Chrome's Trusted Web Activity. No website files are bundled — the app always loads the live site, so updates appear instantly.
 
 ## Building
 
