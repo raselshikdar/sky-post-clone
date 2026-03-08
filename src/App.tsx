@@ -58,7 +58,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 function RootRoute() {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
-  if (user) return <ProtectedRoute><AppLayout /></ProtectedRoute>;
+  if (user) return <Navigate to="/feed" replace />;
   return <LandingPage />;
 }
 
