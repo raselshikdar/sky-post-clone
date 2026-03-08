@@ -75,13 +75,22 @@ jobs:
           rm -rf ./app ./gradle ./build ./gradlew ./settings.gradle ./build.gradle ./local.properties 2>/dev/null || true
           echo "🧹 Old build files removed."
 
-      # ---------- INITIALIZE TWA PROJECT (FULLY NON-INTERACTIVE) ----------
+      # ---------- INSTALL EXPECT (FOR INTERACTIVE PROMPTS) ----------
+      - name: Install expect
+        run: sudo apt-get update && sudo apt-get install -y expect
+
+      # ---------- INITIALIZE TWA PROJECT USING EXPECT ----------
       - name: Initialize TWA project from manifest
         run: |
-          printf "n\n$JAVA_HOME\n" | bubblewrap init \
-            --manifest="${{ env.MANIFEST_URL }}" \
-            --skipPwaValidation \
-            --directory="."
+          expect << EOF
+          set timeout 30
+          spawn bubblewrap init --manifest="${{ env.MANIFEST_URL }}" --skipPwaValidation --directory=.
+          expect {
+            "*install the JDK*" { send "n\r"; exp_continue }
+            "*Path to your existing JDK*" { send "$JAVA_HOME\r"; exp_continue }
+            eof
+          }
+          EOF
           echo "✅ TWA project initialized."
 
       # ---------- BUILD (NON-INTERACTIVE) ----------
