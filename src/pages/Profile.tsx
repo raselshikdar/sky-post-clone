@@ -1246,7 +1246,7 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden" hideClose>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <button onClick={() => onOpenChange(false)} className="text-sm font-semibold text-primary">Cancel</button>
