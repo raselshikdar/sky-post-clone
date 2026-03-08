@@ -11,6 +11,7 @@ import Composer from "@/components/Composer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 type FeedTab = "discover" | "following" | "whats-hot";
 

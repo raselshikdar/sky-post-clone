@@ -8,6 +8,7 @@ import PostCardSkeleton from "@/components/PostCardSkeleton";
 import AwajLogo from "@/components/AwajLogo";
 import MobileTopBarPublic from "@/components/MobileTopBarPublic";
 import PublicDrawer from "@/components/PublicDrawer";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 type FeedTab = "discover" | "feeds";
 
