@@ -1121,6 +1121,35 @@ export type Database = {
           },
         ]
       }
+      profile_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          subscribed_to_id: string
+          subscriber_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subscribed_to_id: string
+          subscriber_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subscribed_to_id?: string
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_subscriptions_subscribed_to_id_fkey"
+            columns: ["subscribed_to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
