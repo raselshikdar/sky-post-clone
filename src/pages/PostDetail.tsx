@@ -143,6 +143,96 @@ export default function PostDetail() {
     enabled: !!postId,
   });
 
+  // User interaction state for main post
+  const { data: userLiked = false } = useQuery({
+    queryKey: ["userLiked", postId, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("likes").select("id").eq("user_id", user!.id).eq("post_id", postId!).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!postId,
+  });
+
+  const { data: userReposted = false } = useQuery({
+    queryKey: ["userReposted", postId, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("reposts").select("id").eq("user_id", user!.id).eq("post_id", postId!).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!postId,
+  });
+
+  const { data: userBookmarked = false } = useQuery({
+    queryKey: ["bookmark", postId, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("bookmarks").select("id").eq("user_id", user!.id).eq("post_id", postId!).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!postId,
+  });
+
+  const [liked, setLiked] = useState(false);
+  const [reposted, setReposted] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  // Sync from queries
+  const isLiked = liked !== userLiked ? liked : userLiked;
+  const isReposted = reposted !== userReposted ? reposted : userReposted;
+  const isBookmarked = bookmarked !== userBookmarked ? bookmarked : userBookmarked;
+
+  const handleLike = async () => {
+    if (!user || !postId) return;
+    const newLiked = !isLiked;
+    setLiked(newLiked);
+    if (newLiked) {
+      await supabase.from("likes").insert({ user_id: user.id, post_id: postId });
+      if (post?.author_id && post.author_id !== user.id) {
+        await supabase.from("notifications").insert({ user_id: post.author_id, actor_id: user.id, type: "like", post_id: postId });
+      }
+    } else {
+      await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", postId);
+    }
+    queryClient.invalidateQueries({ queryKey: ["postStats", postId] });
+    queryClient.invalidateQueries({ queryKey: ["userLiked", postId] });
+  };
+
+  const handleRepost = async () => {
+    if (!user || !postId) return;
+    const newReposted = !isReposted;
+    setReposted(newReposted);
+    if (newReposted) {
+      await supabase.from("reposts").insert({ user_id: user.id, post_id: postId });
+      if (post?.author_id && post.author_id !== user.id) {
+        await supabase.from("notifications").insert({ user_id: post.author_id, actor_id: user.id, type: "repost", post_id: postId });
+      }
+    } else {
+      await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", postId);
+    }
+    queryClient.invalidateQueries({ queryKey: ["postStats", postId] });
+    queryClient.invalidateQueries({ queryKey: ["userReposted", postId] });
+  };
+
+  const handleBookmark = async () => {
+    if (!user || !postId) return;
+    const newBookmarked = !isBookmarked;
+    setBookmarked(newBookmarked);
+    if (newBookmarked) {
+      const { error } = await supabase.from("bookmarks").insert({ user_id: user.id, post_id: postId });
+      if (error?.code === "23505") { toast.info("Already bookmarked"); return; }
+      if (error) { toast.error("Failed to bookmark"); setBookmarked(false); return; }
+      toast.success("Post saved");
+    } else {
+      await supabase.from("bookmarks").delete().eq("user_id", user.id).eq("post_id", postId);
+      toast.success("Bookmark removed");
+    }
+    queryClient.invalidateQueries({ queryKey: ["bookmark", postId] });
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+    toast.success("Link copied!");
+  };
+
   if (!post) {
     return <div className="flex items-center justify-center py-20 text-muted-foreground">{t("common.loading")}</div>;
   }
