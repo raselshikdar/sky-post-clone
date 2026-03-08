@@ -87,7 +87,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             return (
               <NavLink key={label} to={profilePath} onClick={() => onOpenChange(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[20px] font-semibold transition-colors ${isActive ? "text-foreground bg-accent" : "text-foreground hover:bg-accent"}`
+                  `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[17px] font-semibold transition-colors ${isActive ? "text-foreground bg-accent" : "text-foreground hover:bg-accent"}`
                 }>
                 <Icon className="h-6 w-6" strokeWidth={1.75} />
                 {label}
@@ -97,7 +97,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
           {isStaff && (
             <NavLink to="/admin" onClick={() => onOpenChange(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[20px] font-semibold transition-colors ${isActive ? "text-primary bg-primary/10" : "text-primary hover:bg-primary/5"}`
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[17px] font-semibold transition-colors ${isActive ? "text-primary bg-primary/10" : "text-primary hover:bg-primary/5"}`
               }>
               <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
               {isAdmin ? t("drawer.admin_panel") : t("drawer.mod_panel")}
