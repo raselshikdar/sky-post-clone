@@ -7,51 +7,39 @@ on:
       - 'android-twa/**'
       - '.github/workflows/android-build.yml'
 
-env:
-  MANIFEST_URL: "https://sky-post-clone.lovable.app/manifest.json"
-  TWA_DIR: "android-twa"
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-
     defaults:
       run:
-        working-directory: ${{ env.TWA_DIR }}
+        working-directory: android-twa
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Set up JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Android SDK licenses
+      - name: Accept Android licenses
         run: yes | sdkmanager --licenses
 
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Install expect
-        run: sudo apt-get update && sudo apt-get install -y expect
-
-      # ---------- টেম্পোরারি সাইনিং কী ----------
-      - name: Generate temporary keystore
+      - name: Generate signing keystore
         run: |
           keytool -genkeypair \
             -alias awaj \
@@ -62,41 +50,25 @@ jobs:
             -validity 10000 \
             -keyalg RSA \
             -keysize 2048
-          echo "✅ Temporary keystore created."
 
-      # ---------- প্রজেক্ট ফাইল আছে কিনা চেক ----------
-      - name: Check if Android project exists
-        id: check_project
+      - name: Check if project already initialized
+        id: check
         run: |
           if [ -f "app/build.gradle" ]; then
-            echo "project_exists=true" >> $GITHUB_OUTPUT
+            echo "initialized=true" >> $GITHUB_OUTPUT
           else
-            echo "project_exists=false" >> $GITHUB_OUTPUT
+            echo "initialized=false" >> $GITHUB_OUTPUT
           fi
 
-      # ---------- প্রজেক্ট না থাকলে init চালাও (expect দিয়ে) ----------
-      - name: Initialize TWA project (if needed)
-        if: steps.check_project.outputs.project_exists == 'false'
+      - name: Initialize TWA project (only first time)
+        if: steps.check.outputs.initialized == 'false'
         run: |
-          expect -c "
-            set timeout 30
-            spawn bubblewrap init --manifest=\"$MANIFEST_URL\" --skipPwaValidation --directory=.
-            expect {
-              \"*install the JDK*\" { send \"n\r\"; exp_continue }
-              \"*Path to your existing JDK*\" { send \"$env(JAVA_HOME)\r\"; exp_continue }
-              \"*Path to your existing Android SDK*\" { send \"$env(ANDROID_HOME)\r\"; exp_continue }
-              eof
-            }
-          "
-          echo "✅ TWA project initialized."
+          printf "n\n$JAVA_HOME\n$ANDROID_HOME\n" | \
+          bubblewrap init \
+            --manifest=https://sky-post-clone.lovable.app/manifest.json \
+            --directory=. \
+            --skipPwaValidation
 
-      # ---------- বিল্ড ফাইল পরিষ্কার (শুধু বিল্ড ডিরেক্টরি) ----------
-      - name: Clean build files
-        run: |
-          rm -rf ./app/build ./app/.gradle ./build ./.gradle ./local.properties 2>/dev/null || true
-          echo "🧹 Old build files removed."
-
-      # ---------- বিল্ড (APK + AAB) ----------
       - name: Build TWA (APK + AAB)
         run: |
           bubblewrap build \
@@ -106,25 +78,16 @@ jobs:
             --signingKeyPassword=android \
             --signingKeyStorePassword=android
 
-      # ---------- আর্টিফ্যাক্ট আপলোড ----------
-      - name: Locate APK and AAB
-        id: locate
-        run: |
-          apk_path=$(find . -name "*release*.apk" | head -1)
-          aab_path=$(find . -name "*.aab" | head -1)
-          echo "apk_path=$apk_path" >> $GITHUB_OUTPUT
-          echo "aab_path=$aab_path" >> $GITHUB_OUTPUT
-
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: awaj-twa-apk
-          path: ${{ steps.locate.outputs.apk_path }}
+          name: twa-apk
+          path: "**/*.apk"
           if-no-files-found: error
 
-      - name: Upload AAB
+      - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: awaj-twa-aab
-          path: ${{ steps.locate.outputs.aab_path }}
+          name: twa-aab
+          path: "**/*.aab"
           if-no-files-found: error
