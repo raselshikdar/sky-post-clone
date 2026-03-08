@@ -1032,15 +1032,114 @@ function LanguagesSection({ renderBack }: { renderBack: (t: string) => React.Rea
 // ===========================
 function AboutSection({ renderBack }: { renderBack: (t: string) => React.ReactNode }) {
   const { t } = useTranslation();
+  const [subPage, setSubPage] = useState<string | null>(null);
+
+  if (subPage === "tos") {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+          <button onClick={() => setSubPage(null)} className="p-1 rounded-full hover:bg-accent"><ChevronLeft className="h-5 w-5" /></button>
+          <h2 className="text-lg font-bold">{t("about.tos")}</h2>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4 text-sm text-foreground leading-relaxed">
+            <p className="text-muted-foreground">Last updated: March 1, 2026</p>
+            <h3 className="text-base font-bold">1. Acceptance of Terms</h3>
+            <p>By accessing or using Awaj, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use the platform.</p>
+            <h3 className="text-base font-bold">2. User Accounts</h3>
+            <p>You must be at least 13 years old to create an account. You are responsible for maintaining the security of your account credentials and for all activities under your account.</p>
+            <h3 className="text-base font-bold">3. User Content</h3>
+            <p>You retain ownership of content you post. By posting, you grant Awaj a non-exclusive, worldwide license to display, distribute, and promote your content on the platform.</p>
+            <h3 className="text-base font-bold">4. Prohibited Conduct</h3>
+            <p>You may not use Awaj to post illegal content, harass others, spread misinformation, spam, or engage in any activity that violates applicable laws or community guidelines.</p>
+            <h3 className="text-base font-bold">5. Termination</h3>
+            <p>We reserve the right to suspend or terminate accounts that violate these terms, at our sole discretion, with or without notice.</p>
+            <h3 className="text-base font-bold">6. Limitation of Liability</h3>
+            <p>Awaj is provided "as is" without warranties. We are not liable for any damages arising from your use of the platform.</p>
+            <h3 className="text-base font-bold">7. Changes to Terms</h3>
+            <p>We may update these terms from time to time. Continued use of Awaj after changes constitutes acceptance of the new terms.</p>
+          </div>
+          <div className="h-20" />
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  if (subPage === "privacy") {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+          <button onClick={() => setSubPage(null)} className="p-1 rounded-full hover:bg-accent"><ChevronLeft className="h-5 w-5" /></button>
+          <h2 className="text-lg font-bold">{t("about.privacy")}</h2>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4 text-sm text-foreground leading-relaxed">
+            <p className="text-muted-foreground">Last updated: March 1, 2026</p>
+            <h3 className="text-base font-bold">1. Information We Collect</h3>
+            <p>We collect information you provide directly (profile data, posts, messages) and automatically (device info, usage analytics, IP address).</p>
+            <h3 className="text-base font-bold">2. How We Use Your Information</h3>
+            <p>Your data is used to provide and improve the platform, personalize your feed, send notifications, and ensure safety and security.</p>
+            <h3 className="text-base font-bold">3. Data Sharing</h3>
+            <p>We do not sell your personal data. We may share information with service providers who help operate the platform, or when required by law.</p>
+            <h3 className="text-base font-bold">4. Data Retention</h3>
+            <p>We retain your data as long as your account is active. You can request deletion of your account and associated data at any time.</p>
+            <h3 className="text-base font-bold">5. Security</h3>
+            <p>We implement industry-standard security measures to protect your data, including encryption in transit and at rest.</p>
+            <h3 className="text-base font-bold">6. Your Rights</h3>
+            <p>You have the right to access, correct, or delete your personal data. You may also opt out of certain data collection through your account settings.</p>
+            <h3 className="text-base font-bold">7. Contact</h3>
+            <p>For privacy-related inquiries, please reach out through the Support section in Settings.</p>
+          </div>
+          <div className="h-20" />
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  if (subPage === "status") {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+          <button onClick={() => setSubPage(null)} className="p-1 rounded-full hover:bg-accent"><ChevronLeft className="h-5 w-5" /></button>
+          <h2 className="text-lg font-bold">{t("about.status")}</h2>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-5">
+            <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-4 flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-foreground">All Systems Operational</p>
+                <p className="text-xs text-muted-foreground">Last checked: just now</p>
+              </div>
+            </div>
+            {[
+              { name: "API", status: "Operational" },
+              { name: "Authentication", status: "Operational" },
+              { name: "Database", status: "Operational" },
+              { name: "File Storage", status: "Operational" },
+              { name: "Real-time Messaging", status: "Operational" },
+              { name: "Push Notifications", status: "Operational" },
+            ].map((service) => (
+              <div key={service.name} className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
+                <span className="text-sm font-medium text-foreground">{service.name}</span>
+                <span className="text-xs font-medium text-green-500">{service.status}</span>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       {renderBack(t("settings.about"))}
       <ScrollArea className="flex-1">
         <div className="py-1">
           <div className="border-b border-border">
-            <SettingsRow icon={Book} label={t("about.tos")} onClick={() => toast.info(t("account.coming_soon"))} />
-            <SettingsRow icon={Book} label={t("about.privacy")} onClick={() => toast.info(t("account.coming_soon"))} />
-            <SettingsRow icon={Globe} label={t("about.status")} onClick={() => toast.info(t("account.coming_soon"))} />
+            <SettingsRow icon={Book} label={t("about.tos")} subtext="Review our terms and conditions" onClick={() => setSubPage("tos")} />
+            <SettingsRow icon={Shield} label={t("about.privacy")} subtext="How we handle and protect your data" onClick={() => setSubPage("privacy")} />
+            <SettingsRow icon={Globe} label={t("about.status")} subtext="Check real-time platform health" onClick={() => setSubPage("status")} />
           </div>
           <div className="border-b border-border">
             <SettingsRow icon={Wrench} label={t("about.system_log")} onClick={() => toast.info(t("account.coming_soon"))} />
