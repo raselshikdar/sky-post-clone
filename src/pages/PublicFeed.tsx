@@ -31,7 +31,7 @@ export default function PublicFeed() {
       const { data } = await supabase
         .from("posts")
         .select(`
-          id, content, created_at, parent_id, author_id, quote_post_id,
+          id, content, created_at, parent_id, author_id, quote_post_id, video_url,
           profiles!posts_author_id_fkey (id, username, display_name, avatar_url)
         `)
         .is("parent_id", null)
@@ -94,6 +94,7 @@ export default function PublicFeed() {
           authorName: p?.display_name || "Unknown", authorHandle: p?.username || "unknown",
           authorAvatar: p?.avatar_url || "", content: post.content, createdAt: post.created_at,
           images: postImages[post.id],
+          videoUrl: (post as any).video_url || null,
           likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
           isLiked: false, isReposted: false,
