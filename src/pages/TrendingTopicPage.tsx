@@ -19,7 +19,7 @@ export default function TrendingTopicPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("posts")
-        .select("id, content, created_at, parent_id, author_id, quote_post_id, profiles!posts_author_id_fkey(id, username, display_name, avatar_url)")
+        .select("id, content, created_at, parent_id, author_id, quote_post_id, video_url, profiles!posts_author_id_fkey(id, username, display_name, avatar_url)")
         .ilike("content", `%${topic}%`)
         .is("parent_id", null)
         .order("created_at", { ascending: false })
@@ -80,6 +80,7 @@ export default function TrendingTopicPage() {
           authorName: profile?.display_name || "", authorHandle: profile?.username || "",
           authorAvatar: profile?.avatar_url || "", content: p.content, createdAt: p.created_at,
           images: postImages[p.id],
+          videoUrl: (p as any).video_url || null,
           likeCount: likeCounts[p.id] || 0, replyCount: replyCounts[p.id] || 0,
           repostCount: repostCounts[p.id] || 0,
           isLiked: userLikedSet.has(p.id), isReposted: userRepostedSet.has(p.id),
