@@ -291,8 +291,12 @@ export default function Profile() {
               </>
             ) : user ? (
               <>
-                <button className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground hover:bg-accent">
-                  <BellPlus className="h-5 w-5" />
+                <button
+                  onClick={handleToggleSubscription}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${isSubscribed ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-accent"}`}
+                  title={isSubscribed ? "Turn off notifications" : "Get notified about new posts"}
+                >
+                  {isSubscribed ? <BellOff className="h-5 w-5" /> : <BellPlus className="h-5 w-5" />}
                 </button>
                 <Button variant={isFollowing ? "outline" : "default"} className="rounded-full font-semibold text-sm h-9 px-5" onClick={handleFollow}>
                   {isFollowing ? "Following" : "Follow"}
