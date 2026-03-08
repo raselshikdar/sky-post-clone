@@ -103,9 +103,10 @@ export default function PublicFeed() {
 
   return (
     <div className="flex min-h-screen w-full justify-center bg-background">
+      <PublicDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       <div className="flex w-full max-w-feed flex-col border-x border-border min-h-screen">
         {/* Mobile top bar */}
-        <MobileTopBarPublic />
+        <MobileTopBarPublic onMenuClick={() => setDrawerOpen(true)} />
 
         {/* Desktop header - logo centered */}
         <div className="hidden lg:flex items-center justify-center border-b border-border py-3">
@@ -114,32 +115,11 @@ export default function PublicFeed() {
 
         {/* Tabs */}
         <div className="sticky top-[49px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm">
-          <div className="flex w-full items-center justify-center gap-8 border-b border-border px-4">
+          <div className="flex w-full items-center justify-between border-b border-border px-6">
             <TabButton label="Discover" active={tab === "discover"} onClick={() => setTab("discover")} />
             <TabButton label="Feeds ✨" active={tab === "feeds"} onClick={() => setTab("feeds")} />
           </div>
         </div>
-
-        {/* Trending topics */}
-        {tab === "discover" && showTopics && trendingTopics.length > 0 && (
-          <div className="flex items-center border-b border-border">
-            <ScrollArea className="flex-1">
-              <div className="flex items-center gap-0.5 px-2 py-2">
-                <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
-                {trendingTopics.map((topic) => (
-                  <button key={topic} onClick={() => navigate(`/search?q=${encodeURIComponent(topic)}`)}
-                    className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
-                    {topic}
-                  </button>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" className="h-0" />
-            </ScrollArea>
-            <button onClick={() => setShowTopics(false)} className="flex-shrink-0 p-2 text-muted-foreground hover:text-foreground">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
 
         {/* Posts */}
         {isLoading ? (
