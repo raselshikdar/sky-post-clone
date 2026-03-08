@@ -202,7 +202,7 @@ export default function Home() {
             <div className="flex items-center gap-0.5 px-2 py-2">
               <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
               {trendingTopics.map((topic) => (
-                <button key={topic} onClick={() => navigate(`/search?q=${encodeURIComponent(topic)}`)}
+                <button key={topic} onClick={() => navigate(`/trending/${encodeURIComponent(topic)}`)}
                   className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
                   {topic}
                 </button>
