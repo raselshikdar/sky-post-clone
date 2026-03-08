@@ -75,7 +75,7 @@ export default function AdminLayout() {
       {/* Mobile header */}
       <div className="flex flex-1 flex-col">
         <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm lg:hidden">
-          <button onClick={() => navigate("/home")} className="text-foreground">
+          <button onClick={() => navigate("/")} className="text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold">{isAdmin ? "Admin" : "Mod"} Panel</h1>
