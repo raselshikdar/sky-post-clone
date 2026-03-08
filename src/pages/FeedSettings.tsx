@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import {
   ArrowLeft, Hash, MessageSquareText, Home, MonitorPlay, Info,
-  ChevronRight, Play, TrendingUp, CheckSquare, Square,
-  ArrowUp, ArrowDown, Trash2, BellOff, Compass, ListFilter,
-  Flame, Heart, Users, Newspaper, Pencil, Palette, Save, Bell
+  ChevronRight, Play, TrendingUp, GripVertical, Pin,
+  Trash2, Compass, ListFilter,
+  Flame, Heart, Users, Newspaper, Pencil, Palette, Save, MessageCircle,
+  Repeat2, Quote, FlaskConical, TreeDeciduous
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/LanguageContext";
 
@@ -25,16 +25,26 @@ export default function FeedSettings() {
   const { t } = useTranslation();
   const [subSection, setSubSection] = useState<string | null>(null);
 
-  // Content settings from DB
   const [settings, setSettings] = useState({
     autoplay_media: true,
     enable_trending_topics: true,
     enable_trending_in_discover: true,
     thread_sort: "newest",
+    tree_view: false,
     following_feed_replies: true,
     following_feed_reposts: true,
     following_feed_quotes: true,
+    following_feed_samples: false,
     external_media_enabled: true,
+    ext_youtube: false,
+    ext_youtube_shorts: false,
+    ext_vimeo: false,
+    ext_twitch: false,
+    ext_giphy: false,
+    ext_spotify: false,
+    ext_apple_music: false,
+    ext_soundcloud: false,
+    ext_flickr: false,
   });
   const [loaded, setLoaded] = useState(false);
 
@@ -43,16 +53,10 @@ export default function FeedSettings() {
     supabase.from("content_settings").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       if (data) {
         const d = data as any;
-        setSettings({
-          autoplay_media: d.autoplay_media,
-          enable_trending_topics: d.enable_trending_topics,
-          enable_trending_in_discover: d.enable_trending_in_discover,
-          thread_sort: d.thread_sort,
-          following_feed_replies: d.following_feed_replies,
-          following_feed_reposts: d.following_feed_reposts,
-          following_feed_quotes: d.following_feed_quotes,
-          external_media_enabled: d.external_media_enabled,
-        });
+        setSettings(prev => ({
+          ...prev,
+          ...Object.fromEntries(Object.keys(prev).filter(k => d[k] !== undefined).map(k => [k, d[k]])),
+        }));
       }
       setLoaded(true);
     });
@@ -138,51 +142,79 @@ export default function FeedSettings() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["user_feeds"] }); },
   });
 
-  const renderBack = (title: string, onBack: () => void) => (
-    <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
-      <button onClick={onBack} className="p-1 rounded-full hover:bg-accent"><ArrowLeft className="h-5 w-5" /></button>
-      <h2 className="text-lg font-bold">{title}</h2>
+  const renderBack = (title: string, onBack: () => void, extra?: React.ReactNode) => (
+    <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="flex items-center gap-2">
+        <button onClick={onBack} className="p-1 rounded-full hover:bg-accent"><ArrowLeft className="h-5 w-5" /></button>
+        <h2 className="text-lg font-bold">{title}</h2>
+      </div>
+      {extra}
     </div>
   );
 
-  // Sub-section: Manage saved feeds
+  // ─── Sub: Feeds ───
   if (subSection === "feeds") {
     return (
       <div className="flex flex-col h-full">
-        {renderBack("Manage saved feeds", () => setSubSection(null))}
+        {renderBack("Feeds", () => setSubSection(null), (
+          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+            <Save className="h-4 w-4" /> Save
+          </Button>
+        ))}
         <ScrollArea className="flex-1">
-          <div className="px-4 pt-5 pb-2"><h3 className="text-base font-bold text-foreground">Pinned feeds</h3></div>
+          <div className="px-4 pt-5 pb-2"><h3 className="text-xl font-bold text-foreground">Pinned Feeds</h3></div>
           <div className="border-t border-border">
             {pinnedList.map((feed: any) => {
               const Icon = iconMap[feed.icon] || Compass;
-              const isDefault = feed._type === "default"; const isUserPinned = feed._type === "user_pinned";
+              const isDefault = feed._type === "default";
+              const isUserPinned = feed._type === "user_pinned";
               return (
                 <div key={feed.id + (feed._ufId || "")} className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
-                  <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${feed.color} text-white`}><Icon className="h-5 w-5" strokeWidth={2} /></div>
-                  <div className="flex-1 min-w-0"><p className="font-semibold text-[15px] text-foreground truncate">{feed.name}</p><p className="text-sm text-muted-foreground truncate">by {feed.author_handle}</p></div>
-                  <div className="flex items-center gap-1">
-                    {isUserPinned && (<>
-                      <button onClick={() => movePinned.mutate({ ufId: feed._ufId, direction: "up" })} className="p-2 rounded-full hover:bg-accent text-muted-foreground"><ArrowUp className="h-4 w-4" /></button>
-                      <button onClick={() => movePinned.mutate({ ufId: feed._ufId, direction: "down" })} className="p-2 rounded-full hover:bg-accent text-muted-foreground"><ArrowDown className="h-4 w-4" /></button>
-                    </>)}
-                    <button className={`p-2 rounded-full hover:bg-accent ${isDefault || isUserPinned ? "text-primary" : "text-muted-foreground"}`} onClick={() => { if (isUserPinned && feed._ufId) togglePin.mutate(feed._ufId); }} disabled={isDefault}><Bell className="h-4 w-4" /></button>
+                  <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg ${feed.color || "bg-primary"} text-white`}>
+                    <Icon className="h-5 w-5" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[15px] text-foreground truncate">{feed.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">Feed by {feed.author_handle}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="p-1.5 text-primary"
+                      onClick={() => { if (isUserPinned && feed._ufId) togglePin.mutate(feed._ufId); }}
+                      disabled={isDefault}
+                    >
+                      <Pin className="h-4 w-4 fill-primary" />
+                    </button>
+                    <button className="p-1.5 text-muted-foreground cursor-grab">
+                      <GripVertical className="h-5 w-5" />
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+
           {savedList.length > 0 && (<>
-            <div className="px-4 pt-6 pb-2"><h3 className="text-base font-bold text-foreground">Saved feeds</h3></div>
+            <div className="px-4 pt-6 pb-2"><h3 className="text-xl font-bold text-foreground">Saved Feeds</h3></div>
             <div className="border-t border-border">
               {savedList.map((feed: any) => {
                 const Icon = iconMap[feed.icon] || Compass;
                 return (
                   <div key={feed._ufId} className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
-                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${feed.color} text-white`}><Icon className="h-5 w-5" strokeWidth={2} /></div>
-                    <div className="flex-1 min-w-0"><p className="font-semibold text-[15px] text-foreground truncate">{feed.name}</p><p className="text-sm text-muted-foreground truncate">by {feed.author_handle}</p></div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => removeFeed.mutate(feed._ufId)} className="p-2 rounded-full hover:bg-accent text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>
-                      <button onClick={() => togglePin.mutate(feed._ufId)} className="p-2 rounded-full hover:bg-accent text-muted-foreground"><BellOff className="h-4 w-4" /></button>
+                    <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg ${feed.color || "bg-primary"} text-white`}>
+                      <Icon className="h-5 w-5" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[15px] text-foreground truncate">{feed.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">Feed by {feed.author_handle}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => removeFeed.mutate(feed._ufId)} className="p-1.5 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => togglePin.mutate(feed._ufId)} className="p-1.5 text-primary">
+                        <Pin className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -195,90 +227,168 @@ export default function FeedSettings() {
     );
   }
 
-  // Sub-section: Thread preferences
+  // ─── Sub: Thread Preferences ───
   if (subSection === "threads") {
     const sortOptions = [
-      { value: "newest", label: "Newest replies first" },
+      { value: "most_liked", label: "Top replies first" },
       { value: "oldest", label: "Oldest replies first" },
-      { value: "most_liked", label: "Most liked first" },
+      { value: "newest", label: "Newest replies first" },
     ];
     return (
       <div className="flex flex-col h-full">
-        {renderBack("Thread preferences", () => setSubSection(null))}
-        <div className="p-4 space-y-4">
-          <p className="text-sm text-muted-foreground">Choose how replies are sorted in threads</p>
-          <div className="space-y-1">
-            {sortOptions.map((opt) => (
-              <button key={opt.value} onClick={() => updateSetting("thread_sort", opt.value)}
-                className={`w-full rounded-xl px-4 py-3.5 text-left text-[15px] transition-colors ${settings.thread_sort === opt.value ? "bg-primary/10 text-primary font-medium border border-primary/30" : "border border-border hover:bg-accent"}`}>
-                {opt.label}
-              </button>
-            ))}
+        {renderBack("Thread Preferences", () => setSubSection(null))}
+        <div className="p-4 space-y-6">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <MessageSquareText className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+              <h3 className="text-base font-bold text-foreground">Sort replies</h3>
+            </div>
+            <p className="text-sm text-muted-foreground ml-8">Sort replies to the same post by:</p>
+            <div className="ml-8 space-y-3">
+              {sortOptions.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-3 cursor-pointer" onClick={() => updateSetting("thread_sort", opt.value)}>
+                  <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${settings.thread_sort === opt.value ? "border-primary bg-primary" : "border-muted-foreground"}`}>
+                    {settings.thread_sort === opt.value && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
+                  </div>
+                  <span className="text-[15px] font-medium text-foreground">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4 space-y-2">
+            <div className="flex items-center gap-3">
+              <TreeDeciduous className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+              <h3 className="text-base font-bold text-foreground">Tree view</h3>
+            </div>
+            <div className="flex items-center justify-between ml-8">
+              <p className="text-sm text-muted-foreground pr-4">Show post replies in a threaded tree view</p>
+              <Checkbox checked={settings.tree_view} onCheckedChange={(c) => updateSetting("tree_view", !!c)} disabled={!loaded} />
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Sub-section: Following feed preferences
+  // ─── Sub: Following Feed Preferences ───
   if (subSection === "following") {
     return (
       <div className="flex flex-col h-full">
-        {renderBack("Following feed preferences", () => setSubSection(null))}
-        <div className="p-4 space-y-1">
-          <p className="text-sm text-muted-foreground mb-4">Choose what content to show in your Following feed</p>
-          <div className="flex items-center justify-between py-3.5 border-b border-border">
-            <span className="text-[15px] font-medium">Show replies</span>
-            <Switch checked={settings.following_feed_replies} onCheckedChange={(v) => updateSetting("following_feed_replies", v)} disabled={!loaded} />
+        {renderBack("Following Feed Preferences", () => setSubSection(null))}
+        <div className="p-4 space-y-4">
+          {/* Info box */}
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3.5 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-foreground">These settings only apply to the Following feed.</p>
           </div>
-          <div className="flex items-center justify-between py-3.5 border-b border-border">
-            <span className="text-[15px] font-medium">Show reposts</span>
-            <Switch checked={settings.following_feed_reposts} onCheckedChange={(v) => updateSetting("following_feed_reposts", v)} disabled={!loaded} />
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between py-3.5 border-b border-border">
+              <div className="flex items-center gap-3">
+                <MessageSquareText className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                <span className="text-[15px] font-medium">Show replies</span>
+              </div>
+              <Checkbox checked={settings.following_feed_replies} onCheckedChange={(v) => updateSetting("following_feed_replies", !!v)} disabled={!loaded} />
+            </div>
+            <div className="flex items-center justify-between py-3.5 border-b border-border">
+              <div className="flex items-center gap-3">
+                <Repeat2 className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                <span className="text-[15px] font-medium">Show reposts</span>
+              </div>
+              <Checkbox checked={settings.following_feed_reposts} onCheckedChange={(v) => updateSetting("following_feed_reposts", !!v)} disabled={!loaded} />
+            </div>
+            <div className="flex items-center justify-between py-3.5 border-b border-border">
+              <div className="flex items-center gap-3">
+                <Quote className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                <span className="text-[15px] font-medium">Show quote posts</span>
+              </div>
+              <Checkbox checked={settings.following_feed_quotes} onCheckedChange={(v) => updateSetting("following_feed_quotes", !!v)} disabled={!loaded} />
+            </div>
           </div>
-          <div className="flex items-center justify-between py-3.5 border-b border-border">
-            <span className="text-[15px] font-medium">Show quote posts</span>
-            <Switch checked={settings.following_feed_quotes} onCheckedChange={(v) => updateSetting("following_feed_quotes", v)} disabled={!loaded} />
+
+          <div className="border-t border-border pt-4 space-y-2">
+            <div className="flex items-center gap-3">
+              <FlaskConical className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+              <h3 className="text-base font-bold text-foreground">Experimental</h3>
+            </div>
+            <div className="flex items-center justify-between ml-8">
+              <p className="text-sm text-muted-foreground pr-4">Show samples of your saved feeds in your Following feed</p>
+              <Checkbox checked={settings.following_feed_samples} onCheckedChange={(v) => updateSetting("following_feed_samples", !!v)} disabled={!loaded} />
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Sub-section: External media
+  // ─── Sub: External Media ───
   if (subSection === "external") {
+    const providers = [
+      { key: "ext_youtube", label: "YouTube" },
+      { key: "ext_youtube_shorts", label: "YouTube Shorts" },
+      { key: "ext_vimeo", label: "Vimeo" },
+      { key: "ext_twitch", label: "Twitch" },
+      { key: "ext_giphy", label: "GIPHY" },
+      { key: "ext_spotify", label: "Spotify" },
+      { key: "ext_apple_music", label: "Apple Music" },
+      { key: "ext_soundcloud", label: "SoundCloud" },
+      { key: "ext_flickr", label: "Flickr" },
+    ];
     return (
       <div className="flex flex-col h-full">
-        {renderBack("External media", () => setSubSection(null))}
-        <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between py-3.5">
-            <div>
-              <p className="text-[15px] font-medium">Show external media</p>
-              <p className="text-xs text-muted-foreground mt-1">Allow loading of images and media from external sources in posts</p>
+        {renderBack("External Media Preferences", () => setSubSection(null))}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-5">
+            {/* Info box */}
+            <div className="rounded-lg border border-border bg-muted/30 p-3.5 flex items-start gap-3">
+              <Info className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                External media may allow websites to collect information about you and your device. No information is sent or requested until you press the "play" button.
+              </p>
             </div>
-            <Switch checked={settings.external_media_enabled} onCheckedChange={(v) => updateSetting("external_media_enabled", v)} disabled={!loaded} />
+
+            <div>
+              <p className="text-[15px] font-medium text-foreground mb-4">Enable media players for</p>
+              <div className="space-y-1">
+                {providers.map((p) => (
+                  <div key={p.key} className="flex items-center justify-between py-3 border-b border-border last:border-b-0">
+                    <span className="text-[15px] font-medium text-foreground">{p.label}</span>
+                    <Checkbox
+                      checked={(settings as any)[p.key]}
+                      onCheckedChange={(c) => updateSetting(p.key, !!c)}
+                      disabled={!loaded}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+          <div className="h-20" />
+        </ScrollArea>
       </div>
     );
   }
 
-  // Sub-section: Your interests
+  // ─── Sub: Your Interests ───
   if (subSection === "interests") {
     return (
       <div className="flex flex-col h-full">
         {renderBack("Your interests", () => setSubSection(null))}
         <ScrollArea className="flex-1">
-          <div className="p-4 space-y-3">
-            <p className="text-sm text-muted-foreground">Select topics you're interested in to personalize your feed</p>
+          <div className="p-4 space-y-4">
+            <div className="pb-3 border-b border-border">
+              <p className="text-sm text-muted-foreground">Your selected interests help us serve you content you care about.</p>
+            </div>
             {allInterests.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No interests available</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 {allInterests.map((interest: any) => {
                   const selected = userInterestIds.has(interest.id);
                   return (
                     <button key={interest.id} onClick={() => toggleInterest(interest.id)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${selected ? "bg-primary text-primary-foreground" : "border border-border text-foreground hover:bg-accent"}`}>
+                      className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${selected ? "bg-foreground text-background" : "bg-muted text-foreground hover:bg-accent"}`}>
                       {interest.name}
                     </button>
                   );
@@ -292,7 +402,7 @@ export default function FeedSettings() {
     );
   }
 
-  // Main Content & Media page
+  // ─── Main Content & Media page ───
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
