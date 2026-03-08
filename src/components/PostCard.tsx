@@ -59,6 +59,7 @@ export default function PostCard({
   const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
   const [replyComposerOpen, setReplyComposerOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -256,22 +257,26 @@ export default function PostCard({
               onClick={handleBookmark}
               fill={bookmarked || isBookmarked}
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+            <DropdownMenu open={shareMenuOpen} onOpenChange={setShareMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShareMenuOpen(prev => !prev); }}
+                  onPointerDown={(e) => e.preventDefault()}
+                >
                   <Forward className="h-[18px] w-[18px]" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 z-50 bg-background border border-border shadow-lg">
                 <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); handleCopyLink(e as any); }}
+                  onClick={(e) => { e.stopPropagation(); handleCopyLink(e as any); setShareMenuOpen(false); }}
                   className="cursor-pointer py-2.5 px-3 text-sm gap-2"
                 >
                   <Link2 className="h-4 w-4" />
                   Copy link to post
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); handleSendDM(e as any); }}
+                  onClick={(e) => { e.stopPropagation(); handleSendDM(e as any); setShareMenuOpen(false); }}
                   className="cursor-pointer py-2.5 px-3 text-sm gap-2"
                 >
                   <Send className="h-4 w-4" />
