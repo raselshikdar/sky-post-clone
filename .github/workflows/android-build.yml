@@ -5,13 +5,19 @@ on:
   push:
     paths:
       - 'android-twa/**'
+      - '.github/workflows/android-build.yml'
+
+env:
+  MANIFEST_URL: "https://sky-post-clone.lovable.app/manifest.json"
+  TWA_DIR: "android-twa"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     defaults:
       run:
-        working-directory: android-twa
+        working-directory: ${{ env.TWA_DIR }}
 
     steps:
       - name: Checkout repository
@@ -37,7 +43,20 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Generate signing keystore
+      # ---------- SIGNING KEY ----------
+      - name: Decode keystore from secret (if available)
+        id: keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+            echo "keystore_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "keystore_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No keystore secret found. A temporary keystore will be generated."
+          fi
+
+      - name: Generate temporary keystore (only if secret missing)
+        if: steps.keystore.outputs.keystore_available == 'false'
         run: |
           keytool -genkeypair \
             -alias awaj \
@@ -48,33 +67,52 @@ jobs:
             -validity 10000 \
             -keyalg RSA \
             -keysize 2048
+          echo "✅ Temporary keystore created (for testing only)."
 
-      - name: Initialize TWA project
+      # ---------- CLEAN OLD BUILD FILES (BUT KEEP CONFIGS) ----------
+      - name: Clean previous build files
         run: |
-          npx bubblewrap init --manifest="https://sky-post-clone.lovable.app/manifest.json" --directory=. 2>/dev/null || \
-          npx bubblewrap init --manifest twa-manifest.json --directory=. 2>/dev/null || true
+          rm -rf ./app ./gradle ./build ./gradlew ./settings.gradle ./build.gradle ./local.properties 2>/dev/null || true
+          echo "🧹 Old build files removed."
 
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew || true
+      # ---------- INITIALIZE TWA PROJECT ----------
+      - name: Initialize TWA project from manifest
+        run: |
+          bubblewrap init \
+            --manifest="${{ env.MANIFEST_URL }}" \
+            --skipPwaValidation \
+            --directory="."
+          echo "✅ TWA project initialized."
 
+      # ---------- BUILD (WITH NON-INTERACTIVE FALLBACK) ----------
       - name: Build TWA (APK + AAB)
         run: |
-          printf "n\n" | npx bubblewrap build --skipPwaValidation \
+          printf "n\n" | bubblewrap build \
+            --skipPwaValidation \
             --signingKeyPath=android.keystore \
             --signingKeyAlias=awaj \
             --signingKeyPassword=android \
             --signingKeyStorePassword=android
 
-      - name: Upload APK artifact
+      # ---------- LOCATE AND UPLOAD ARTIFACTS ----------
+      - name: Locate APK and AAB
+        id: locate
+        run: |
+          apk_path=$(find . -name "*release*.apk" | head -1)
+          aab_path=$(find . -name "*.aab" | head -1)
+          echo "apk_path=$apk_path" >> $GITHUB_OUTPUT
+          echo "aab_path=$aab_path" >> $GITHUB_OUTPUT
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: awaj-twa-apk
-          path: app-release-signed.apk
-          if-no-files-found: warn
+          path: ${{ steps.locate.outputs.apk_path }}
+          if-no-files-found: error
 
-      - name: Upload AAB artifact
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: awaj-twa-aab
-          path: app-release-bundle.aab
-          if-no-files-found: warn
+          path: ${{ steps.locate.outputs.aab_path }}
+          if-no-files-found: error
