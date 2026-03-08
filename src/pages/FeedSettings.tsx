@@ -4,7 +4,8 @@ import {
   ChevronRight, Play, TrendingUp, GripVertical, Pin,
   Trash2, Compass, ListFilter,
   Flame, Heart, Users, Newspaper, Pencil, Palette, Save, MessageCircle,
-  Repeat2, Quote, FlaskConical, TreeDeciduous
+  Repeat2, Quote, FlaskConical, TreeDeciduous, Video, VolumeX, Volume2,
+  RotateCcw, Gauge
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,6 +46,9 @@ export default function FeedSettings() {
     ext_apple_music: false,
     ext_soundcloud: false,
     ext_flickr: false,
+    video_default_muted: true,
+    video_loop: false,
+    video_quality: "auto",
   });
   const [loaded, setLoaded] = useState(false);
 
@@ -322,6 +326,114 @@ export default function FeedSettings() {
     );
   }
 
+  // ─── Sub: Video Preferences ───
+  if (subSection === "video") {
+    const qualityOptions = [
+      { value: "auto", label: "Auto (recommended)" },
+      { value: "low", label: "Low (save data)" },
+      { value: "medium", label: "Medium" },
+      { value: "high", label: "High" },
+    ];
+    return (
+      <div className="flex flex-col h-full">
+        {renderBack("Video Preferences", () => setSubSection(null))}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-5">
+            {/* Info box */}
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3.5 flex items-start gap-3">
+              <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">Control how uploaded and embedded videos behave in your feeds.</p>
+            </div>
+
+            {/* Playback section */}
+            <div className="space-y-1">
+              <div className="px-0 pb-2">
+                <h3 className="text-base font-bold text-foreground">Playback</h3>
+              </div>
+              <div className="flex items-center justify-between py-3.5 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <Play className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[15px] font-medium text-foreground block">Autoplay videos</span>
+                    <span className="text-sm text-muted-foreground">Videos play automatically as you scroll</span>
+                  </div>
+                </div>
+                <Checkbox checked={settings.autoplay_media} onCheckedChange={(v) => updateSetting("autoplay_media", !!v)} disabled={!loaded} />
+              </div>
+              <div className="flex items-center justify-between py-3.5 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <VolumeX className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[15px] font-medium text-foreground block">Mute by default</span>
+                    <span className="text-sm text-muted-foreground">Videos start muted until you unmute</span>
+                  </div>
+                </div>
+                <Checkbox checked={settings.video_default_muted} onCheckedChange={(v) => updateSetting("video_default_muted", !!v)} disabled={!loaded} />
+              </div>
+              <div className="flex items-center justify-between py-3.5 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <RotateCcw className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[15px] font-medium text-foreground block">Loop videos</span>
+                    <span className="text-sm text-muted-foreground">Replay videos automatically when they end</span>
+                  </div>
+                </div>
+                <Checkbox checked={settings.video_loop} onCheckedChange={(v) => updateSetting("video_loop", !!v)} disabled={!loaded} />
+              </div>
+            </div>
+
+            {/* Quality section */}
+            <div className="border-t border-border pt-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <Gauge className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                <h3 className="text-base font-bold text-foreground">Video quality</h3>
+              </div>
+              <p className="text-sm text-muted-foreground ml-8">Preferred quality for video playback:</p>
+              <div className="ml-8 space-y-3">
+                {qualityOptions.map((opt) => (
+                  <label key={opt.value} className="flex items-center gap-3 cursor-pointer" onClick={() => updateSetting("video_quality", opt.value)}>
+                    <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${settings.video_quality === opt.value ? "border-primary bg-primary" : "border-muted-foreground"}`}>
+                      {settings.video_quality === opt.value && <div className="h-2 w-2 rounded-full bg-primary-foreground" />}
+                    </div>
+                    <span className="text-[15px] font-medium text-foreground">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Embed section */}
+            <div className="border-t border-border pt-4 space-y-1">
+              <div className="px-0 pb-2">
+                <h3 className="text-base font-bold text-foreground">Embedded videos</h3>
+              </div>
+              <div className="flex items-center justify-between py-3.5 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <MonitorPlay className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[15px] font-medium text-foreground block">Enable external embeds</span>
+                    <span className="text-sm text-muted-foreground">Show embedded videos from YouTube, Facebook, etc.</span>
+                  </div>
+                </div>
+                <Checkbox checked={settings.external_media_enabled} onCheckedChange={(v) => updateSetting("external_media_enabled", !!v)} disabled={!loaded} />
+              </div>
+              <div className="flex items-center justify-between py-3.5 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5 text-foreground" strokeWidth={1.75} />
+                  <div>
+                    <span className="text-[15px] font-medium text-foreground block">Trending videos in Discover</span>
+                    <span className="text-sm text-muted-foreground">Show trending videos in your Discover feed</span>
+                  </div>
+                </div>
+                <Checkbox checked={settings.enable_trending_in_discover} onCheckedChange={(v) => updateSetting("enable_trending_in_discover", !!v)} disabled={!loaded} />
+              </div>
+            </div>
+          </div>
+          <div className="h-20" />
+        </ScrollArea>
+      </div>
+    );
+  }
+
   // ─── Sub: External Media ───
   if (subSection === "external") {
     const providers = [
@@ -414,6 +526,7 @@ export default function FeedSettings() {
           <SettingsNavRow icon={Hash} label="Manage saved feeds" onClick={() => setSubSection("feeds")} />
           <SettingsNavRow icon={MessageSquareText} label="Thread preferences" onClick={() => setSubSection("threads")} />
           <SettingsNavRow icon={Home} label="Following feed preferences" onClick={() => setSubSection("following")} />
+          <SettingsNavRow icon={Video} label="Video preferences" onClick={() => setSubSection("video")} />
           <SettingsNavRow icon={MonitorPlay} label="External media" onClick={() => setSubSection("external")} />
           <SettingsNavRow icon={Info} label="Your interests" onClick={() => setSubSection("interests")} />
         </div>
