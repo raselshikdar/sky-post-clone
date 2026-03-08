@@ -1176,18 +1176,39 @@ function EditProfileDialog({ open, onOpenChange, profile, onSaved }: any) {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
+  // Crop dialog state
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState("");
+  const [cropShape, setCropShape] = useState<"avatar" | "banner">("avatar");
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    setCropSrc(URL.createObjectURL(file));
+    setCropShape("avatar");
+    setCropOpen(true);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
   };
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setBannerFile(file);
-    setBannerPreview(URL.createObjectURL(file));
+    setCropSrc(URL.createObjectURL(file));
+    setCropShape("banner");
+    setCropOpen(true);
+    e.target.value = "";
+  };
+
+  const handleCropComplete = (croppedFile: File) => {
+    const previewUrl = URL.createObjectURL(croppedFile);
+    if (cropShape === "avatar") {
+      setAvatarFile(croppedFile);
+      setAvatarPreview(previewUrl);
+    } else {
+      setBannerFile(croppedFile);
+      setBannerPreview(previewUrl);
+    }
   };
 
   const uploadImage = async (file: File) => {
