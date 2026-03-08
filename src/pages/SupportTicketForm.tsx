@@ -97,7 +97,7 @@ export default function SupportTicketForm() {
   const renderHeader = () => {
     if (view === "detail") {
       return (
-        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
           <button onClick={() => setView("list")} className="p-1 rounded-full hover:bg-accent">
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -107,7 +107,7 @@ export default function SupportTicketForm() {
     }
     if (view === "form") {
       return (
-        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
           <button onClick={() => setView("list")} className="p-1 rounded-full hover:bg-accent">
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -116,7 +116,7 @@ export default function SupportTicketForm() {
       );
     }
     return (
-      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
         <button onClick={() => navigate(-1)} className="p-1 rounded-full hover:bg-accent">
           <ChevronLeft className="h-5 w-5" />
         </button>
