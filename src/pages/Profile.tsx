@@ -339,7 +339,10 @@ export default function Profile() {
                 {profileLiveStatus.stream_type === "audio" ? "Audio Podcast" : (detectPlatform(profileLiveStatus.live_link)?.name || "Live Stream")}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{profileLiveStatus.live_link}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-muted-foreground truncate">{profileLiveStatus.live_link}</p>
+              <LiveViewerCount liveStatusId={profileLiveStatus.id} isAudio={profileLiveStatus.stream_type === "audio"} />
+            </div>
           </div>
           <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         </button>
@@ -890,6 +893,11 @@ function LiveViewerDialog({ open, onOpenChange, liveStatus, profile }: {
                       {platform.name}
                     </span>
                   </>
+                )}
+                {viewerCount > 0 && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                    · {viewerCount} {isAudio ? "listening" : "watching"}
+                  </span>
                 )}
               </div>
             </div>
