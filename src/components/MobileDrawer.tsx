@@ -87,9 +87,9 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
             return (
               <NavLink key={label} to={profilePath} onClick={() => onOpenChange(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-semibold transition-colors ${isActive ? "text-foreground bg-accent" : "text-foreground hover:bg-accent"}`
+                  `flex items-center gap-4 rounded-lg px-3 py-2.5 text-[30px] font-semibold transition-colors ${isActive ? "text-foreground bg-accent" : "text-foreground hover:bg-accent"}`
                 }>
-                <Icon className="h-5 w-5" strokeWidth={1.75} />
+                <Icon className="h-7 w-7" strokeWidth={1.75} />
                 {label}
               </NavLink>
             );
@@ -97,9 +97,9 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
           {isStaff && (
             <NavLink to="/admin" onClick={() => onOpenChange(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-semibold transition-colors ${isActive ? "text-primary bg-primary/10" : "text-primary hover:bg-primary/5"}`
+                `flex items-center gap-4 rounded-lg px-3 py-2.5 text-[30px] font-semibold transition-colors ${isActive ? "text-primary bg-primary/10" : "text-primary hover:bg-primary/5"}`
               }>
-              <ShieldCheck className="h-5 w-5" strokeWidth={1.75} />
+              <ShieldCheck className="h-7 w-7" strokeWidth={1.75} />
               {isAdmin ? t("drawer.admin_panel") : t("drawer.mod_panel")}
             </NavLink>
           )}
