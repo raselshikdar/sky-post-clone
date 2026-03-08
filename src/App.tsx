@@ -37,6 +37,7 @@ import AdminFeeds from "@/pages/admin/AdminFeeds";
 import AdminVerification from "@/pages/admin/AdminVerification";
 import AdminSupport from "@/pages/admin/AdminSupport";
 import AdminRoles from "@/pages/admin/AdminRoles";
+import AdminContent from "@/pages/admin/AdminContent";
 import LandingPage from "@/pages/LandingPage";
 import PublicFeed from "@/pages/PublicFeed";
 import TermsOfService from "@/pages/TermsOfService";
@@ -125,6 +126,7 @@ const App = () => (
                 <Route index element={<AdminOverview />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="moderation" element={<AdminModeration />} />
+                <Route path="content" element={<AdminContent />} />
                 <Route path="feeds" element={<AdminFeeds />} />
                 <Route path="verification" element={<AdminVerification />} />
                 <Route path="support" element={<AdminSupport />} />

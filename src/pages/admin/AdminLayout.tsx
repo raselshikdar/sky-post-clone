@@ -2,13 +2,14 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useRole } from "@/hooks/use-role";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  Users, Shield, BarChart3, Rss, BadgeCheck, MessageSquareText, ArrowLeft, Settings2
+  Users, Shield, BarChart3, Rss, BadgeCheck, MessageSquareText, ArrowLeft, Settings2, FileText
 } from "lucide-react";
 
 const adminNavItems = [
   { label: "Overview", path: "/admin", icon: BarChart3, adminOnly: false },
   { label: "Users", path: "/admin/users", icon: Users, adminOnly: false },
   { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false },
+  { label: "Content", path: "/admin/content", icon: FileText, adminOnly: false },
   { label: "Feeds", path: "/admin/feeds", icon: Rss, adminOnly: true },
   { label: "Verification", path: "/admin/verification", icon: BadgeCheck, adminOnly: true },
   { label: "Support", path: "/admin/support", icon: MessageSquareText, adminOnly: false },
