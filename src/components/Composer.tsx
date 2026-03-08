@@ -236,7 +236,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
     if (videoProcessing) return; // Don't close while processing
     images.forEach((img) => URL.revokeObjectURL(img.preview));
     if (videoPreview) URL.revokeObjectURL(videoPreview);
-    setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); onOpenChange(false);
+    setContent(""); setImages([]); setVideoFile(null); setVideoPreview(null); setConfirmedEmbedUrl(null); setEmbedUrl(""); setEmbedInputOpen(false); setSelectedGif(null); onOpenChange(false);
   };
 
   const ringRadius = 10;
@@ -332,6 +332,17 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
                   <EmbedPlayer url={confirmedEmbedUrl} />
                   <button onClick={removeEmbed}
                     className="absolute top-2.5 right-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+               )}
+
+              {/* GIF preview */}
+              {selectedGif && (
+                <div className="mt-2 relative rounded-xl overflow-hidden border border-border">
+                  <img src={selectedGif} alt="Selected GIF" className="w-full max-h-[300px] object-contain bg-muted" />
+                  <button onClick={() => setSelectedGif(null)}
+                    className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
