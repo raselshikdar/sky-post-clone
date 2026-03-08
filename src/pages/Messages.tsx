@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, Settings, Search, X, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,10 +15,24 @@ import { useTranslation } from "@/i18n/LanguageContext";
 export default function Messages() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
+
+  // Realtime subscription for conversations and messages
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("messages-list")
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" },
+        () => { queryClient.invalidateQueries({ queryKey: ["conversations", user.id] }); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" },
+        () => { queryClient.invalidateQueries({ queryKey: ["conversations", user.id] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["conversations", user?.id],
