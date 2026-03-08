@@ -26,6 +26,8 @@ export default function ImageGrid({ images }: ImageGridProps) {
           <img
             src={images[0]}
             alt=""
+            loading="lazy"
+            decoding="async"
             onClick={(e) => openLightbox(0, e)}
             className="h-full w-full object-cover cursor-pointer"
           />
@@ -38,6 +40,8 @@ export default function ImageGrid({ images }: ImageGridProps) {
                 key={i}
                 src={img}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 onClick={(e) => openLightbox(i, e)}
                 className="h-full w-full object-cover cursor-pointer"
               />
@@ -50,6 +54,8 @@ export default function ImageGrid({ images }: ImageGridProps) {
             <img
               src={images[0]}
               alt=""
+              loading="lazy"
+              decoding="async"
               onClick={(e) => openLightbox(0, e)}
               className="h-full w-full object-cover cursor-pointer row-span-2"
             />
@@ -57,12 +63,16 @@ export default function ImageGrid({ images }: ImageGridProps) {
               <img
                 src={images[1]}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 onClick={(e) => openLightbox(1, e)}
                 className="h-full w-full object-cover cursor-pointer"
               />
               <img
                 src={images[2]}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 onClick={(e) => openLightbox(2, e)}
                 className="h-full w-full object-cover cursor-pointer"
               />
@@ -77,6 +87,8 @@ export default function ImageGrid({ images }: ImageGridProps) {
                 key={i}
                 src={img}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 onClick={(e) => openLightbox(i, e)}
                 className="h-full w-full object-cover cursor-pointer"
               />
