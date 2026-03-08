@@ -619,16 +619,23 @@ function ProfileListsDialog({ open, onOpenChange, targetUserId, targetDisplayNam
 
 /* ---- Go Live Dialog ---- */
 const SUPPORTED_PLATFORMS = [
-  { name: "YouTube", domain: ["youtube.com", "youtu.be"], color: "bg-red-600" },
-  { name: "Facebook", domain: ["facebook.com", "fb.watch"], color: "bg-blue-600" },
-  { name: "Twitch", domain: ["twitch.tv"], color: "bg-purple-600" },
-  { name: "VDO.Ninja", domain: ["vdo.ninja"], color: "bg-emerald-600" },
-  { name: "Kick", domain: ["kick.com"], color: "bg-green-500" },
-  { name: "Instagram", domain: ["instagram.com"], color: "bg-pink-600" },
-  { name: "TikTok", domain: ["tiktok.com"], color: "bg-foreground" },
-  { name: "Rumble", domain: ["rumble.com"], color: "bg-green-700" },
-  { name: "Streamyard", domain: ["streamyard.com"], color: "bg-blue-500" },
-  { name: "Restream", domain: ["restream.io"], color: "bg-indigo-600" },
+  // Video platforms
+  { name: "YouTube", domain: ["youtube.com", "youtu.be"], color: "bg-red-600", type: "video" as const },
+  { name: "Facebook", domain: ["facebook.com", "fb.watch"], color: "bg-blue-600", type: "video" as const },
+  { name: "Twitch", domain: ["twitch.tv"], color: "bg-purple-600", type: "video" as const },
+  { name: "VDO.Ninja", domain: ["vdo.ninja"], color: "bg-emerald-600", type: "video" as const },
+  { name: "Kick", domain: ["kick.com"], color: "bg-green-500", type: "video" as const },
+  { name: "Instagram", domain: ["instagram.com"], color: "bg-pink-600", type: "video" as const },
+  { name: "TikTok", domain: ["tiktok.com"], color: "bg-foreground", type: "video" as const },
+  { name: "Rumble", domain: ["rumble.com"], color: "bg-green-700", type: "video" as const },
+  { name: "Streamyard", domain: ["streamyard.com"], color: "bg-blue-500", type: "video" as const },
+  { name: "Restream", domain: ["restream.io"], color: "bg-indigo-600", type: "video" as const },
+  // Audio / Podcast platforms
+  { name: "Spotify", domain: ["spotify.com", "open.spotify.com"], color: "bg-green-500", type: "audio" as const },
+  { name: "Apple Podcasts", domain: ["podcasts.apple.com"], color: "bg-purple-500", type: "audio" as const },
+  { name: "SoundCloud", domain: ["soundcloud.com"], color: "bg-orange-500", type: "audio" as const },
+  { name: "Twitter/X Spaces", domain: ["twitter.com/i/spaces", "x.com/i/spaces"], color: "bg-foreground", type: "audio" as const },
+  { name: "Clubhouse", domain: ["clubhouse.com"], color: "bg-yellow-500", type: "audio" as const },
 ];
 
 function detectPlatform(url: string) {
