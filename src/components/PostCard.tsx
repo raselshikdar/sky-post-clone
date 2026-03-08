@@ -13,6 +13,7 @@ import ImageGrid from "@/components/ImageGrid";
 import RichContent from "@/components/RichContent";
 import VideoPlayer from "@/components/VideoPlayer";
 import EmbedPlayer from "@/components/EmbedPlayer";
+import LiveAvatar from "@/components/LiveAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Composer from "@/components/Composer";
 
@@ -150,12 +151,14 @@ export default function PostCard({
         onClick={() => navigate(`/post/${id}`)}
       >
         <div className="flex-shrink-0 pt-0.5">
-          <Avatar className="h-11 w-11 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>
-            <AvatarImage src={authorAvatar} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-              {authorName[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <LiveAvatar
+            userId={authorId}
+            src={authorAvatar}
+            fallback={authorName[0]?.toUpperCase() || "?"}
+            className="h-11 w-11"
+            onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}
+            onLiveClick={() => navigate(`/profile/${authorHandle}`)}
+          />
         </div>
 
         <div className="min-w-0 flex-1">

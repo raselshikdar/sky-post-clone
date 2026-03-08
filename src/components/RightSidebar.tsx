@@ -1,4 +1,4 @@
-import { Search, TrendingUp } from "lucide-react";
+import { Search, TrendingUp, Radio } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { useAllLiveUsers } from "@/hooks/use-live-status";
 
 export default function RightSidebar() {
   const { user } = useAuth();
@@ -60,12 +61,44 @@ export default function RightSidebar() {
     toast.success(t("sidebar.followed"));
   };
 
+  const { data: liveUsers = [] } = useAllLiveUsers();
+
   return (
     <aside className="sticky top-0 hidden h-screen w-[320px] flex-col gap-4 overflow-y-auto py-4 pl-6 xl:flex">
       <div className="relative" onClick={() => navigate("/search")}>
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder={t("sidebar.search")} className="rounded-full border-border bg-secondary pl-9 focus-visible:ring-primary cursor-pointer" readOnly />
       </div>
+
+      {/* Live Now Widget */}
+      {liveUsers.length > 0 && (
+        <div className="rounded-2xl bg-secondary p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
+            <Radio className="h-5 w-5 text-destructive animate-pulse" /> Live Now
+          </h3>
+          <div className="space-y-3">
+            {liveUsers.slice(0, 5).map((ls: any) => {
+              const p = ls.profiles;
+              if (!p) return null;
+              return (
+                <div key={ls.id} className="flex items-center gap-3 cursor-pointer rounded-lg p-2 -mx-2 bsky-hover transition-colors" onClick={() => navigate(`/profile/${p.username}`)}>
+                  <div className="relative">
+                    <Avatar className="h-9 w-9 ring-2 ring-destructive ring-offset-1 ring-offset-background">
+                      <AvatarImage src={p.avatar_url} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">{p.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
+                    </Avatar>
+                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 bg-destructive text-destructive-foreground text-[7px] font-bold px-1 rounded animate-pulse leading-none">LIVE</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold flex items-center gap-1">{p.display_name}<VerifiedBadge userId={p.id} /></p>
+                    <p className="truncate text-xs text-muted-foreground">@{p.username}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div className="rounded-2xl bg-secondary p-4">
         <h3 className="mb-3 flex items-center gap-2 text-lg font-bold">
           <TrendingUp className="h-5 w-5" /> {t("sidebar.whats_hot")}
