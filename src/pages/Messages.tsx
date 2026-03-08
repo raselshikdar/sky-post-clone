@@ -17,6 +17,7 @@ export default function Messages() {
   const { user } = useAuth();
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
 
   const { data: conversations = [] } = useQuery({
@@ -59,15 +60,42 @@ export default function Messages() {
         <button onClick={() => navigate("/messages/settings")} className="text-muted-foreground hover:text-foreground"><Settings className="h-5 w-5" /></button>
       </div>
 
-      {conversations.length === 0 && !isLoading ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
-          <MessageCircle className="h-16 w-16 text-primary" strokeWidth={1.5} />
-          <h3 className="text-xl font-bold">{t("msg.nothing_here")}</h3>
-          <p className="text-muted-foreground text-center">{t("msg.no_conversations")}</p>
+      <div className="px-3 py-2 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("nav.search")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-9 bg-muted/50 border-none rounded-full text-sm focus-visible:ring-1 focus-visible:ring-primary placeholder:text-muted-foreground"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
-      ) : (
+      </div>
+
+      {(() => {
+        const filtered = conversations.filter((conv: any) => {
+          if (!searchQuery.trim()) return true;
+          const q = searchQuery.toLowerCase();
+          const name = conv.otherUser?.display_name?.toLowerCase() || "";
+          const username = conv.otherUser?.username?.toLowerCase() || "";
+          const msg = conv.lastMessage?.content?.toLowerCase() || "";
+          return name.includes(q) || username.includes(q) || msg.includes(q);
+        });
+        if (filtered.length === 0 && !isLoading) return (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4">
+            <MessageCircle className="h-16 w-16 text-primary" strokeWidth={1.5} />
+            <h3 className="text-xl font-bold">{searchQuery ? t("msg.no_users") : t("msg.nothing_here")}</h3>
+            {!searchQuery && <p className="text-muted-foreground text-center">{t("msg.no_conversations")}</p>}
+          </div>
+        );
+        return (
         <div>
-          {conversations.map((conv: any) => (
+          {filtered.map((conv: any) => (
             <button key={conv.id} onClick={() => navigate(`/messages/${conv.id}`)} className="flex w-full items-center gap-3 px-4 py-3 border-b border-border hover:bg-accent/50 text-left">
               <Avatar className="h-12 w-12 flex-shrink-0"><AvatarImage src={conv.otherUser?.avatar_url} /><AvatarFallback className="bg-primary text-primary-foreground">{conv.otherUser?.display_name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
               <div className="flex-1 min-w-0">
@@ -85,7 +113,8 @@ export default function Messages() {
             </button>
           ))}
         </div>
-      )}
+        );
+      })()}
 
       <button onClick={() => setNewChatOpen(true)} className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 z-30">
         <MessageCircle className="h-6 w-6" fill="currentColor" />
