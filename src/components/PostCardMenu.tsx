@@ -86,8 +86,12 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={stop}>
-        <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
+      <DropdownMenuTrigger asChild>
+        <button
+          className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary"
+          onClick={stop}
+          onPointerDown={(e) => e.preventDefault()}
+        >
           <MoreHorizontal className="h-[18px] w-[18px]" strokeWidth={1.75} />
         </button>
       </DropdownMenuTrigger>

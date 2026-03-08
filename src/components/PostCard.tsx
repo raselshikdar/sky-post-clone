@@ -222,8 +222,12 @@ export default function PostCard({
             
             {/* Repost dropdown with quote option */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <button className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : ""}`}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : ""}`}
+                  onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                  onPointerDown={(e) => e.preventDefault()}
+                >
                   <Repeat2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
                   {reposts > 0 && <span className="text-xs">{reposts}</span>}
                 </button>
