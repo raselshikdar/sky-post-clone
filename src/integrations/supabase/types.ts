@@ -218,6 +218,9 @@ export type Database = {
           tree_view: boolean
           updated_at: string
           user_id: string
+          video_default_muted: boolean
+          video_loop: boolean
+          video_quality: string
         }
         Insert: {
           autoplay_media?: boolean
@@ -243,6 +246,9 @@ export type Database = {
           tree_view?: boolean
           updated_at?: string
           user_id: string
+          video_default_muted?: boolean
+          video_loop?: boolean
+          video_quality?: string
         }
         Update: {
           autoplay_media?: boolean
@@ -268,6 +274,9 @@ export type Database = {
           tree_view?: boolean
           updated_at?: string
           user_id?: string
+          video_default_muted?: boolean
+          video_loop?: boolean
+          video_quality?: string
         }
         Relationships: []
       }
