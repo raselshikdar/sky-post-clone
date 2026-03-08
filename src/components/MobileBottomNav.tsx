@@ -9,7 +9,7 @@ import { useEffect } from "react";
 const mobileNavItems = [
   { label: "Home", path: "/", icon: Home },
   { label: "Search", path: "/search", icon: Search },
-  { label: "Chat", path: "/messages", icon: MessageCircle },
+  { label: "Chat", path: "/messages", icon: MessageCircleMore },
   { label: "Notifications", path: "/notifications", icon: Bell },
 ];
 
