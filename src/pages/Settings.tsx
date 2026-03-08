@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import {
   ChevronRight, User, Bell, Palette, LogOut,
-  ChevronLeft, BadgeCheck, HelpCircle, Globe, Accessibility, FileText, Info,
+  ChevronLeft, BadgeCheck, HelpCircle, Globe, FileText, Info,
   Lock, Sun, Moon, Monitor, Type, Mail, PenLine,
   AtSign, Cake, Download, XCircle, Trash2, CheckCircle2,
   VolumeX, UserX, Shield, Filter, Users, Ban, CheckCircle,
-  Book, Wrench, Hash, MessageSquare, Eye, EyeOff, AlertTriangle
+  Book, Wrench, Hash, MessageSquare, Eye, EyeOff, AlertTriangle,
+  ScanEye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -86,7 +87,7 @@ export default function SettingsPage() {
           <SettingsRow icon={Bell} label={t("nav.notifications")} onClick={() => navigate("/notifications/settings")} />
           <SettingsRow icon={FileText} label={t("settings.content_media")} onClick={() => navigate("/feeds/settings")} />
           <SettingsRow icon={Palette} label={t("settings.appearance")} onClick={() => setSection("appearance")} />
-          <SettingsRow icon={Accessibility} label={t("settings.accessibility")} onClick={() => setSection("accessibility")} />
+          <SettingsRow icon={ScanEye} label={t("settings.accessibility")} onClick={() => setSection("accessibility")} />
           <SettingsRow icon={Globe} label={t("settings.languages")} onClick={() => setSection("languages")} />
           <SettingsRow icon={HelpCircle} label={t("settings.help")} onClick={() => navigate("/support")} />
           <SettingsRow icon={Info} label={t("settings.about")} onClick={() => setSection("about")} />
@@ -859,16 +860,45 @@ function AppearanceSection({ renderBack }: { renderBack: (t: string) => React.Re
 // ===========================
 function AccessibilitySection({ renderBack }: { renderBack: (t: string) => React.ReactNode }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("awaj-reduce-motion") === "true");
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem("awaj-high-contrast") === "true");
   const [requireAltText, setRequireAltText] = useState(() => localStorage.getItem("awaj-require-alt-text") === "true");
   const [largeAltBadges, setLargeAltBadges] = useState(() => localStorage.getItem("awaj-large-alt-badges") === "true");
+  const [loaded, setLoaded] = useState(false);
 
-  const toggle = (key: string, value: boolean, setter: (v: boolean) => void) => {
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("accessibility_settings").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      if (data) {
+        const d = data as any;
+        setRequireAltText(d.require_alt_text); localStorage.setItem("awaj-require-alt-text", String(d.require_alt_text));
+        setLargeAltBadges(d.large_alt_badges); localStorage.setItem("awaj-large-alt-badges", String(d.large_alt_badges));
+        setReduceMotion(d.reduce_motion); localStorage.setItem("awaj-reduce-motion", String(d.reduce_motion));
+        document.documentElement.classList.toggle("reduce-motion", d.reduce_motion);
+        setHighContrast(d.high_contrast); localStorage.setItem("awaj-high-contrast", String(d.high_contrast));
+        document.documentElement.classList.toggle("high-contrast", d.high_contrast);
+      }
+      setLoaded(true);
+    });
+  }, [user]);
+
+  const persistSetting = async (updates: Record<string, any>) => {
+    if (!user) return;
+    const { data: existing } = await supabase.from("accessibility_settings").select("id").eq("user_id", user.id).maybeSingle();
+    if (existing) {
+      await supabase.from("accessibility_settings").update({ ...updates, updated_at: new Date().toISOString() } as any).eq("user_id", user.id);
+    } else {
+      await supabase.from("accessibility_settings").insert({ user_id: user.id, ...updates } as any);
+    }
+  };
+
+  const toggle = (key: string, dbKey: string, value: boolean, setter: (v: boolean) => void) => {
     setter(value);
     localStorage.setItem(key, String(value));
     if (key === "awaj-reduce-motion") document.documentElement.classList.toggle("reduce-motion", value);
     if (key === "awaj-high-contrast") document.documentElement.classList.toggle("high-contrast", value);
+    persistSetting({ [dbKey]: value });
     toast.success(t("privacy.setting_updated"));
   };
 
@@ -879,17 +909,17 @@ function AccessibilitySection({ renderBack }: { renderBack: (t: string) => React
         <div className="py-2">
           <div className="px-4 py-3">
             <div className="flex items-center gap-3 mb-3">
-              <Accessibility className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
+              <ScanEye className="h-5 w-5 text-muted-foreground" strokeWidth={1.75} />
               <span className="text-[15px] font-semibold text-foreground">{t("a11y.alt_text")}</span>
             </div>
             <div className="space-y-3 ml-8">
               <label className="flex items-center justify-between cursor-pointer">
                 <span className="text-sm text-foreground">{t("a11y.require_alt")}</span>
-                <Checkbox checked={requireAltText} onCheckedChange={(c) => toggle("awaj-require-alt-text", !!c, setRequireAltText)} />
+                <Checkbox checked={requireAltText} onCheckedChange={(c) => toggle("awaj-require-alt-text", "require_alt_text", !!c, setRequireAltText)} disabled={!loaded} />
               </label>
               <label className="flex items-center justify-between cursor-pointer">
                 <span className="text-sm text-foreground">{t("a11y.larger_badges")}</span>
-                <Checkbox checked={largeAltBadges} onCheckedChange={(c) => toggle("awaj-large-alt-badges", !!c, setLargeAltBadges)} />
+                <Checkbox checked={largeAltBadges} onCheckedChange={(c) => toggle("awaj-large-alt-badges", "large_alt_badges", !!c, setLargeAltBadges)} disabled={!loaded} />
               </label>
             </div>
           </div>
@@ -900,14 +930,14 @@ function AccessibilitySection({ renderBack }: { renderBack: (t: string) => React
                 <p className="text-sm font-medium text-foreground">{t("a11y.reduce_motion")}</p>
                 <p className="text-xs text-muted-foreground">{t("a11y.reduce_motion_desc")}</p>
               </div>
-              <Switch checked={reduceMotion} onCheckedChange={(v) => toggle("awaj-reduce-motion", v, setReduceMotion)} />
+              <Switch checked={reduceMotion} onCheckedChange={(v) => toggle("awaj-reduce-motion", "reduce_motion", v, setReduceMotion)} disabled={!loaded} />
             </label>
             <label className="flex items-center justify-between cursor-pointer py-1">
               <div>
                 <p className="text-sm font-medium text-foreground">{t("a11y.high_contrast")}</p>
                 <p className="text-xs text-muted-foreground">{t("a11y.high_contrast_desc")}</p>
               </div>
-              <Switch checked={highContrast} onCheckedChange={(v) => toggle("awaj-high-contrast", v, setHighContrast)} />
+              <Switch checked={highContrast} onCheckedChange={(v) => toggle("awaj-high-contrast", "high_contrast", v, setHighContrast)} disabled={!loaded} />
             </label>
           </div>
         </div>

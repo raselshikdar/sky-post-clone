@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      accessibility_settings: {
+        Row: {
+          created_at: string
+          high_contrast: boolean
+          id: string
+          large_alt_badges: boolean
+          reduce_motion: boolean
+          require_alt_text: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          high_contrast?: boolean
+          id?: string
+          large_alt_badges?: boolean
+          reduce_motion?: boolean
+          require_alt_text?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          high_contrast?: boolean
+          id?: string
+          large_alt_badges?: boolean
+          reduce_motion?: boolean
+          require_alt_text?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       account_reports: {
         Row: {
           created_at: string
