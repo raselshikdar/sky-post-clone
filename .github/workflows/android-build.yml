@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'android-twa/**'
-      - '.github/workflows/android-build.yml'
+      - '.github/workflows/build-twa.yml'
 
 jobs:
   build:
@@ -39,7 +39,7 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Generate signing keystore
+      - name: Generate temporary keystore
         run: |
           keytool -genkeypair \
             -alias awaj \
@@ -50,24 +50,6 @@ jobs:
             -validity 10000 \
             -keyalg RSA \
             -keysize 2048
-
-      - name: Check if project already initialized
-        id: check
-        run: |
-          if [ -f "app/build.gradle" ]; then
-            echo "initialized=true" >> $GITHUB_OUTPUT
-          else
-            echo "initialized=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Initialize TWA project (only first time)
-        if: steps.check.outputs.initialized == 'false'
-        run: |
-          printf "n\n$JAVA_HOME\n$ANDROID_HOME\n" | \
-          bubblewrap init \
-            --manifest=https://sky-post-clone.lovable.app/manifest.json \
-            --directory=. \
-            --skipPwaValidation
 
       - name: Build TWA (APK + AAB)
         run: |
