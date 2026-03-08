@@ -35,6 +35,8 @@ import AdminFeeds from "@/pages/admin/AdminFeeds";
 import AdminVerification from "@/pages/admin/AdminVerification";
 import AdminSupport from "@/pages/admin/AdminSupport";
 import AdminRoles from "@/pages/admin/AdminRoles";
+import LandingPage from "@/pages/LandingPage";
+import PublicFeed from "@/pages/PublicFeed";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,22 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Root route: authenticated → Home feed, unauthenticated → Landing page */
+function RootRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
+  if (user) return <Navigate to="/home" replace />;
+  return <LandingPage />;
+}
+
+/** Explore route: authenticated → redirect to home, unauthenticated → public feed */
+function ExploreRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/home" replace />;
+  return <PublicFeed />;
+}
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
     <QueryClientProvider client={queryClient}>
@@ -62,10 +80,12 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+              <Route path="/" element={<RootRoute />} />
+              <Route path="/explore" element={<ExploreRoute />} />
               <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/feeds" element={<Feeds />} />
                 <Route path="/feeds/settings" element={<FeedSettings />} />
