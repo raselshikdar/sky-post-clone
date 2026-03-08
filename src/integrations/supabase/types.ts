@@ -578,6 +578,33 @@ export type Database = {
         }
         Relationships: []
       }
+      live_status: {
+        Row: {
+          id: string
+          is_live: boolean
+          live_link: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_live?: boolean
+          live_link?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_live?: boolean
+          live_link?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string
