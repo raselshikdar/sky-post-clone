@@ -247,7 +247,7 @@ export default function Home() {
               <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
               {trendingTopics.map((topic) => (
                 <button key={topic} onClick={() => navigate(`/trending/${encodeURIComponent(topic)}`)}
-                  className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                  className="whitespace-nowrap rounded-full px-3 py-1 text-sm font-normal text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                   {topic}
                 </button>
               ))}
