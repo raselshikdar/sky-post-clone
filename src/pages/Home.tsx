@@ -201,10 +201,10 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       <div className={`sticky top-[41px] lg:top-0 z-20 bg-background/95 backdrop-blur-sm transition-transform duration-300 ${headerHidden ? "-translate-y-[calc(100%+41px)] lg:-translate-y-full" : "translate-y-0"}`}>
-        <div className="flex w-full items-center border-b border-border px-[18px]">
-          <TabButton label={t("home.discover")} active={tab === "discover"} onClick={() => setTab("discover")} align="left" />
-          <TabButton label={t("home.following")} active={tab === "following"} onClick={() => setTab("following")} align="center" />
-          <TabButton label={t("home.whats_hot")} active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} align="right" />
+        <div className="flex w-full items-center justify-between border-b border-border px-[18px]">
+          <TabButton label={t("home.discover")} active={tab === "discover"} onClick={() => setTab("discover")} />
+          <TabButton label={t("home.following")} active={tab === "following"} onClick={() => setTab("following")} />
+          <TabButton label={t("home.whats_hot")} active={tab === "whats-hot"} onClick={() => setTab("whats-hot")} />
         </div>
       </div>
 
@@ -299,11 +299,10 @@ export default function Home() {
   );
 }
 
-function TabButton({ label, active, onClick, align }: { label: string; active: boolean; onClick: () => void; align?: "left" | "center" | "right" }) {
-  const justifyClass = align === "left" ? "justify-start" : align === "right" ? "justify-end" : "justify-center";
+function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`relative flex-1 flex items-center ${justifyClass} py-3 whitespace-nowrap text-[15px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      className={`relative py-3 whitespace-nowrap text-[15px] font-semibold leading-[1.2] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
       <span className="relative">
         {label}
         {active && <div className="absolute -bottom-[11px] left-0 right-0 h-[3px] rounded-full bg-primary" />}
