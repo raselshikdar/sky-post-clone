@@ -1,6 +1,6 @@
 {
-  "packageId": "app.lovable.awaj",
-  "host": "awaj.eu.cc",
+  "packageId": "app.doyel.awaj",
+  "host": "doyel.vercel.app",
   "name": "Awaj — আওয়াজ",
   "launcherName": "Awaj",
   "display": "standalone",
@@ -13,8 +13,8 @@
   "backgroundColor": "#ffffff",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://awaj.eu.cc/favicon.png",
-  "maskableIconUrl": "https://awaj.eu.cc/favicon.png",
+  "iconUrl": "https://doyel.vercel.app/favicon.png",
+  "maskableIconUrl": "https://doyel.vercel.app/favicon.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "android.keystore",
@@ -24,13 +24,13 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://awaj.eu.cc/manifest.json",
+  "webManifestUrl": "https://doyel.vercel.app/manifest.json",
   "fallbackType": "customtabs",
   "features": {},
   "enableSiteSettingsShortcut": "enabled",
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://awaj.eu.cc/",
+  "fullScopeUrl": "https://doyel.vercel.app/",
   "minSdkVersion": 19,
   "orientation": "default"
 }
