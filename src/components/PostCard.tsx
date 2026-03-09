@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Heart, MessageSquare, Repeat2, Forward, Bookmark, BookmarkCheck, Quote, Link2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
