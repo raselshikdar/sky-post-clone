@@ -13,8 +13,8 @@
   "backgroundColor": "#ffffff",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://doyel.vercel.app/favicon.png",
-  "maskableIconUrl": "https://doyel.vercel.app/favicon.png",
+  "iconUrl": "https://doyel.vercel.app/icons/icon-512x512.png",
+  "maskableIconUrl": "https://doyel.vercel.app/icons/icon-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "android.keystore",
