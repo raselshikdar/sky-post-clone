@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          # Capacitor CLI সরাসরি ইন্সটল করা যাতে npx এরর না দেয়
+          # Capacitor CLI-কে গ্লোবালি না খুঁজে সরাসরি প্রজেক্টে ইন্সটল করা
           npm install @capacitor/cli @capacitor/core @capacitor/android
           
       - name: Build Web App
@@ -25,7 +25,7 @@ jobs:
         
       - name: Sync Capacitor
         run: |
-          # এখানে npx এর বদলে সরাসরি capacitor ব্যবহার করা হচ্ছে
+          # npx এর বদলে সরাসরি পাথ ব্যবহার করা যেন এরর না দেয়
           ./node_modules/.bin/cap sync android
         
       - name: Build APK with Gradle
