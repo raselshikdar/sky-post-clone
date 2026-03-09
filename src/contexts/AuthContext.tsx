@@ -81,26 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (identifier: string, password: string) => {
     let email = identifier;
-    // If identifier doesn't look like an email, treat it as a username
     if (!identifier.includes("@")) {
-      const { data, error: lookupError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", identifier)
-        .single();
+      const { data, error: lookupError } = await supabase.rpc("get_email_by_username", { _username: identifier });
       if (lookupError || !data) throw new Error("Username not found");
-      // Get email from auth admin — we need to use a workaround:
-      // Try signing in; Supabase needs an email, so we look up via edge or use the user id
-      // Since we can't query auth.users from client, we'll store/retrieve email differently.
-      // Best approach: try sign in with username as email first, then look up.
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: identifier,
-        password,
-      });
-      if (!authError && authData.user) return;
-      // If that failed, we need the actual email — let's query it via an RPC or edge function
-      // For now, the simplest reliable approach: add email to profiles
-      throw new Error("Please sign in with your email address, or contact support");
+      email = data as string;
     }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;

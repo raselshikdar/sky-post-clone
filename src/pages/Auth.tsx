@@ -164,7 +164,7 @@ export default function Auth() {
           )}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input type="email" placeholder={t("auth.email")} value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className="pl-10 h-11" />
+            <Input type={view === "signup" ? "email" : "text"} placeholder={view === "signup" ? t("auth.email") : t("auth.email_or_username")} value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete={view === "signup" ? "email" : "username"} className="pl-10 h-11" />
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
