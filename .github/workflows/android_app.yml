@@ -13,10 +13,10 @@ jobs:
         with:
           node-version: '22'
           
-      - name: set up JDK 17
+      - name: set up JDK 21 # এখানে ১৭ থেকে বাড়িয়ে ২১ করা হলো
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'zulu'
           
       - name: Install dependencies
@@ -29,19 +29,14 @@ jobs:
         
       - name: Create and Sync Android Platform
         run: |
-          # যদি আগে থেকে অ্যান্ড্রয়েড ফোল্ডার থাকে তবে তা মুছে ফেলা (যাতে কোনো পুরনো এরর না থাকে)
           rm -rf android
-          # একদম নতুন করে অ্যান্ড্রয়েড প্ল্যাটফর্ম যোগ করা
           npx cap add android
-          # কোড সিঙ্ক করা
           npx cap sync android
         
       - name: Build APK with Gradle
         run: |
           cd android
-          # gradlew ফাইলকে এক্সিকিউটেবল পারমিশন দেওয়া
           chmod +x gradlew
-          # বিল্ড শুরু করা
           ./gradlew assembleDebug
           
       - name: Upload APK
