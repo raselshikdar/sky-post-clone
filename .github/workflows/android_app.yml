@@ -8,6 +8,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # এখানে ভার্সন বাড়িয়ে দেওয়া হলো
+          
       - name: set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -17,7 +22,6 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          # Capacitor CLI-কে গ্লোবালি না খুঁজে সরাসরি প্রজেক্টে ইন্সটল করা
           npm install @capacitor/cli @capacitor/core @capacitor/android
           
       - name: Build Web App
@@ -25,8 +29,7 @@ jobs:
         
       - name: Sync Capacitor
         run: |
-          # npx এর বদলে সরাসরি পাথ ব্যবহার করা যেন এরর না দেয়
-          ./node_modules/.bin/cap sync android
+          npx cap sync android
         
       - name: Build APK with Gradle
         run: |
