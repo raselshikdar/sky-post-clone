@@ -89,39 +89,65 @@ export default function PostCard({
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
-    const newLiked = !liked;
+    const prevLiked = liked;
+    const newLiked = !prevLiked;
     setLiked(newLiked);
     setLikes((l) => l + (newLiked ? 1 : -1));
     if (newLiked) setAnimating(true);
 
     if (newLiked) {
-      await supabase.from("likes").insert({ user_id: user.id, post_id: id });
+      const { error } = await supabase.from("likes").insert({ user_id: user.id, post_id: id });
+      if (error) {
+        if (error.code === "23505") {
+          // Already liked in DB — keep UI as liked, don't revert
+          return;
+        }
+        // Real error — revert
+        setLiked(prevLiked);
+        setLikes((l) => l - 1);
+        return;
+      }
       if (authorId !== user.id) {
         await supabase.from("notifications").insert({
           user_id: authorId, actor_id: user.id, type: "like", post_id: id,
         });
       }
     } else {
-      await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", id);
+      const { error } = await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", id);
+      if (error) {
+        setLiked(prevLiked);
+        setLikes((l) => l + 1);
+      }
     }
   };
 
   const handleRepost = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
-    const newReposted = !reposted;
+    const prevReposted = reposted;
+    const newReposted = !prevReposted;
     setReposted(newReposted);
     setReposts((r) => r + (newReposted ? 1 : -1));
 
     if (newReposted) {
-      await supabase.from("reposts").insert({ user_id: user.id, post_id: id });
+      const { error } = await supabase.from("reposts").insert({ user_id: user.id, post_id: id });
+      if (error) {
+        if (error.code === "23505") return; // already reposted
+        setReposted(prevReposted);
+        setReposts((r) => r - 1);
+        return;
+      }
       if (authorId !== user.id) {
         await supabase.from("notifications").insert({
           user_id: authorId, actor_id: user.id, type: "repost", post_id: id,
         });
       }
     } else {
-      await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", id);
+      const { error } = await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", id);
+      if (error) {
+        setReposted(prevReposted);
+        setReposts((r) => r + 1);
+      }
     }
   };
 
