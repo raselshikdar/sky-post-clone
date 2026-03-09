@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" suppressHydrationWarning>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+    <title>Awaj — আওয়াজ | Your Voice, Your Platform</title>
+    <meta name="description" content="Awaj (আওয়াজ) is a social platform where every voice matters. Share, connect, and be heard.">
+    <meta name="author" content="Awaj" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0085ff" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sky-post-clone.lovable.app" />
+    <meta property="og:image" content="https://sky-post-clone.lovable.app/favicon.png">
+    <meta property="og:title" content="Awaj — আওয়াজ | Your Voice, Your Platform">
+    <meta property="og:description" content="Awaj (আওয়াজ) is a social platform where every voice matters. Share, connect, and be heard.">
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@AwajApp" />
+    <meta name="twitter:image" content="https://sky-post-clone.lovable.app/favicon.png">
+    <meta name="twitter:title" content="Awaj — আওয়াজ | Your Voice, Your Platform">
+    <meta name="twitter:description" content="Awaj (আওয়াজ) is a social platform where every voice matters. Share, connect, and be heard.">
+  <style>
+    #splash-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #ffffff; transition: opacity 0.4s ease;
+    }
+    @media (prefers-color-scheme: dark) { #splash-screen { background: #09090b; } }
+    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+    #splash-screen img { width: 56px; height: 56px; animation: splash-pulse 1.5s ease-in-out infinite; filter: drop-shadow(0 2px 8px rgba(0,133,255,0.3)); }
+    #splash-screen p { margin-top: 8px; font-family: system-ui, sans-serif; font-size: 18px; color: #0085ff; font-weight: 700; letter-spacing: 0.5px; }
+    @keyframes splash-pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+  </style>
+  <script type="module" crossorigin src="/assets/index-DNQ6ujRn.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CAopHWKQ.css">
+</head>
+
+  <body>
+    <div id="splash-screen">
+      <img src="/favicon.png" alt="Awaj" />
+      <p>Awaj</p>
+    </div>
+    <div id="root"></div>
+  </body>
+</html>
