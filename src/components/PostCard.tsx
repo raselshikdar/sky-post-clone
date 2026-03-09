@@ -151,7 +151,6 @@ export default function PostCard({
     }
     setTimeout(() => { mutatingRepost.current = false; }, 2000);
   };
-  };
 
   const handleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation();
