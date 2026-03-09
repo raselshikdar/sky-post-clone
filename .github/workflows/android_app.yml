@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Production Android APK
 on:
   workflow_dispatch:
 
@@ -13,34 +13,46 @@ jobs:
         with:
           node-version: '22'
           
-      - name: set up JDK 21 # এখানে ১৭ থেকে বাড়িয়ে ২১ করা হলো
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'zulu'
           
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           npm install
           npm install @capacitor/cli @capacitor/core @capacitor/android
           
-      - name: Build Web App
+      - name: Build Web App (Production)
         run: npm run build
         
-      - name: Create and Sync Android Platform
+      - name: Sync Android Platform
         run: |
           rm -rf android
           npx cap add android
           npx cap sync android
         
-      - name: Build APK with Gradle
+      - name: Build Release APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleRelease
           
-      - name: Upload APK
+      - name: Sign Production APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: awaj-alias
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Upload Production APK
         uses: actions/upload-artifact@v4
         with:
-          name: Awaj-App-Debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Awaj-Production-App
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
