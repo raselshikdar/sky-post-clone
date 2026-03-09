@@ -89,6 +89,7 @@ export default function PostCard({
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
+    mutatingLike.current = true;
     const prevLiked = liked;
     const newLiked = !prevLiked;
     setLiked(newLiked);
@@ -100,6 +101,7 @@ export default function PostCard({
       if (error && error.code !== "23505") {
         setLiked(prevLiked);
         setLikes((l) => l - 1);
+        mutatingLike.current = false;
         return;
       }
       if (authorId !== user.id) {
@@ -114,11 +116,14 @@ export default function PostCard({
         setLikes((l) => l + 1);
       }
     }
+    // Allow sync again after a short delay so refetch picks up fresh data
+    setTimeout(() => { mutatingLike.current = false; }, 2000);
   };
 
   const handleRepost = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
+    mutatingRepost.current = true;
     const prevReposted = reposted;
     const newReposted = !prevReposted;
     setReposted(newReposted);
@@ -129,6 +134,7 @@ export default function PostCard({
       if (error && error.code !== "23505") {
         setReposted(prevReposted);
         setReposts((r) => r - 1);
+        mutatingRepost.current = false;
         return;
       }
       if (authorId !== user.id) {
@@ -143,6 +149,8 @@ export default function PostCard({
         setReposts((r) => r + 1);
       }
     }
+    setTimeout(() => { mutatingRepost.current = false; }, 2000);
+  };
   };
 
   const handleBookmark = async (e: React.MouseEvent) => {
