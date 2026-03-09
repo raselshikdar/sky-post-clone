@@ -29,14 +29,15 @@ jobs:
         
       - name: Sync Android Platform
         run: |
-          rm -rf android
-          npx cap add android
+          # এখানে 'rm -rf android' এবং 'cap add' বাদ দেওয়া হয়েছে
+          # যাতে আপনার কাস্টম আইকনগুলো মুছে না যায়
           npx cap sync android
         
       - name: Build Release APK
         run: |
           cd android
           chmod +x gradlew
+          ./gradlew clean  # এটি পুরনো ডিফল্ট আইকন ক্যাশ পরিষ্কার করবে
           ./gradlew assembleRelease
           
       - name: Sign Production APK
