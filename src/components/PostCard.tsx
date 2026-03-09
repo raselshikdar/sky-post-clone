@@ -54,12 +54,12 @@ export default function PostCard({
   const [likes, setLikes] = useState(likeCount);
   const [reposted, setReposted] = useState(isReposted);
   const [reposts, setReposts] = useState(repostCount);
+  const [pendingLike, setPendingLike] = useState(false);
+  const [pendingRepost, setPendingRepost] = useState(false);
 
-  // Keep local state in sync with query data
-  useEffect(() => { setLiked(isLiked); }, [isLiked]);
-  useEffect(() => { setLikes(likeCount); }, [likeCount]);
-  useEffect(() => { setReposted(isReposted); }, [isReposted]);
-  useEffect(() => { setReposts(repostCount); }, [repostCount]);
+  // Keep local state in sync with query data, but only when no pending mutation
+  useEffect(() => { if (!pendingLike) { setLiked(isLiked); setLikes(likeCount); } }, [isLiked, likeCount, pendingLike]);
+  useEffect(() => { if (!pendingRepost) { setReposted(isReposted); setReposts(repostCount); } }, [isReposted, repostCount, pendingRepost]);
   const [animating, setAnimating] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
