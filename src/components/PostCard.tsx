@@ -54,6 +54,12 @@ export default function PostCard({
   const [likes, setLikes] = useState(likeCount);
   const [reposted, setReposted] = useState(isReposted);
   const [reposts, setReposts] = useState(repostCount);
+  const mutatingLike = useRef(false);
+  const mutatingRepost = useRef(false);
+
+  // Sync from props (e.g. after reload/refetch) but skip during active mutations
+  useEffect(() => { if (!mutatingLike.current) { setLiked(isLiked); setLikes(likeCount); } }, [isLiked, likeCount]);
+  useEffect(() => { if (!mutatingRepost.current) { setReposted(isReposted); setReposts(repostCount); } }, [isReposted, repostCount]);
   const [animating, setAnimating] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
