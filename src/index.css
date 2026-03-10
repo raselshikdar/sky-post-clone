@@ -233,11 +233,14 @@
   }
 }
 
-/* স্ক্রলবার পুরোপুরি হাইড করা */
+/* গ্লোবাল ফিক্স: সব এলিমেন্ট থেকে স্ক্রলবার সরিয়ে দেবে */
 * {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
 }
+
 *::-webkit-scrollbar {
-  display: none !important;
+  display: none !important; /* Chrome/Safari */
+  width: 0 !important;
+  height: 0 !important;
 }
