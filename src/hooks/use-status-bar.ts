@@ -1,20 +1,26 @@
 import { useEffect } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { NavigationBar } from '@capgo/capacitor-navigation-bar';
 
-export const useStatusBar = () => {
+export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
-    const setupStatusBar = async () => {
+    const setupSystemBars = async () => {
       try {
-        // স্ট্যাটাস বারকে অ্যাপের কন্টেন্টের ওপর ওভারলে করবে (ফেসবুকের মতো লুক)
-        await StatusBar.setOverlaysWebView({ overlay: true });
+        const isDark = theme === 'dark';
         
-        // আইকনের স্টাইল (ডার্ক মোডে সাদা আইকন এবং লাইট মোডে কালো আইকন দেখাবে)
-        await StatusBar.setStyle({ style: Style.Default });
+        // ১. স্ট্যাটাস বার (ওপরের বার)
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setBackgroundColor({ color: isDark ? '#000000' : '#ffffff' });
+        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+
+        // ২. নেভিগেশন বার (নিচের বার)
+        // এটি আপনার ফোনের নিচের বাটন বা বার এর কালার পরিবর্তন করবে
+        await NavigationBar.setColor({ color: isDark ? '#000000' : '#ffffff', darkButtons: !isDark });
       } catch (e) {
-        console.warn('Status bar not available on this platform');
+        console.warn('System bars configuration failed');
       }
     };
 
-    setupStatusBar();
-  }, []);
+    setupSystemBars();
+  }, [theme]);
 };
