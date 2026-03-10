@@ -10,36 +10,34 @@ export const useStatusBar = (theme: string | undefined) => {
         const isDark = html.classList.contains('dark');
         const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        // ১. আপনার CSS অনুযায়ী ব্যাকগ্রাউন্ড কালার (Hex)
-        let bgColor = '#ffffff'; // Light
+        let finalColor = '#ffffff'; // Light
+
         if (isDark) {
-          bgColor = isAmoled ? '#000000' : '#1a2333'; // Amoled vs Dim
+          if (isAmoled) {
+            finalColor = '#000000'; // AMOLED (পিওর ব্ল্যাক)
+          } else {
+            finalColor = '#1a2333'; // Dim (আপনার CSS এর hsl(220 30% 14%))
+          }
         }
 
-        // ২. ওপরের স্ট্যাটাস বার ফিক্স
+        // ১. ওপরের বার
         await StatusBar.setOverlaysWebView({ overlay: false });
-        await StatusBar.setBackgroundColor({ color: bgColor });
-        
-        // Style.Dark দিলে অ্যান্ড্রয়েড অটোমেটিক সেই 'প্রফেশনাল সফট হোয়াইট' আইকন দেখাবে
-        await StatusBar.setStyle({ 
-          style: isDark ? Style.Dark : Style.Light 
-        });
+        await StatusBar.setBackgroundColor({ color: finalColor });
+        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
 
-        // ৩. নিচের নেভিগেশন বার ফিক্স (সবচেয়ে গুরুত্বপূর্ণ)
+        // ২. নিচের নেভিগেশন বার (এখন এটি কাজ করতে বাধ্য)
         await NavigationBar.setColor({ 
-          color: bgColor, 
-          // darkButtons: false মানে ডার্ক মোডে বাটনগুলো পিওর সাদা হবে না, 
-          // বরং আপনার চাওয়া সেই প্রফেশনাল 'সফট ভিজিবল' কালার নেবে।
+          color: finalColor, 
           darkButtons: !isDark 
         });
 
       } catch (e) {
-        console.warn('System bars update failed');
+        console.warn('System bars configuration failed');
       }
     };
 
     updateSystemBars();
-    const timer = setTimeout(updateSystemBars, 450);
+    const timer = setTimeout(updateSystemBars, 500);
     return () => clearTimeout(timer);
   }, [theme]);
 };
