@@ -180,10 +180,27 @@ export default function PostDetail() {
   const isReposted = repostedOverride !== null ? repostedOverride : userReposted;
   const isBookmarked = bookmarkedOverride !== null ? bookmarkedOverride : userBookmarked;
 
+  // Helper: sync like/repost state to feed caches
+  const updatePostInFeedCaches = (pid: string, updater: (post: any) => any) => {
+    const keys = [["posts"], ["profilePosts"], ["hashtag_posts"], ["trending_topic_posts"]];
+    keys.forEach((key) => {
+      queryClient.setQueriesData({ queryKey: key }, (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((p: any) => p.id === pid ? updater(p) : p);
+      });
+    });
+  };
+
   const handleLike = async () => {
     if (!user || !postId) return;
     const newLiked = !isLiked;
     setLikedOverride(newLiked);
+    // Sync to feed caches immediately
+    updatePostInFeedCaches(postId, (p: any) => ({
+      ...p,
+      isLiked: newLiked,
+      likeCount: (p.likeCount ?? 0) + (newLiked ? 1 : -1),
+    }));
     if (newLiked) {
       await supabase.from("likes").insert({ user_id: user.id, post_id: postId });
       if (post?.author_id && post.author_id !== user.id) {
@@ -193,6 +210,7 @@ export default function PostDetail() {
       await supabase.from("likes").delete().eq("user_id", user.id).eq("post_id", postId);
     }
     queryClient.invalidateQueries({ queryKey: ["postStats", postId] });
+    queryClient.invalidateQueries({ queryKey: ["posts"] });
     await queryClient.invalidateQueries({ queryKey: ["userLiked", postId] });
     setLikedOverride(null);
   };
@@ -201,6 +219,12 @@ export default function PostDetail() {
     if (!user || !postId) return;
     const newReposted = !isReposted;
     setRepostedOverride(newReposted);
+    // Sync to feed caches immediately
+    updatePostInFeedCaches(postId, (p: any) => ({
+      ...p,
+      isReposted: newReposted,
+      repostCount: (p.repostCount ?? 0) + (newReposted ? 1 : -1),
+    }));
     if (newReposted) {
       await supabase.from("reposts").insert({ user_id: user.id, post_id: postId });
       if (post?.author_id && post.author_id !== user.id) {
@@ -210,6 +234,7 @@ export default function PostDetail() {
       await supabase.from("reposts").delete().eq("user_id", user.id).eq("post_id", postId);
     }
     queryClient.invalidateQueries({ queryKey: ["postStats", postId] });
+    queryClient.invalidateQueries({ queryKey: ["posts"] });
     await queryClient.invalidateQueries({ queryKey: ["userReposted", postId] });
     setRepostedOverride(null);
   };
