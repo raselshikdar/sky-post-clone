@@ -87,7 +87,7 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
-const App = () => (
+const App = () => {
  useBackButton();
   return ( 
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
