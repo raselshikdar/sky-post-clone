@@ -43,6 +43,8 @@ import PublicFeed from "@/pages/PublicFeed";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import FeedbackPage from "@/pages/FeedbackPage";
+import { useBackButton } from "./hooks/use-back-button";
+import { PullToRefresh } from "./components/PullToRefresh";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -86,6 +88,8 @@ function ExploreRoute() {
 }
 
 const App = () => (
+ useBackButton();
+  return ( 
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
@@ -93,6 +97,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PullToRefresh />
           <AuthProvider>
             <Routes>
               <Route path="/" element={<RootRoute />} />
