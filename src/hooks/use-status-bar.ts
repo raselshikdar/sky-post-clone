@@ -6,36 +6,40 @@ export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
     const updateSystemBars = async () => {
       try {
-        // ১. ডার্ক মোড চেক করা
-        const isDark = document.documentElement.classList.contains('dark') || theme === 'dark';
-        
-        // ২. আপনার সাইটের ডার্ক কালার (Amoled/Dim এর মাঝামাঝি একটি ডার্ক কালার)
-        const darkColor = '#0f172a'; // আপনার সাইটের কালারের সাথে সামঞ্জস্যপূর্ণ
-        const lightColor = '#ffffff';
-        const finalColor = isDark ? darkColor : lightColor;
+        const html = document.documentElement;
+        const isDark = html.classList.contains('dark');
+        const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        // ৩. ওপরের স্ট্যাটাস বার ফিক্স
-        // overlay: false মানে কন্টেন্ট বারের নিচে যাবে না, সময়/ব্যাটারি স্পষ্ট দেখা যাবে
+        // ১. আপনার CSS অনুযায়ী ব্যাকগ্রাউন্ড কালার (Hex)
+        let bgColor = '#ffffff'; // Light
+        if (isDark) {
+          bgColor = isAmoled ? '#000000' : '#1a2333'; // Amoled vs Dim
+        }
+
+        // ২. ওপরের স্ট্যাটাস বার ফিক্স
         await StatusBar.setOverlaysWebView({ overlay: false });
-        await StatusBar.setBackgroundColor({ color: finalColor });
+        await StatusBar.setBackgroundColor({ color: bgColor });
         
-        // আইকন কালার: ডার্ক মোডে সাদা আইকন (Style.Dark), লাইট মোডে কালো (Style.Light)
-        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+        // Style.Dark দিলে অ্যান্ড্রয়েড অটোমেটিক সেই 'প্রফেশনাল সফট হোয়াইট' আইকন দেখাবে
+        await StatusBar.setStyle({ 
+          style: isDark ? Style.Dark : Style.Light 
+        });
 
-        // ৪. নিচের নেভিগেশন বার ফিক্স
+        // ৩. নিচের নেভিগেশন বার ফিক্স (সবচেয়ে গুরুত্বপূর্ণ)
         await NavigationBar.setColor({ 
-          color: finalColor, 
+          color: bgColor, 
+          // darkButtons: false মানে ডার্ক মোডে বাটনগুলো পিওর সাদা হবে না, 
+          // বরং আপনার চাওয়া সেই প্রফেশনাল 'সফট ভিজিবল' কালার নেবে।
           darkButtons: !isDark 
         });
 
       } catch (e) {
-        console.warn('System bar update failed');
+        console.warn('System bars update failed');
       }
     };
 
     updateSystemBars();
-    // থিম পরিবর্তনের জন্য একটু সময় দিয়ে আবার চেক করা
-    const timer = setTimeout(updateSystemBars, 500);
+    const timer = setTimeout(updateSystemBars, 450);
     return () => clearTimeout(timer);
   }, [theme]);
 };
