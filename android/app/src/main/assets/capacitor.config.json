@@ -1,5 +1,8 @@
 {
 	"appId": "cc.eu.awaj",
 	"appName": "Awaj",
-	"webDir": "dist"
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	}
 }
