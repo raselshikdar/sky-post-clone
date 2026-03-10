@@ -86,6 +86,34 @@ export default function PostCard({
   // Sync bookmark state when query data changes
   useState(() => { setBookmarked(isBookmarked); });
 
+  // Helper: update like/repost state across all cached query keys
+  const updatePostInCache = (postId: string, updater: (post: any) => any) => {
+    queryClient.setQueriesData({ queryKey: ["posts"] }, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+    queryClient.setQueriesData({ queryKey: ["post", postId] }, (old: any) => {
+      if (!old) return old;
+      return updater(old);
+    });
+    queryClient.setQueriesData({ queryKey: ["profilePosts"] }, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+    queryClient.setQueriesData({ queryKey: ["replies"] }, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+    queryClient.setQueriesData({ queryKey: ["hashtag_posts"] }, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+    queryClient.setQueriesData({ queryKey: ["trending_topic_posts"] }, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    });
+  };
+
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) return;
@@ -96,11 +124,19 @@ export default function PostCard({
     setLikes((l) => l + (newLiked ? 1 : -1));
     if (newLiked) setAnimating(true);
 
+    // Optimistic cache update across all queries
+    updatePostInCache(id, (p: any) => ({
+      ...p,
+      isLiked: newLiked,
+      likeCount: (p.likeCount ?? 0) + (newLiked ? 1 : -1),
+    }));
+
     if (newLiked) {
       const { error } = await supabase.from("likes").insert({ user_id: user.id, post_id: id });
       if (error && error.code !== "23505") {
         setLiked(prevLiked);
         setLikes((l) => l - 1);
+        updatePostInCache(id, (p: any) => ({ ...p, isLiked: prevLiked, likeCount: (p.likeCount ?? 0) - 1 }));
         mutatingLike.current = false;
         return;
       }
@@ -114,9 +150,12 @@ export default function PostCard({
       if (error) {
         setLiked(prevLiked);
         setLikes((l) => l + 1);
+        updatePostInCache(id, (p: any) => ({ ...p, isLiked: prevLiked, likeCount: (p.likeCount ?? 0) + 1 }));
       }
     }
-    // Allow sync again after a short delay so refetch picks up fresh data
+    // Background invalidation for eventual consistency
+    queryClient.invalidateQueries({ queryKey: ["posts"] });
+    queryClient.invalidateQueries({ queryKey: ["post", id] });
     setTimeout(() => { mutatingLike.current = false; }, 2000);
   };
 
