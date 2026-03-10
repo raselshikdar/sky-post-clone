@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://sky-post-clone.lovable.app/sitemap.xml
+Sitemap: https://awaj.eu.cc/sitemap.xml
