@@ -45,6 +45,7 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import FeedbackPage from "@/pages/FeedbackPage";
 import { useBackButton } from "./hooks/use-back-button";
+import { useStatusBar } from "./hooks/use-status-bar";
 import { PullToRefresh } from "./components/PullToRefresh";
 
 const LoadingScreen = () => (
@@ -87,9 +88,9 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
-// এটি হুকগুলোকে রাউটারের ভেতরে হ্যান্ডেল করবে
 function AppPlugins() {
   useBackButton();
+  useStatusBar();
   return <PullToRefresh />;
 }
 
