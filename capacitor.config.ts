@@ -1,11 +1,17 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'cc.eu.awaj',
+  appId: 'com.lovable.sky.post.clone', // আপনার অ্যাপ আইডি
   appName: 'Awaj',
   webDir: 'dist',
   server: {
-    androidScheme: "http" // এটি যোগ করুন
+    androidScheme: 'https'
+  },
+  plugins: {
+    // এই অংশটি নেভিগেশন বারকে পারমিশন দিবে
+    NavigationBar: {
+      enable: true
+    }
   }
 };
 
