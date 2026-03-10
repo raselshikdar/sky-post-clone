@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,11 +47,18 @@ import FeedbackPage from "@/pages/FeedbackPage";
 import { useBackButton } from "./hooks/use-back-button";
 import { PullToRefresh } from "./components/PullToRefresh";
 
+// Reusable Loading Component
+const LoadingScreen = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes — data stays fresh, no refetch on mount/focus
-      gcTime: 1000 * 60 * 30, // 30 minutes — keep unused data in cache
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 30,
       refetchOnWindowFocus: false,
       retry: 1,
     },
@@ -59,92 +67,99 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <LoadingScreen />;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
-/** Root route: authenticated → Home feed in AppLayout, unauthenticated → Landing page */
 function RootRoute() {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <LandingPage />;
   return <AppLayout homeOverride={<Home />} />;
 }
 
-/** Explore route: authenticated → redirect to /, unauthenticated → public feed */
 function ExploreRoute() {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <LoadingScreen />;
   if (user) return <Navigate to="/" replace />;
   return <PublicFeed />;
 }
 
 const App = () => {
- useBackButton();
-  return ( 
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <PullToRefresh />
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<RootRoute />} />
-              <Route path="/explore" element={<ExploreRoute />} />
-              <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/feeds" element={<Feeds />} />
-                <Route path="/feeds/settings" element={<FeedSettings />} />
-                <Route path="/settings/content-and-media" element={<ContentMediaSettings />} />
-                <Route path="/lists" element={<Lists />} />
-                <Route path="/saved" element={<SavedPosts />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/notifications/settings" element={<NotificationSettings />} />
-                <Route path="/profile/:username" element={<Profile />} />
-                <Route path="/post/:postId" element={<PostDetail />} />
-                <Route path="/hashtag/:tag" element={<HashtagPage />} />
-                <Route path="/trending/:topic" element={<TrendingTopicPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/messages/settings" element={<ChatSettings />} />
-                <Route path="/messages/:conversationId" element={<Conversation />} />
-                <Route path="/support" element={<SupportTicketForm />} />
-                <Route path="/feedback" element={<FeedbackPage />} />
-                <Route path="/verification/apply" element={<VerificationApply />} />
-              </Route>
-              <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-                <Route index element={<AdminOverview />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="moderation" element={<AdminModeration />} />
-                <Route path="content" element={<AdminContent />} />
-                <Route path="feeds" element={<AdminFeeds />} />
-                <Route path="verification" element={<AdminVerification />} />
-                <Route path="support" element={<AdminSupport />} />
-                <Route path="roles" element={<AdminRoles />} />
-              </Route>
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+  useBackButton(); // Android Hardware Back Button Hook
+
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <PullToRefresh /> {/* Pull to Refresh Logic */}
+              <AuthProvider>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<RootRoute />} />
+                  <Route path="/explore" element={<ExploreRoute />} />
+                  <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+
+                  {/* Protected User Routes */}
+                  <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/feeds" element={<Feeds />} />
+                    <Route path="/feeds/settings" element={<FeedSettings />} />
+                    <Route path="/settings/content-and-media" element={<ContentMediaSettings />} />
+                    <Route path="/lists" element={<Lists />} />
+                    <Route path="/saved" element={<SavedPosts />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/notifications/settings" element={<NotificationSettings />} />
+                    <Route path="/profile/:username" element={<Profile />} />
+                    <Route path="/post/:postId" element={<PostDetail />} />
+                    <Route path="/hashtag/:tag" element={<HashtagPage />} />
+                    <Route path="/trending/:topic" element={<TrendingTopicPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/messages/settings" element={<ChatSettings />} />
+                    <Route path="/messages/:conversationId" element={<Conversation />} />
+                    <Route path="/support" element={<SupportTicketForm />} />
+                    <Route path="/feedback" element={<FeedbackPage />} />
+                    <Route path="/verification/apply" element={<VerificationApply />} />
+                  </Route>
+
+                  {/* Admin Routes with Wildcard Fix */}
+                  <Route path="/admin/*" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                    <Route index element={<AdminOverview />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="moderation" element={<AdminModeration />} />
+                    <Route path="content" element={<AdminContent />} />
+                    <Route path="feeds" element={<AdminFeeds />} />
+                    <Route path="verification" element={<AdminVerification />} />
+                    <Route path="support" element={<AdminSupport />} />
+                    <Route path="roles" element={<AdminRoles />} />
+                  </Route>
+
+                  {/* 404 Route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
 };
 
 export default App;
