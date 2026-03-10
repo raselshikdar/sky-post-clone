@@ -6,6 +6,9 @@
 		"androidScheme": "https"
 	},
 	"plugins": {
+		"StatusBar": {
+			"overlaysWebView": false
+		},
 		"NavigationBar": {
 			"enable": true
 		}
