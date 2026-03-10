@@ -6,44 +6,42 @@ export const PullToRefresh = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // টাচ শুরু হওয়ার পজিশন সেভ করা
     const handleTouchStart = (e: TouchEvent) => {
+      // আমরা সরাসরি টাচ পয়েন্ট ধরছি
       startY.current = e.touches[0].pageY;
     };
 
-    // আঙুল ছাড়ার সময় দূরত্ব চেক করা
     const handleTouchEnd = (e: TouchEvent) => {
       const endY = e.changedTouches[0].pageY;
       const distance = endY - startY.current;
 
-      // স্ক্রিন একদম ওপরে থাকলে এবং ২৫০ পিক্সেলের বেশি নিচে টানলে
-      // আমরা document.documentElement.scrollTop এবং window.pageYOffset দুটোই চেক করছি
-      const isTop = (window.pageYOffset || document.documentElement.scrollTop) <= 0;
-
-      if (isTop && distance > 250) {
-        // ভাইব্রেশন কনফার্মেশন
+      // লজিক: যদি ইউজার ৩০০ পিক্সেল নিচে টানে 
+      // এবং সে স্ক্রিনের একদম ওপরের দিকে থাকে (যেখানেই স্ক্রল থাকুক)
+      if (distance > 300) {
+        // রিফ্রেশ শুরু হওয়ার আগে ভাইব্রেশন কনফার্মেশন
         if ('vibrate' in navigator) {
-          navigator.vibrate(60);
+          navigator.vibrate(80); // একটু কড়া ভাইব্রেশন
         }
 
-        // আপনার অ্যাপের সব ডাটা রিফ্রেশ করবে
+        // ১. আপনার সাইটের ডাটা রিফ্রেশ করা (TanStack Query)
         queryClient.invalidateQueries();
-        
-        // যদি এটি কাজ না করে, তবে নিচের রিলোড কমান্ডটি দিন (এটি ১০০% কাজ করবে)
-        // window.location.reload();
+
+        // ২. যদি ডাটা রিফ্রেশ না হয়, তবে জোর করে পেজ রিলোড করা (সবচেয়ে কার্যকর)
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
       
-      // মান রিসেট
       startY.current = 0;
     };
 
-    // সরাসরি বডিতে লিসেনার যোগ করা
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    // 'body' তে ইভেন্ট যোগ করছি এবং passive: false দিচ্ছি যাতে এটি সিএসএসকে ওভাররাইড করতে পারে
+    document.body.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.body.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      document.body.removeEventListener('touchstart', handleTouchStart);
+      document.body.removeEventListener('touchend', handleTouchEnd);
     };
   }, [queryClient]);
 
