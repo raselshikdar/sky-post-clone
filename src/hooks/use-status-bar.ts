@@ -4,40 +4,33 @@ import { NavigationBar } from '@capgo/capacitor-navigation-bar';
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
-    const updateSystemBars = async () => {
+    const applyColors = async () => {
       try {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-        const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
+        const isDark = document.documentElement.classList.contains('dark');
+        const isAmoled = document.documentElement.getAttribute('data-dark-theme') === 'dark';
 
-        let finalColor = '#ffffff'; // Light
-
+        let targetColor = '#ffffff'; // লাইট
         if (isDark) {
-          if (isAmoled) {
-            finalColor = '#000000'; // AMOLED (পিওর ব্ল্যাক)
-          } else {
-            finalColor = '#1a2333'; // Dim (আপনার CSS এর hsl(220 30% 14%))
-          }
+          targetColor = isAmoled ? '#000000' : '#15202B'; // এমুলেড বনাম ডিম
         }
 
-        // ১. ওপরের বার
-        await StatusBar.setOverlaysWebView({ overlay: false });
-        await StatusBar.setBackgroundColor({ color: finalColor });
+        // ওপরের বার
+        await StatusBar.setBackgroundColor({ color: targetColor });
         await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
 
-        // ২. নিচের নেভিগেশন বার (এখন এটি কাজ করতে বাধ্য)
+        // নিচের নেভিগেশন বার - ফোর্স মোড
         await NavigationBar.setColor({ 
-          color: finalColor, 
+          color: targetColor, 
           darkButtons: !isDark 
         });
-
       } catch (e) {
-        console.warn('System bars configuration failed');
+        console.error("Navigation Bar Error:", e);
       }
     };
 
-    updateSystemBars();
-    const timer = setTimeout(updateSystemBars, 500);
+    applyColors();
+    // থিম পরিবর্তনের জন্য ব্যাকআপ রান
+    const timer = setTimeout(applyColors, 500);
     return () => clearTimeout(timer);
   }, [theme]);
 };
