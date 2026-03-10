@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider, useTheme } from "next-themes";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 import Home from "@/pages/Home";
@@ -88,9 +88,11 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
+// এটি হুকগুলোকে রাউটারের ভেতরে হ্যান্ডেল করবে
 function AppPlugins() {
+  const { theme } = useTheme(); // থিম ডিটেক্ট করার জন্য
   useBackButton();
-  useStatusBar();
+  useStatusBar(theme); // থিম অনুযায়ী সিস্টেম বার ফিক্স হবে
   return <PullToRefresh />;
 }
 
