@@ -1,8 +1,13 @@
 {
-	"appId": "cc.eu.awaj",
+	"appId": "com.lovable.sky.post.clone",
 	"appName": "Awaj",
 	"webDir": "dist",
 	"server": {
-		"androidScheme": "http"
+		"androidScheme": "https"
+	},
+	"plugins": {
+		"NavigationBar": {
+			"enable": true
+		}
 	}
 }
