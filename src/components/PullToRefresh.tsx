@@ -1,34 +1,32 @@
 import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const PullToRefresh = () => {
   const touchStart = useRef<number>(0);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    const handleTouchStart = (e: TouchEvent) => { 
-      touchStart.current = e.touches[0].pageY; 
-    };
+    const handleStart = (e: TouchEvent) => { touchStart.current = e.touches[0].pageY; };
+    const handleEnd = (e: TouchEvent) => {
+      const distance = e.changedTouches[0].pageY - touchStart.current;
 
-    const handleTouchEnd = (e: TouchEvent) => {
-      const touchEnd = e.changedTouches[0].pageY;
-      const distance = touchEnd - touchStart.current;
-
-      // শুধুমাত্র স্ক্রিনের একদম উপরে (window.scrollY === 0) থাকলে কাজ করবে
-      // দূরত্ব ১৫০ পিক্সেলের বেশি হতে হবে
-      if (window.scrollY <= 0 && distance > 150) {
-        // অল্প ভাইব্রেশন দিয়ে ইউজারকে ফিডব্যাক দেওয়া (অপশনাল)
-        if ('vibrate' in navigator) navigator.vibrate(50);
-        window.location.reload();
+      // দূরত্ব ২০০ পিক্সেলের বেশি হলে রিফ্রেশ হবে (যাতে ভুলবশত না হয়)
+      if (window.scrollY <= 0 && distance > 200) {
+        if ('vibrate' in navigator) navigator.vibrate(40);
+        
+        // পুরো পেজ রিলোড না করে শুধু ডাটা রিফ্রেশ করবে
+        queryClient.invalidateQueries();
       }
     };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchstart', handleStart, { passive: true });
+    document.addEventListener('touchend', handleEnd, { passive: true });
 
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleStart);
+      document.removeEventListener('touchend', handleEnd);
     };
-  }, []);
+  }, [queryClient]);
 
   return null;
 };
