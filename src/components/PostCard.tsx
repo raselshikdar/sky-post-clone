@@ -168,11 +168,19 @@ export default function PostCard({
     setReposted(newReposted);
     setReposts((r) => r + (newReposted ? 1 : -1));
 
+    // Optimistic cache update across all queries
+    updatePostInCache(id, (p: any) => ({
+      ...p,
+      isReposted: newReposted,
+      repostCount: (p.repostCount ?? 0) + (newReposted ? 1 : -1),
+    }));
+
     if (newReposted) {
       const { error } = await supabase.from("reposts").insert({ user_id: user.id, post_id: id });
       if (error && error.code !== "23505") {
         setReposted(prevReposted);
         setReposts((r) => r - 1);
+        updatePostInCache(id, (p: any) => ({ ...p, isReposted: prevReposted, repostCount: (p.repostCount ?? 0) - 1 }));
         mutatingRepost.current = false;
         return;
       }
@@ -186,8 +194,11 @@ export default function PostCard({
       if (error) {
         setReposted(prevReposted);
         setReposts((r) => r + 1);
+        updatePostInCache(id, (p: any) => ({ ...p, isReposted: prevReposted, repostCount: (p.repostCount ?? 0) + 1 }));
       }
     }
+    queryClient.invalidateQueries({ queryKey: ["posts"] });
+    queryClient.invalidateQueries({ queryKey: ["post", id] });
     setTimeout(() => { mutatingRepost.current = false; }, 2000);
   };
 
