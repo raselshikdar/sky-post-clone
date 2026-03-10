@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Awaj',
   webDir: 'dist',
   server: {
-    androidScheme: 'https' // এটি যোগ করুন
+    androidScheme: "http" // এটি যোগ করুন
   }
 };
 

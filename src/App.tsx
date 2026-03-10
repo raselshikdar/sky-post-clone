@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/i18n/LanguageContext";
@@ -47,7 +47,6 @@ import FeedbackPage from "@/pages/FeedbackPage";
 import { useBackButton } from "./hooks/use-back-button";
 import { PullToRefresh } from "./components/PullToRefresh";
 
-// Reusable Loading Component
 const LoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center">
     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -56,12 +55,7 @@ const LoadingScreen = () => (
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 30,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
+    queries: { staleTime: 1000 * 60 * 5, gcTime: 1000 * 60 * 30, refetchOnWindowFocus: false, retry: 1 },
   },
 });
 
@@ -93,9 +87,13 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
-const App = () => {
-  useBackButton(); // Android Hardware Back Button Hook
+// এটি হুকগুলোকে রাউটারের ভেতরে হ্যান্ডেল করবে
+function AppPlugins() {
+  useBackButton();
+  return <PullToRefresh />;
+}
 
+const App = () => {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
@@ -103,19 +101,16 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <PullToRefresh /> {/* Pull to Refresh Logic */}
+            <HashRouter>
+              <AppPlugins />
               <AuthProvider>
                 <Routes>
-                  {/* Public Routes */}
                   <Route path="/" element={<RootRoute />} />
                   <Route path="/explore" element={<ExploreRoute />} />
                   <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
-
-                  {/* Protected User Routes */}
                   <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/feeds" element={<Feeds />} />
@@ -137,8 +132,6 @@ const App = () => {
                     <Route path="/feedback" element={<FeedbackPage />} />
                     <Route path="/verification/apply" element={<VerificationApply />} />
                   </Route>
-
-                  {/* Admin Routes with Wildcard Fix */}
                   <Route path="/admin/*" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                     <Route index element={<AdminOverview />} />
                     <Route path="users" element={<AdminUsers />} />
@@ -149,12 +142,10 @@ const App = () => {
                     <Route path="support" element={<AdminSupport />} />
                     <Route path="roles" element={<AdminRoles />} />
                   </Route>
-
-                  {/* 404 Route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthProvider>
-            </BrowserRouter>
+            </HashRouter>
           </TooltipProvider>
         </LanguageProvider>
       </QueryClientProvider>
