@@ -6,5 +6,9 @@
 	{
 		"pkg": "@capacitor/status-bar",
 		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
+	},
+	{
+		"pkg": "@capgo/capacitor-navigation-bar",
+		"classpath": "ee.forgr.capacitor_navigation_bar.CapgoNavigationBarPlugin"
 	}
 ]
