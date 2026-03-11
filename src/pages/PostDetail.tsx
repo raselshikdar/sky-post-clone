@@ -126,6 +126,7 @@ export default function PostDetail() {
           repostCount: repostCounts[r.id] || 0,
           isLiked: userLikedSet.has(r.id),
           isReposted: userRepostedSet.has(r.id),
+          isReplied: userRepliedSet.has(r.id),
         };
       });
     },
