@@ -30,13 +30,14 @@ export default function TrendingTopicPage() {
       const postIds = data.map((p) => p.id);
       const quotePostIds = data.map((p) => (p as any).quote_post_id).filter(Boolean) as string[];
 
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
         quotePostIds.length > 0
           ? supabase.from("posts").select("id, content, created_at, author_id, profiles!posts_author_id_fkey (username, display_name, avatar_url)").in("id", quotePostIds)
           : { data: [] },
