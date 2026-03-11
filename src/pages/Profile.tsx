@@ -475,13 +475,14 @@ function ProfileSearchDialog({ open, onOpenChange, profileId, profileUsername }:
       if (!data || data.length === 0) return [];
 
       const postIds = data.map((p) => p.id);
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
       ]);
 
       const likeCounts: Record<string, number> = {};
