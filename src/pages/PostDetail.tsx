@@ -82,13 +82,14 @@ export default function PostDetail() {
 
       // Fetch real counts for replies
       const replyIds = data.map((r) => r.id);
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", replyIds),
         supabase.from("reposts").select("post_id").in("post_id", replyIds),
         supabase.from("posts").select("parent_id").in("parent_id", replyIds),
         user ? supabase.from("likes").select("post_id").in("post_id", replyIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", replyIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", replyIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", replyIds).eq("author_id", user.id) : { data: [] },
       ]);
 
       const likeCounts: Record<string, number> = {};
