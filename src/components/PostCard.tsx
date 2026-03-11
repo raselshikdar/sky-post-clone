@@ -415,7 +415,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors ${hoverColor || "hover:text-primary"} ${active ? activeColor : ""}`}
+      className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors ${active ? activeColor : "text-muted-foreground"} ${active ? "" : (hoverColor || "hover:text-primary")}`}
       onClick={onClick}
     >
       <Icon
