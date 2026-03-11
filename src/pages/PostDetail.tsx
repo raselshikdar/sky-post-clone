@@ -98,6 +98,7 @@ export default function PostDetail() {
       const postImages: Record<string, string[]> = {};
       const userLikedSet = new Set((userLikesRes.data || []).map((l) => l.post_id));
       const userRepostedSet = new Set((userRepostsRes.data || []).map((r) => r.post_id));
+      const userRepliedSet = new Set((userRepliesRes.data || []).map((r: any) => r.parent_id));
 
       (likesRes.data || []).forEach((l) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
       (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
