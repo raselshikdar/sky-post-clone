@@ -188,6 +188,7 @@ export default function Home() {
           likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
           isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
+          isReplied: userRepliedSet.has(post.id),
           quotePost: (post as any).quote_post_id ? quotePostMap[(post as any).quote_post_id] || null : null,
         };
       });
