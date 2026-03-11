@@ -309,7 +309,7 @@ export default function PostCard({
             <DropdownMenu open={repostMenuOpen} onOpenChange={setRepostMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : ""}`}
+                  className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : "text-muted-foreground"}`}
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setRepostMenuOpen(prev => !prev); }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
