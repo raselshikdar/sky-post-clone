@@ -49,7 +49,7 @@ interface PostCardProps {
 export default function PostCard({
   id, authorId, authorName, authorHandle, authorAvatar,
   content, createdAt, images, videoUrl, embedUrl, likeCount, replyCount, repostCount,
-  isLiked, isReposted, quotePost,
+  isLiked, isReposted, isReplied, quotePost,
 }: PostCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likes, setLikes] = useState(likeCount);
