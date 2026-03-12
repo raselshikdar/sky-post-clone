@@ -260,7 +260,7 @@ export default function PostCard({
           <LiveAvatar
             userId={authorId}
             src={authorAvatar}
-            fallback={authorName[0]?.toUpperCase() || "?"}
+            fallback={(authorName || "?")[0]?.toUpperCase() || "?"}
             className="h-11 w-11"
             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}
             onLiveClick={() => navigate(`/profile/${authorHandle}`)}
