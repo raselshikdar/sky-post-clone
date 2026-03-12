@@ -45,8 +45,9 @@
 
     /* Bluesky-specific tokens */
     --bsky-blue: 209 100% 50%;
-    --bsky-like: 348 94% 45%;
+    --bsky-like: 338 95% 54%;
     --bsky-repost: 152 69% 40%;
+    --bsky-reply: 209 100% 50%;
     --bsky-text-primary: 210 11% 15%;
     --bsky-text-secondary: 210 11% 45%;
     --bsky-text-link: 209 100% 50%;
@@ -94,8 +95,9 @@
     --sidebar-ring: 209 100% 50%;
 
     --bsky-blue: 209 100% 50%;
-    --bsky-like: 348 94% 45%;
+    --bsky-like: 338 95% 54%;
     --bsky-repost: 152 69% 40%;
+    --bsky-reply: 209 100% 55%;
     --bsky-text-primary: 210 40% 96%;
     --bsky-text-secondary: 215 20% 62%;
     --bsky-text-link: 209 100% 60%;
@@ -143,8 +145,9 @@
     --sidebar-ring: 209 100% 50%;
 
     --bsky-blue: 209 100% 50%;
-    --bsky-like: 348 94% 45%;
+    --bsky-like: 338 95% 54%;
     --bsky-repost: 152 69% 40%;
+    --bsky-reply: 209 100% 55%;
     --bsky-text-primary: 0 0% 95%;
     --bsky-text-secondary: 0 0% 60%;
     --bsky-text-link: 209 100% 60%;

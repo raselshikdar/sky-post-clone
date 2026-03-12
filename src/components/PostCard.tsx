@@ -17,6 +17,13 @@ import LiveAvatar from "@/components/LiveAvatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Composer from "@/components/Composer";
 import SharePostDialog from "@/components/SharePostDialog";
+import LinkPreview from "@/components/LinkPreview";
+
+/** Extract the first URL from post content */
+function extractFirstUrl(text: string): string | null {
+  const match = text.match(/https?:\/\/[^\s]+/);
+  return match ? match[0] : null;
+}
 
 interface PostCardProps {
   id: string;
@@ -34,6 +41,8 @@ interface PostCardProps {
   repostCount: number;
   isLiked: boolean;
   isReposted: boolean;
+  isReplied?: boolean;
+  repostedBy?: { username: string; displayName: string } | null;
   quotePost?: {
     id: string;
     content: string;
@@ -48,7 +57,7 @@ interface PostCardProps {
 export default function PostCard({
   id, authorId, authorName, authorHandle, authorAvatar,
   content, createdAt, images, videoUrl, embedUrl, likeCount, replyCount, repostCount,
-  isLiked, isReposted, quotePost,
+  isLiked, isReposted, isReplied, repostedBy, quotePost,
 }: PostCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likes, setLikes] = useState(likeCount);
@@ -239,14 +248,26 @@ export default function PostCard({
   return (
     <>
       <article
-        className="flex gap-3 px-4 py-3 cursor-pointer bsky-divider"
+        className="flex flex-col cursor-pointer bsky-divider"
         onClick={() => navigate(`/post/${id}`)}
       >
+        {repostedBy && (
+          <div className="flex items-center gap-1.5 px-4 pt-2.5 pb-0 ml-[52px] text-[13px] text-muted-foreground font-medium">
+            <Repeat2 className="h-3.5 w-3.5" strokeWidth={2} />
+            <span
+              className="hover:underline cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${repostedBy.username}`); }}
+            >
+              Reposted by @{repostedBy.username}
+            </span>
+          </div>
+        )}
+        <div className="flex gap-3 px-4 py-3 pt-2">
         <div className="flex-shrink-0 pt-0.5">
           <LiveAvatar
             userId={authorId}
             src={authorAvatar}
-            fallback={authorName[0]?.toUpperCase() || "?"}
+            fallback={(authorName || "?")[0]?.toUpperCase() || "?"}
             className="h-11 w-11"
             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}
             onLiveClick={() => navigate(`/profile/${authorHandle}`)}
@@ -265,6 +286,11 @@ export default function PostCard({
           <p className="mt-0.5 whitespace-pre-wrap break-words text-[15px] leading-snug text-foreground">
             <RichContent content={content} />
           </p>
+
+          {/* Link preview - only show if no images/video/embed */}
+          {!images?.length && !videoUrl && !embedUrl && extractFirstUrl(content) && (
+            <LinkPreview url={extractFirstUrl(content)!} />
+          )}
 
           {images && images.length > 0 && <ImageGrid images={images} />}
 
@@ -302,13 +328,13 @@ export default function PostCard({
           )}
 
           <div className="mt-2 flex items-center justify-between -ml-1.5">
-            <ActionButton icon={MessageSquare} count={replyCount} onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
+            <ActionButton icon={MessageSquare} count={replyCount} active={isReplied} activeColor="text-[hsl(var(--bsky-reply))]" hoverColor="hover:text-[hsl(var(--bsky-reply))]" onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
             
             {/* Repost dropdown with quote option */}
             <DropdownMenu open={repostMenuOpen} onOpenChange={setRepostMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : ""}`}
+                  className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-repost))] ${reposted ? "text-[hsl(var(--bsky-repost))]" : "text-muted-foreground"}`}
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setRepostMenuOpen(prev => !prev); }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
@@ -381,6 +407,7 @@ export default function PostCard({
             />
           </div>
         </div>
+        </div>
       </article>
 
       {/* Reply composer */}
@@ -415,7 +442,7 @@ function ActionButton({
 }) {
   return (
     <button
-      className={`group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors ${hoverColor || "hover:text-primary"} ${active ? activeColor : ""}`}
+      className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors ${active ? activeColor : "text-muted-foreground"} ${active ? "" : (hoverColor || "hover:text-primary")}`}
       onClick={onClick}
     >
       <Icon

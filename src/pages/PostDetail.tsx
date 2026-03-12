@@ -82,13 +82,14 @@ export default function PostDetail() {
 
       // Fetch real counts for replies
       const replyIds = data.map((r) => r.id);
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", replyIds),
         supabase.from("reposts").select("post_id").in("post_id", replyIds),
         supabase.from("posts").select("parent_id").in("parent_id", replyIds),
         user ? supabase.from("likes").select("post_id").in("post_id", replyIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", replyIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", replyIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", replyIds).eq("author_id", user.id) : { data: [] },
       ]);
 
       const likeCounts: Record<string, number> = {};
@@ -97,6 +98,7 @@ export default function PostDetail() {
       const postImages: Record<string, string[]> = {};
       const userLikedSet = new Set((userLikesRes.data || []).map((l) => l.post_id));
       const userRepostedSet = new Set((userRepostsRes.data || []).map((r) => r.post_id));
+      const userRepliedSet = new Set((userRepliesRes.data || []).map((r: any) => r.parent_id));
 
       (likesRes.data || []).forEach((l) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
       (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
@@ -124,6 +126,7 @@ export default function PostDetail() {
           repostCount: repostCounts[r.id] || 0,
           isLiked: userLikedSet.has(r.id),
           isReposted: userRepostedSet.has(r.id),
+          isReplied: userRepliedSet.has(r.id),
         };
       });
     },

@@ -98,7 +98,7 @@ export default function PublicFeed() {
           embedUrl: (post as any).embed_url || null,
           likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
-          isLiked: false, isReposted: false,
+          isLiked: false, isReposted: false, isReplied: false,
           quotePost: (post as any).quote_post_id ? quotePostMap[(post as any).quote_post_id] || null : null,
         };
       });

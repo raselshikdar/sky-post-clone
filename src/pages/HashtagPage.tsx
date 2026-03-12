@@ -27,24 +27,26 @@ export default function HashtagPage() {
       const { data } = await supabase.from("posts").select("id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey(id, username, display_name, avatar_url)").ilike("content", `%#${tag}%`).is("parent_id", null).order("created_at", { ascending: false }).limit(50);
       if (!data || data.length === 0) return [];
       const postIds = data.map((p) => p.id);
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
       ]);
       const likeCounts: Record<string, number> = {}; const repostCounts: Record<string, number> = {}; const replyCounts: Record<string, number> = {}; const postImages: Record<string, string[]> = {};
       const userLikedSet = new Set((userLikesRes.data || []).map((l: any) => l.post_id));
       const userRepostedSet = new Set((userRepostsRes.data || []).map((r: any) => r.post_id));
+      const userRepliedSet = new Set((userRepliesRes.data || []).map((r: any) => r.parent_id));
       (likesRes.data || []).forEach((l: any) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
       (repostsRes.data || []).forEach((r: any) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
       (repliesRes.data || []).forEach((r: any) => { if (r.parent_id) replyCounts[r.parent_id] = (replyCounts[r.parent_id] || 0) + 1; });
       (imagesRes.data || []).forEach((img: any) => { if (!postImages[img.post_id]) postImages[img.post_id] = []; postImages[img.post_id].push(img.url); });
       return data.map((p: any) => {
         const profile = p.profiles as any;
-        return { id: p.id, authorId: p.author_id, authorName: profile?.display_name || "", authorHandle: profile?.username || "", authorAvatar: profile?.avatar_url || "", content: p.content, createdAt: p.created_at, images: postImages[p.id], videoUrl: (p as any).video_url || null, embedUrl: (p as any).embed_url || null, likeCount: likeCounts[p.id] || 0, replyCount: replyCounts[p.id] || 0, repostCount: repostCounts[p.id] || 0, isLiked: userLikedSet.has(p.id), isReposted: userRepostedSet.has(p.id) };
+        return { id: p.id, authorId: p.author_id, authorName: profile?.display_name || "", authorHandle: profile?.username || "", authorAvatar: profile?.avatar_url || "", content: p.content, createdAt: p.created_at, images: postImages[p.id], videoUrl: (p as any).video_url || null, embedUrl: (p as any).embed_url || null, likeCount: likeCounts[p.id] || 0, replyCount: replyCounts[p.id] || 0, repostCount: repostCounts[p.id] || 0, isLiked: userLikedSet.has(p.id), isReposted: userRepostedSet.has(p.id), isReplied: userRepliedSet.has(p.id) };
       });
     },
     enabled: !!tag,

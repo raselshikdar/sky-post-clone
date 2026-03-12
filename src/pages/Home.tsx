@@ -85,6 +85,17 @@ export default function Home() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["posts", tab, user?.id],
     queryFn: async () => {
+      let followingIds: string[] = [];
+      if (tab === "following" && user) {
+        const { data: following } = await supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", user.id);
+        followingIds = following?.map((f) => f.following_id) || [];
+        if (followingIds.length === 0) return [];
+      }
+
+      // Fetch original posts
       let query = supabase
         .from("posts")
         .select(`
@@ -96,19 +107,53 @@ export default function Home() {
         .limit(50);
 
       if (tab === "following" && user) {
-        const { data: following } = await supabase
-          .from("follows")
-          .select("following_id")
-          .eq("follower_id", user.id);
-        const ids = following?.map((f) => f.following_id) || [];
-        if (ids.length === 0) return [];
-        query = query.in("author_id", ids);
+        query = query.in("author_id", followingIds);
       }
 
       const { data } = await query;
       if (!data) return [];
 
-      let filtered = data;
+      // Fetch reposts to show in feed
+      let repostQuery = supabase
+        .from("reposts")
+        .select("id, post_id, user_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (tab === "following" && user) {
+        repostQuery = repostQuery.in("user_id", followingIds);
+      }
+
+      const { data: repostsData } = await repostQuery;
+      const reposts = repostsData || [];
+
+      // Get unique reposted post IDs that aren't already in our posts
+      const existingPostIds = new Set(data.map((p) => p.id));
+      const repostedPostIds = [...new Set(reposts.map((r) => r.post_id))].filter((id) => !existingPostIds.has(id));
+
+      // Fetch reposter profiles
+      const reposterIds = [...new Set(reposts.map((r) => r.user_id))];
+      const { data: reposterProfiles } = reposterIds.length > 0
+        ? await supabase.from("profiles").select("id, username, display_name").in("id", reposterIds)
+        : { data: [] };
+      const reposterMap: Record<string, { username: string; displayName: string }> = {};
+      (reposterProfiles || []).forEach((p: any) => { reposterMap[p.id] = { username: p.username, displayName: p.display_name }; });
+
+      // Fetch the reposted posts that aren't already loaded
+      let repostedPosts: any[] = [];
+      if (repostedPostIds.length > 0) {
+        const { data: rpData } = await supabase
+          .from("posts")
+          .select(`id, content, created_at, parent_id, author_id, quote_post_id, video_url, embed_url, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
+          .in("id", repostedPostIds)
+          .is("parent_id", null);
+        repostedPosts = rpData || [];
+      }
+
+      // Combine all posts
+      const allPostsRaw = [...data, ...repostedPosts];
+
+      let filtered = allPostsRaw;
       if (user) {
         const [hiddenRes, mutedThreadsRes, mutedAccRes, blockedRes] = await Promise.all([
           supabase.from("hidden_posts").select("post_id").eq("user_id", user.id),
@@ -120,7 +165,7 @@ export default function Home() {
         const mutedThreadIds = new Set((mutedThreadsRes.data || []).map((m) => m.post_id));
         const mutedUserIds = new Set((mutedAccRes.data || []).map((m) => m.muted_user_id));
         const blockedUserIds = new Set((blockedRes.data || []).map((b) => b.blocked_user_id));
-        filtered = data.filter((p) => !hiddenIds.has(p.id) && !mutedThreadIds.has(p.id) && !mutedUserIds.has(p.author_id) && !blockedUserIds.has(p.author_id));
+        filtered = allPostsRaw.filter((p) => !hiddenIds.has(p.id) && !mutedThreadIds.has(p.id) && !mutedUserIds.has(p.author_id) && !blockedUserIds.has(p.author_id));
       }
 
       const postIds = filtered.map((p) => p.id);
@@ -128,13 +173,14 @@ export default function Home() {
       
       const quotePostIds = filtered.map((p) => (p as any).quote_post_id).filter(Boolean) as string[];
       
-      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
         supabase.from("posts").select("parent_id").in("parent_id", postIds),
         user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
         supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
         quotePostIds.length > 0
           ? supabase.from("posts").select("id, content, created_at, author_id, profiles!posts_author_id_fkey (username, display_name, avatar_url)").in("id", quotePostIds)
           : { data: [] },
@@ -149,6 +195,7 @@ export default function Home() {
       const postImages: Record<string, string[]> = {};
       const userLikedSet = new Set((userLikesRes.data || []).map((l) => l.post_id));
       const userRepostedSet = new Set((userRepostsRes.data || []).map((r) => r.post_id));
+      const userRepliedSet = new Set((userRepliesRes.data || []).map((r: any) => r.parent_id));
 
       (likesRes.data || []).forEach((l) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
       (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
@@ -159,10 +206,10 @@ export default function Home() {
       });
 
       const quotePostMap: Record<string, any> = {};
-      const quoteImages: Record<string, string[]> = {};
+      const quoteImageMap: Record<string, string[]> = {};
       (quoteImagesRes.data || []).forEach((img: any) => {
-        if (!quoteImages[img.post_id]) quoteImages[img.post_id] = [];
-        quoteImages[img.post_id].push(img.url);
+        if (!quoteImageMap[img.post_id]) quoteImageMap[img.post_id] = [];
+        quoteImageMap[img.post_id].push(img.url);
       });
       (quotePostsRes.data || []).forEach((qp: any) => {
         const qProfile = qp.profiles as any;
@@ -170,13 +217,32 @@ export default function Home() {
           id: qp.id, content: qp.content,
           authorName: qProfile?.display_name || "", authorHandle: qProfile?.username || "",
           authorAvatar: qProfile?.avatar_url || "", createdAt: qp.created_at,
-          images: quoteImages[qp.id],
+          images: quoteImageMap[qp.id],
         };
       });
 
-      let result = filtered.map((post) => {
+      // Build a map: post_id -> repost info (reposter + repost time)
+      // For each post, find if it was reposted and by whom
+      const repostInfoMap: Record<string, { userId: string; createdAt: string }[]> = {};
+      reposts.forEach((r) => {
+        if (!repostInfoMap[r.post_id]) repostInfoMap[r.post_id] = [];
+        repostInfoMap[r.post_id].push({ userId: r.user_id, createdAt: r.created_at });
+      });
+
+      // Build feed entries: original posts + repost entries
+      type FeedEntry = {
+        sortTime: string;
+        feedKey: string;
+        repostedBy?: { username: string; displayName: string } | null;
+        post: any;
+      };
+
+      const feedEntries: FeedEntry[] = [];
+      const postDataMap: Record<string, any> = {};
+
+      filtered.forEach((post) => {
         const p = post.profiles as any;
-        return {
+        postDataMap[post.id] = {
           id: post.id, authorId: post.author_id,
           authorName: p?.display_name || "Unknown", authorHandle: p?.username || "unknown",
           authorAvatar: p?.avatar_url || "", content: post.content, createdAt: post.created_at,
@@ -186,15 +252,62 @@ export default function Home() {
           likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
           repostCount: repostCounts[post.id] || 0,
           isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
+          isReplied: userRepliedSet.has(post.id),
           quotePost: (post as any).quote_post_id ? quotePostMap[(post as any).quote_post_id] || null : null,
         };
       });
 
+      // Add original posts (from the original query only, not reposted-only posts)
+      const originalPostIds = new Set(data.map((p) => p.id));
+      filtered.forEach((post) => {
+        if (originalPostIds.has(post.id)) {
+          feedEntries.push({
+            sortTime: post.created_at,
+            feedKey: `post-${post.id}`,
+            repostedBy: null,
+            post: postDataMap[post.id],
+          });
+        }
+      });
+
+      // Add repost entries
+      reposts.forEach((r) => {
+        const postData = postDataMap[r.post_id];
+        if (!postData) return;
+        // Don't show repost entry if user reposted their own post
+        if (r.user_id === postData.authorId) return;
+        const reposter = reposterMap[r.user_id];
+        if (!reposter) return;
+        feedEntries.push({
+          sortTime: r.created_at,
+          feedKey: `repost-${r.id}`,
+          repostedBy: reposter,
+          post: postData,
+        });
+      });
+
+      // Sort by time descending
+      feedEntries.sort((a, b) => new Date(b.sortTime).getTime() - new Date(a.sortTime).getTime());
+
+      // Deduplicate: if same post appears as both original and repost close together, keep both (like Bluesky)
+      // But remove duplicate repost entries for same post
+      const seen = new Set<string>();
+      const deduped = feedEntries.filter((entry) => {
+        const key = entry.feedKey;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
       if (tab === "whats-hot") {
-        result.sort((a, b) => (b.likeCount + b.repostCount + b.replyCount) - (a.likeCount + a.repostCount + a.replyCount));
+        deduped.sort((a, b) => {
+          const aScore = a.post.likeCount + a.post.repostCount + a.post.replyCount;
+          const bScore = b.post.likeCount + b.post.repostCount + b.post.replyCount;
+          return bScore - aScore;
+        });
       }
 
-      return result;
+      return deduped;
     },
   });
 
@@ -283,7 +396,7 @@ export default function Home() {
           <p className="mt-1 text-sm">{t("home.be_first")}</p>
         </div>
       ) : (
-        posts.map((post) => <PostCard key={post.id} {...post} />)
+        posts.map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
       )}
 
       <Composer open={composerOpen} onOpenChange={(v) => { setComposerOpen(v); if (!v) setComposerAutoImage(false); }} autoOpenImagePicker={composerAutoImage} />
