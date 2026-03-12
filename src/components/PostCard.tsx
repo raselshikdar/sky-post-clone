@@ -395,6 +395,7 @@ export default function PostCard({
             />
           </div>
         </div>
+        </div>
       </article>
 
       {/* Reply composer */}
