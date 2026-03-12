@@ -35,6 +35,7 @@ interface PostCardProps {
   isLiked: boolean;
   isReposted: boolean;
   isReplied?: boolean;
+  repostedBy?: { username: string; displayName: string } | null;
   quotePost?: {
     id: string;
     content: string;
@@ -49,7 +50,7 @@ interface PostCardProps {
 export default function PostCard({
   id, authorId, authorName, authorHandle, authorAvatar,
   content, createdAt, images, videoUrl, embedUrl, likeCount, replyCount, repostCount,
-  isLiked, isReposted, isReplied, quotePost,
+  isLiked, isReposted, isReplied, repostedBy, quotePost,
 }: PostCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likes, setLikes] = useState(likeCount);
@@ -240,9 +241,21 @@ export default function PostCard({
   return (
     <>
       <article
-        className="flex gap-3 px-4 py-3 cursor-pointer bsky-divider"
+        className="flex flex-col cursor-pointer bsky-divider"
         onClick={() => navigate(`/post/${id}`)}
       >
+        {repostedBy && (
+          <div className="flex items-center gap-1.5 px-4 pt-2.5 pb-0 ml-[52px] text-[13px] text-muted-foreground font-medium">
+            <Repeat2 className="h-3.5 w-3.5" strokeWidth={2} />
+            <span
+              className="hover:underline cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); navigate(`/profile/${repostedBy.username}`); }}
+            >
+              Reposted by @{repostedBy.username}
+            </span>
+          </div>
+        )}
+        <div className="flex gap-3 px-4 py-3 pt-2">
         <div className="flex-shrink-0 pt-0.5">
           <LiveAvatar
             userId={authorId}
@@ -381,6 +394,7 @@ export default function PostCard({
               onHide={() => setHidden(true)}
             />
           </div>
+        </div>
         </div>
       </article>
 

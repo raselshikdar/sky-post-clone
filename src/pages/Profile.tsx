@@ -182,6 +182,8 @@ export default function Profile() {
     queryKey: ["profilePosts", profile?.id, activeTab, user?.id],
     queryFn: async () => {
       if (!profile) return [];
+
+      // Fetch user's own posts
       let query = supabase
         .from("posts")
         .select(`id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
@@ -193,9 +195,46 @@ export default function Profile() {
       if (activeTab === "Replies") query = query.not("parent_id", "is", null);
 
       const { data } = await query;
-      if (!data || data.length === 0) return [];
+      const ownPosts = data || [];
 
-      const postIds = data.map((p) => p.id);
+      // For Posts tab, also fetch reposts by this user
+      let repostEntries: any[] = [];
+      if (activeTab === "Posts") {
+        const { data: userReposts } = await supabase
+          .from("reposts")
+          .select("id, post_id, user_id, created_at")
+          .eq("user_id", profile.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        if (userReposts && userReposts.length > 0) {
+          const ownPostIds = new Set(ownPosts.map((p) => p.id));
+          const repostedPostIds = [...new Set(userReposts.map((r) => r.post_id))].filter((id) => !ownPostIds.has(id));
+
+          if (repostedPostIds.length > 0) {
+            const { data: rpData } = await supabase
+              .from("posts")
+              .select(`id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey (id, username, display_name, avatar_url)`)
+              .in("id", repostedPostIds)
+              .is("parent_id", null);
+
+            if (rpData) {
+              // Map repost entries with timing
+              userReposts.forEach((r) => {
+                const post = rpData.find((p) => p.id === r.post_id);
+                if (post) {
+                  repostEntries.push({ ...post, _repostCreatedAt: r.created_at, _repostId: r.id });
+                }
+              });
+            }
+          }
+        }
+      }
+
+      const allPosts = [...ownPosts, ...repostEntries.filter((r) => !ownPosts.some((p) => p.id === r.id))];
+      if (allPosts.length === 0) return [];
+
+      const postIds = allPosts.map((p) => p.id);
       const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
         supabase.from("likes").select("post_id").in("post_id", postIds),
         supabase.from("reposts").select("post_id").in("post_id", postIds),
@@ -222,22 +261,55 @@ export default function Profile() {
         postImages[img.post_id].push(img.url);
       });
 
-      return data.map((post) => {
+      // Build feed entries with repost info
+      type FeedEntry = { feedKey: string; sortTime: string; repostedBy: { username: string; displayName: string } | null; post: any };
+      const entries: FeedEntry[] = [];
+      const repostSet = new Set(repostEntries.map((r) => r.id));
+
+      // Own posts
+      ownPosts.forEach((post) => {
         const p = post.profiles as any;
-        return {
-          id: post.id, authorId: post.author_id,
-          authorName: p?.display_name || "", authorHandle: p?.username || "",
-          authorAvatar: p?.avatar_url || "", content: post.content,
-          createdAt: post.created_at,
-          images: postImages[post.id],
-          videoUrl: (post as any).video_url || null,
-          embedUrl: (post as any).embed_url || null,
-          likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
-          repostCount: repostCounts[post.id] || 0,
-          isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
-          isReplied: userRepliedSet.has(post.id),
-        };
+        entries.push({
+          feedKey: `post-${post.id}`,
+          sortTime: post.created_at,
+          repostedBy: null,
+          post: {
+            id: post.id, authorId: post.author_id,
+            authorName: p?.display_name || "", authorHandle: p?.username || "",
+            authorAvatar: p?.avatar_url || "", content: post.content,
+            createdAt: post.created_at, images: postImages[post.id],
+            videoUrl: (post as any).video_url || null, embedUrl: (post as any).embed_url || null,
+            likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
+            repostCount: repostCounts[post.id] || 0,
+            isLiked: userLikedSet.has(post.id), isReposted: userRepostedSet.has(post.id),
+            isReplied: userRepliedSet.has(post.id),
+          },
+        });
       });
+
+      // Repost entries
+      repostEntries.forEach((rp) => {
+        const p = rp.profiles as any;
+        entries.push({
+          feedKey: `repost-${rp._repostId}`,
+          sortTime: rp._repostCreatedAt,
+          repostedBy: { username: profile.username, displayName: profile.display_name },
+          post: {
+            id: rp.id, authorId: rp.author_id,
+            authorName: p?.display_name || "", authorHandle: p?.username || "",
+            authorAvatar: p?.avatar_url || "", content: rp.content,
+            createdAt: rp.created_at, images: postImages[rp.id],
+            videoUrl: (rp as any).video_url || null, embedUrl: (rp as any).embed_url || null,
+            likeCount: likeCounts[rp.id] || 0, replyCount: replyCounts[rp.id] || 0,
+            repostCount: repostCounts[rp.id] || 0,
+            isLiked: userLikedSet.has(rp.id), isReposted: userRepostedSet.has(rp.id),
+            isReplied: userRepliedSet.has(rp.id),
+          },
+        });
+      });
+
+      entries.sort((a, b) => new Date(b.sortTime).getTime() - new Date(a.sortTime).getTime());
+      return entries;
     },
     enabled: !!profile?.id,
   });
@@ -403,7 +475,7 @@ export default function Profile() {
       {posts.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">No {activeTab.toLowerCase()} yet</p>
       ) : (
-        posts.map((post) => <PostCard key={post.id} {...post} />)
+        posts.map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
       )}
 
       {isOwnProfile && (
