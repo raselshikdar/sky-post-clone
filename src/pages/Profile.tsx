@@ -496,10 +496,21 @@ export default function Profile() {
         </ScrollArea>
       </div>
 
-      {posts.length === 0 ? (
+      {/* Pinned post */}
+      {activeTab === "Posts" && pinnedPost && (
+        <div>
+          <div className="flex items-center gap-1.5 px-4 pt-2 pb-0 text-muted-foreground">
+            <Pin className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Pinned</span>
+          </div>
+          <PostCard {...pinnedPost} />
+        </div>
+      )}
+
+      {posts.length === 0 && !pinnedPost ? (
         <p className="py-12 text-center text-muted-foreground">No {activeTab.toLowerCase()} yet</p>
       ) : (
-        posts.map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
+        posts.filter((entry: any) => !(activeTab === "Posts" && pinnedPost && entry.post.id === pinnedPost.id)).map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
       )}
 
       {isOwnProfile && (
