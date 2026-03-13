@@ -1,10 +1,28 @@
-import { Hash, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import MobileDrawer from "@/components/MobileDrawer";
 import { useNavigate } from "react-router-dom";
 import AwajLogo from "@/components/AwajLogo";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
+
+// --- Bluesky Style Custom Hash Icon ---
+const BskyHashtag = (props: any) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="3.2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    <line x1="4.5" y1="9" x2="19.5" y2="9" />
+    <line x1="4.5" y1="15" x2="19.5" y2="15" />
+    <line x1="10" y1="3" x2="8" y2="21" />
+    <line x1="16" y1="3" x2="14" y2="21" />
+  </svg>
+);
 
 export default function MobileTopBar() {
   const { profile } = useAuth();
@@ -22,7 +40,8 @@ export default function MobileTopBar() {
         <AwajLogo className="h-8 w-8" />
 
         <button onClick={() => navigate("/feeds")} className="p-0">
-          <Hash className="h-6 w-6 text-muted-foreground" strokeWidth={2} />
+          {/* শুধুমাত্র এই অংশটুকু পরিবর্তন করা হয়েছে */}
+          <BskyHashtag className="h-[21px] w-[21px] text-muted-foreground" />
         </button>
       </header>
 
