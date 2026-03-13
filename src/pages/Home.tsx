@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { X, TrendingUp, ArrowUp, Radio } from "lucide-react";
+import { X, ArrowUp, Radio } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,23 @@ import { useTranslation } from "@/i18n/LanguageContext";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 import { useAllLiveUsers } from "@/hooks/use-live-status";
 import LiveViewerCount from "@/components/LiveViewerCount";
+
+const BskyHashtag = (props: any) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="3.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    {...props}
+  >
+    <line x1="4" y1="9" x2="20" y2="9" />
+    <line x1="4" y1="15" x2="20" y2="15" />
+    <line x1="10" y1="3" x2="8" y2="21" />
+    <line x1="16" y1="3" x2="14" y2="21" />
+  </svg>
+);
 
 type FeedTab = "discover" | "following" | "whats-hot";
 
@@ -357,7 +374,7 @@ export default function Home() {
         <div className="flex items-center border-b border-border">
           <ScrollArea className="flex-1">
             <div className="flex items-center gap-0.5 px-2 py-2">
-              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
+              <BskyHashtag className="h-4 w-4 text-primary flex-shrink-0 mx-1" />
               {trendingTopics.map((topic) => (
                 <button key={topic} onClick={() => navigate(`/trending/${encodeURIComponent(topic)}`)}
                   className="whitespace-nowrap rounded-full px-3 py-1 text-[14px] font-semibold text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
