@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import FollowListDialog from "@/components/FollowListDialog";
+import MutualFollowersIndicator from "@/components/MutualFollowersIndicator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useLiveViewerCount, useLiveViewerPresence } from "@/hooks/use-live-viewers";
@@ -411,23 +412,9 @@ export default function Profile() {
           <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{renderBio(profile.bio)}</p>
         )}
 
-        {/* Mutual followers */}
-        {!isOwnProfile && mutualFollowers.length > 0 && (
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {mutualFollowers.slice(0, 3).map((mf: any) => (
-                <Avatar key={mf.id} className="h-6 w-6 border-2 border-background">
-                  <AvatarImage src={mf.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                    {mf.display_name?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
-            <p className="text-sm text-primary">
-              Followed by {mutualFollowers.map((mf: any) => mf.display_name).join(" and ")}
-            </p>
-          </div>
+        {/* Mutual/Known followers */}
+        {!isOwnProfile && (
+          <MutualFollowersIndicator mutualFollowers={mutualFollowers} />
         )}
       </div>
 
