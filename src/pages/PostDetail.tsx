@@ -437,7 +437,7 @@ export default function PostDetail() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-bold flex items-center gap-0.4">
+              <p className="font-bold flex items-center gap-0.5">
                 {profile?.display_name}
                 <VerifiedBadge userId={post.author_id} />
               </p>
