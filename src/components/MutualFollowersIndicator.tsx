@@ -53,7 +53,7 @@ export default function MutualFollowersIndicator({ mutualFollowers }: MutualFoll
       >
         <div className="flex -space-x-1.5">
           {previewUsers.map((u) => (
-            <Avatar key={u.id} className="h-5 w-5 border border-background">
+            <Avatar key={u.id} className="h-6 w-6 border border-background">
               <AvatarImage src={u.avatar_url || ""} />
               <AvatarFallback className="bg-muted text-muted-foreground text-[8px]">
                 {u.display_name?.[0]?.toUpperCase() || "?"}
