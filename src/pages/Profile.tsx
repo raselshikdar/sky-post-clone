@@ -114,6 +114,43 @@ export default function Profile() {
     enabled: !!user && !!profile?.id && !isOwnProfile,
   });
 
+  // Pinned post for this profile
+  const { data: pinnedPost } = useQuery({
+    queryKey: ["pinnedPost", profile?.id, user?.id],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data: pin } = await supabase.from("pinned_posts").select("post_id").eq("user_id", profile.id).maybeSingle();
+      if (!pin) return null;
+      const { data: post } = await supabase.from("posts").select("id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey(id, username, display_name, avatar_url)").eq("id", pin.post_id).single();
+      if (!post) return null;
+      const postIds = [post.id];
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
+        supabase.from("likes").select("post_id").in("post_id", postIds),
+        supabase.from("reposts").select("post_id").in("post_id", postIds),
+        supabase.from("posts").select("parent_id").in("parent_id", postIds),
+        user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
+        user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
+        supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
+      ]);
+      const p = post.profiles as any;
+      const postImgs: string[] = (imagesRes.data || []).map((img: any) => img.url);
+      return {
+        id: post.id, authorId: post.author_id,
+        authorName: p?.display_name || "", authorHandle: p?.username || "",
+        authorAvatar: p?.avatar_url || "", content: post.content,
+        createdAt: post.created_at, images: postImgs.length > 0 ? postImgs : undefined,
+        videoUrl: (post as any).video_url || null, embedUrl: (post as any).embed_url || null,
+        likeCount: (likesRes.data || []).length, replyCount: (repliesRes.data || []).filter((r: any) => r.parent_id).length,
+        repostCount: (repostsRes.data || []).length,
+        isLiked: new Set((userLikesRes.data || []).map((l: any) => l.post_id)).has(post.id),
+        isReposted: new Set((userRepostsRes.data || []).map((r: any) => r.post_id)).has(post.id),
+        isReplied: new Set((userRepliesRes.data || []).map((r: any) => r.parent_id)).has(post.id),
+      };
+    },
+    enabled: !!profile?.id,
+  });
+
   // Live status for this profile
   const { data: profileLiveStatus } = useQuery({
     queryKey: ["liveStatus", profile?.id],
