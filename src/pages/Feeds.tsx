@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Settings, ChevronRight, Compass, ListFilter, Flame, Heart, Users, Newspaper, Pencil, Palette, Search, Pin, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Settings, ChevronRight, Compass, ListFilter, Flame, Heart, Users, Newspaper, Pencil, Palette, Search, Pin, Globe, Tv, Atom, Music, Gamepad2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/LanguageContext";
 
+// Bsky আইডেন্টিক্যাল আইকন ম্যাপ - নতুন আইকন যুক্ত করা হয়েছে
 const iconMap: Record<string, any> = { 
   compass: Compass, 
   "list-filter": ListFilter, 
@@ -16,8 +17,14 @@ const iconMap: Record<string, any> = {
   heart: Heart, 
   users: Users, 
   newspaper: Newspaper, 
+  news: Newspaper, // News এর জন্য সুনির্দিষ্ট ম্যাপিং
   pencil: Pencil, 
-  palette: Palette 
+  palette: Palette,
+  globe: Globe,
+  tv: Tv,
+  atom: Atom,
+  music: Music,
+  gaming: Gamepad2
 };
 
 function formatLikedCount(n: number) { 
@@ -92,13 +99,12 @@ export default function Feeds() {
     );
 
   const handleFeedClick = (feed: any) => {
-    // ট্রেন্ডিং টপিকের মতো নেভিগেট করা
     navigate(`/trending/${feed.name.replace(/\s+/g, '-').toLowerCase()}`);
   };
 
   return (
     <div className="flex flex-col bg-background min-h-screen">
-      {/* Sticky Header - Compact size */}
+      {/* Sticky Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-background/95 px-4 py-2 backdrop-blur-md">
         <div className="flex items-center gap-6">
           <button onClick={() => navigate(-1)} className="p-1 -ml-1">
@@ -111,8 +117,8 @@ export default function Feeds() {
         </button>
       </div>
 
-      {/* "My Feeds" Section Header - Proportionate size */}
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* "My Feeds" Header - হরাইজন্টাল লাইন যুক্ত করা হয়েছে */}
+      <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-100">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-primary">
           <ListFilter className="h-5 w-5" strokeWidth={2.5} />
         </div>
@@ -122,10 +128,11 @@ export default function Feeds() {
         </div>
       </div>
 
-      {/* My Feeds List - Compact rows like Screenshot 1 */}
+      {/* My Feeds List */}
       <div className="flex flex-col">
         {myFeeds.map((feed: any) => { 
-          const Icon = iconMap[feed.icon] || Compass; 
+          // News এর জন্য সুনির্দিষ্ট আইকন চেক
+          const Icon = feed.name.toLowerCase() === 'news' ? Newspaper : (iconMap[feed.icon] || Compass); 
           return (
             <button 
               key={feed.id} 
@@ -142,7 +149,7 @@ export default function Feeds() {
         })}
       </div>
 
-      {/* Discover Section - screenshot 1 style */}
+      {/* Discover Section */}
       <div className="px-4 pt-6 pb-3">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-primary">
@@ -154,7 +161,7 @@ export default function Feeds() {
           </div>
         </div>
         
-        {/* Search Input - Compact and rounded */}
+        {/* Search Input */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input 
@@ -166,7 +173,7 @@ export default function Feeds() {
         </div>
       </div>
 
-      {/* Discover Feeds List - Matches proportion */}
+      {/* Discover Feeds List */}
       <div className="flex flex-col border-t border-slate-100">
         {discoverFeeds.map((feed: any) => { 
           const Icon = iconMap[feed.icon] || Compass; 
@@ -184,7 +191,6 @@ export default function Feeds() {
                         Feed by @{feed.author_handle}
                       </p>
                     </div>
-                    {/* Bsky style Pin Button */}
                     <Button 
                       className="h-8 rounded-full bg-[#0085ff] text-white hover:bg-[#0070d6] font-bold text-[13px] px-3.5 border-none flex-shrink-0" 
                       onClick={(e) => { e.stopPropagation(); pinFeedMutation.mutate(feed.id); }}
