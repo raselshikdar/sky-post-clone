@@ -311,7 +311,7 @@ export default function PostCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 text-sm">
+          <div className="flex items-center gap-0.5 text-sm">
             <span className="truncate font-semibold text-foreground hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>{authorName}</span>
             <VerifiedBadge userId={authorId} />
             <span className="truncate bsky-text-secondary">@{authorHandle}</span>
