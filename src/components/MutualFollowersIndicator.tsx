@@ -49,19 +49,19 @@ export default function MutualFollowersIndicator({ mutualFollowers }: MutualFoll
     <>
       <button
         onClick={() => setOpen(true)}
-        className="mt-3 flex items-center gap-2 text-left group"
+        className="mt-2 flex items-center gap-1.5 text-left group"
       >
-        <div className="flex -space-x-2">
+        <div className="flex -space-x-1.5">
           {previewUsers.map((u) => (
-            <Avatar key={u.id} className="h-6 w-6 border-2 border-background">
+            <Avatar key={u.id} className="h-5 w-5 border border-background">
               <AvatarImage src={u.avatar_url || ""} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+              <AvatarFallback className="bg-muted text-muted-foreground text-[8px]">
                 {u.display_name?.[0]?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
           ))}
         </div>
-        <p className="text-sm text-primary group-hover:underline">
+        <p className="text-[13px] leading-tight text-muted-foreground group-hover:underline">
           {buildText()}
         </p>
       </button>
