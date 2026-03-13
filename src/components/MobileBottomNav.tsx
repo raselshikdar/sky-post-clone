@@ -85,6 +85,24 @@ export default function MobileBottomNav() {
           : pathname.startsWith(path);
         const badge = getBadge(label);
 
+        // --- ব্লু-স্কাই এর অরিজিনাল বিহেভিয়ার লজিক ---
+        let iconFill = "none";
+        let customStyles = "";
+
+        if (isActive) {
+          if (label === "Home") {
+            iconFill = "currentColor";
+          } else if (label === "Chat") {
+            iconFill = "currentColor";
+            // চ্যাটের ভেতরের ৩টি ডটকে ব্যাকগ্রাউন্ড কালার দিয়ে ফাঁকা করা হয়েছে
+            customStyles = " [&>path:not(:first-child)]:!stroke-background";
+          } else if (label === "Notifications") {
+            iconFill = "currentColor";
+            // বেলের নিচের নোস/ঝুলন্ত অংশটিকে ভরাট হতে বাধা দেওয়া হয়েছে
+            customStyles = " [&>path:last-child]:!fill-none";
+          }
+        }
+
         return (
           <NavLink
             key={label}
@@ -95,10 +113,16 @@ export default function MobileBottomNav() {
           >
             <div className="relative">
               <Icon
-                className="h-6 w-6"
-                strokeWidth={isActive ? 2.25 : 1.75}
-                fill={isActive && path === "/" ? "currentColor" : "none"}
+                className={`h-6 w-6${customStyles}`}
+                strokeWidth={2.25} // নির্দেশ অনুযায়ী সব সময় একই পরিমাণ বোল্ড থাকবে
+                fill={iconFill}
               />
+              
+              // সার্চ আইকনে ক্লিক করলে ভেতরের ডট লজিক (cx=11, cy=11 এর উপর ভিত্তি করে)
+              {isActive && label === "Search" && (
+                <div className="absolute top-[11px] left-[11px] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+              )}
+              
               {badge > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {badge > 99 ? "99+" : badge}
