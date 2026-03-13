@@ -47,7 +47,6 @@ export default function MobileBottomNav() {
     enabled: !!user,
   });
 
-  // Realtime: notifications
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -59,7 +58,6 @@ export default function MobileBottomNav() {
     return () => { supabase.removeChannel(ch); };
   }, [user, queryClient]);
 
-  // Realtime: messages
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -85,21 +83,18 @@ export default function MobileBottomNav() {
           : pathname.startsWith(path);
         const badge = getBadge(label);
 
-        // --- ব্লু-স্কাই এর অরিজিনাল বিহেভিয়ার লজিক ---
         let iconFill = "none";
-        let customStyles = "";
+        let customClass = "";
 
         if (isActive) {
           if (label === "Home") {
             iconFill = "currentColor";
           } else if (label === "Chat") {
             iconFill = "currentColor";
-            // চ্যাটের ভেতরের ৩টি ডটকে ব্যাকগ্রাউন্ড কালার দিয়ে ফাঁকা করা হয়েছে
-            customStyles = " [&>path:not(:first-child)]:!stroke-background";
+            customClass = " [&>path:not(:first-child)]:stroke-background [&>path:not(:first-child)]:fill-background";
           } else if (label === "Notifications") {
             iconFill = "currentColor";
-            // বেলের নিচের নোস/ঝুলন্ত অংশটিকে ভরাট হতে বাধা দেওয়া হয়েছে
-            customStyles = " [&>path:last-child]:!fill-none";
+            customClass = " [&>path:last-child]:fill-none";
           }
         }
 
@@ -111,20 +106,17 @@ export default function MobileBottomNav() {
               isActive ? "text-foreground" : "text-muted-foreground"
             }`}
           >
-            <div className="relative">
+            <div className="relative flex items-center justify-center">
               <Icon
-                className={`h-6 w-6${customStyles}`}
-                strokeWidth={2.25} // নির্দেশ অনুযায়ী সব সময় একই পরিমাণ বোল্ড থাকবে
+                className={`h-6 w-6${customClass}`}
+                strokeWidth={2.25}
                 fill={iconFill}
               />
-              
-              // সার্চ আইকনে ক্লিক করলে ভেতরের ডট লজিক (cx=11, cy=11 এর উপর ভিত্তি করে)
               {isActive && label === "Search" && (
-                <div className="absolute top-[11px] left-[11px] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+                <div className="absolute left-[10px] top-[10px] h-[5px] w-[5px] rounded-full bg-current" />
               )}
-              
               {badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {badge > 99 ? "99+" : badge}
                 </span>
               )}
@@ -133,7 +125,6 @@ export default function MobileBottomNav() {
         );
       })}
 
-      {/* Profile avatar as last nav item */}
       <NavLink
         to={`/profile/${profile?.username || ""}`}
         className="flex flex-col items-center gap-0.5 px-3 py-1"
