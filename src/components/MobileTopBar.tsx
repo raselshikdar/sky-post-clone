@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import AwajLogo from "@/components/AwajLogo";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
-// --- Bluesky Specific Proportion Hash Icon (মাঝখানের রম্বস সামান্য ছোট করা হয়েছে) ---
+// --- Bluesky Specific Proportion Hash Icon (মাঝামাঝি পারফেক্ট সাইজ) ---
 const BskyHashtag = (props: any) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg"
@@ -17,13 +17,13 @@ const BskyHashtag = (props: any) => (
     strokeLinejoin="round" 
     {...props}
   >
-    {/* রম্বস সামান্য ছোট করার জন্য অনুভূমিক রেখা কেন্দ্রের দিকে আনা হয়েছে (y=7.5 থেকে 8.25 এবং y=16.5 থেকে 15.75) */}
-    <line x1="4" y1="8.25" x2="20" y2="8.25" />
-    <line x1="4" y1="15.75" x2="20" y2="15.75" />
+    {/* রম্বসের সাইজ আগের বড় এবং ছোটর একদম মাঝামাঝি রাখা হয়েছে */}
+    <line x1="4" y1="7.875" x2="20" y2="7.875" />
+    <line x1="4" y1="16.125" x2="20" y2="16.125" />
     
-    {/* রম্বস সামান্য ছোট করার জন্য উল্লম্ব রেখা কেন্দ্রের দিকে আনা হয়েছে (x=8.5 থেকে 9.25 এবং x=17.5 থেকে 16.75) */}
-    <line x1="9.25" y1="3" x2="7.25" y2="21" />
-    <line x1="16.75" y1="3" x2="14.75" y2="21" />
+    {/* উল্লম্ব রেখাগুলোকেও ঠিক মাঝামাঝি পজিশনে রাখা হয়েছে */}
+    <line x1="8.875" y1="3" x2="6.875" y2="21" />
+    <line x1="17.125" y1="3" x2="15.125" y2="21" />
   </svg>
 );
 
