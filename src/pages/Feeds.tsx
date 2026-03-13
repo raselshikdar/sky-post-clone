@@ -9,9 +9,21 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/LanguageContext";
 
-const iconMap: Record<string, any> = { compass: Compass, "list-filter": ListFilter, flame: Flame, heart: Heart, users: Users, newspaper: Newspaper, pencil: Pencil, palette: Palette };
+const iconMap: Record<string, any> = { 
+  compass: Compass, 
+  "list-filter": ListFilter, 
+  flame: Flame, 
+  heart: Heart, 
+  users: Users, 
+  newspaper: Newspaper, 
+  pencil: Pencil, 
+  palette: Palette 
+};
 
-function formatLikedCount(n: number) { if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`; return n.toString(); }
+function formatLikedCount(n: number) { 
+  if (n >= 1000) return `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k`; 
+  return n.toString(); 
+}
 
 export default function Feeds() {
   const navigate = useNavigate();
@@ -20,10 +32,21 @@ export default function Feeds() {
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
 
-  const { data: allFeeds = [] } = useQuery({ queryKey: ["feeds"], queryFn: async () => { const { data } = await supabase.from("feeds").select("*").order("created_at"); return data || []; } });
+  const { data: allFeeds = [] } = useQuery({ 
+    queryKey: ["feeds"], 
+    queryFn: async () => { 
+      const { data } = await supabase.from("feeds").select("*").order("created_at"); 
+      return data || []; 
+    } 
+  });
+
   const { data: userFeeds = [] } = useQuery({
     queryKey: ["user_feeds", user?.id],
-    queryFn: async () => { if (!user) return []; const { data } = await supabase.from("user_feeds").select("*, feeds(*)").eq("user_id", user.id).order("pin_position"); return data || []; },
+    queryFn: async () => { 
+      if (!user) return []; 
+      const { data } = await supabase.from("user_feeds").select("*, feeds(*)").eq("user_id", user.id).order("pin_position"); 
+      return data || []; 
+    },
     enabled: !!user,
   });
 
@@ -31,68 +54,172 @@ export default function Feeds() {
     mutationFn: async (feedId: string) => {
       if (!user) return;
       const existing = userFeeds.find((uf: any) => uf.feed_id === feedId);
-      if (existing) { await supabase.from("user_feeds").update({ is_pinned: !existing.is_pinned }).eq("id", existing.id); }
-      else { await supabase.from("user_feeds").insert({ user_id: user.id, feed_id: feedId, is_pinned: true, pin_position: userFeeds.length }); }
+      if (existing) { 
+        await supabase.from("user_feeds").update({ is_pinned: !existing.is_pinned }).eq("id", existing.id); 
+      }
+      else { 
+        await supabase.from("user_feeds").insert({ 
+          user_id: user.id, 
+          feed_id: feedId, 
+          is_pinned: true, 
+          pin_position: userFeeds.length 
+        }); 
+      }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["user_feeds"] }); toast.success(t("feeds.updated")); },
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ["user_feeds"] }); 
+      toast.success(t("feeds.updated")); 
+    },
   });
 
   const savedFeedIds = new Set(userFeeds.map((uf: any) => uf.feed_id));
   const pinnedFeeds = userFeeds.filter((uf: any) => uf.is_pinned);
   const savedFeeds = userFeeds.filter((uf: any) => !uf.is_pinned);
   const defaultFeeds = allFeeds.filter((f: any) => f.is_default);
-  const myFeeds = [...defaultFeeds, ...pinnedFeeds.map((uf: any) => uf.feeds).filter(Boolean), ...savedFeeds.map((uf: any) => uf.feeds).filter(Boolean)];
-  const discoverFeeds = allFeeds.filter((f: any) => !f.is_default && !savedFeedIds.has(f.id)).filter((f: any) => !searchQuery || f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+  
+  const myFeeds = [
+    ...defaultFeeds, 
+    ...pinnedFeeds.map((uf: any) => uf.feeds).filter(Boolean), 
+    ...savedFeeds.map((uf: any) => uf.feeds).filter(Boolean)
+  ];
+
+  const discoverFeeds = allFeeds
+    .filter((f: any) => !f.is_default && !savedFeedIds.has(f.id))
+    .filter((f: any) => 
+      !searchQuery || 
+      f.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      f.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   return (
-    <div className="flex flex-col">
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="p-1"><ArrowLeft className="h-5 w-5 text-foreground" /></button>
-        <h2 className="text-lg font-bold">{t("nav.feeds")}</h2>
-        <button onClick={() => navigate("/feeds/settings")} className="p-1"><Settings className="h-5 w-5 text-muted-foreground" /></button>
-      </div>
-      <div className="flex items-center gap-4 px-4 py-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent"><ListFilter className="h-7 w-7 text-primary" strokeWidth={1.75} /></div>
-        <div><h3 className="text-lg font-bold text-foreground">{t("feeds.my_feeds")}</h3><p className="text-sm text-muted-foreground">{t("feeds.my_feeds_desc")}</p></div>
-      </div>
-      <div className="border-t border-border">
-        {myFeeds.map((feed: any) => { const Icon = iconMap[feed.icon] || Compass; return (
-          <button key={feed.id} className="flex w-full items-center gap-4 px-4 py-4 bsky-hover border-b border-border">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${feed.color} text-white`}><Icon className="h-5 w-5" strokeWidth={2} /></div>
-            <span className="flex-1 text-left text-[15px] font-medium text-foreground">{feed.name}</span>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+    <div className="flex flex-col bg-background min-h-screen pb-20">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-2 backdrop-blur-md">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-1 -ml-1 hover:bg-accent rounded-full transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-        ); })}
-      </div>
-      <div className="px-4 pt-6 pb-4">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent"><ListFilter className="h-7 w-7 text-primary" strokeWidth={1.75} /></div>
-          <div><h3 className="text-lg font-bold text-foreground">{t("feeds.discover")}</h3><p className="text-sm text-muted-foreground">{t("feeds.discover_desc")}</p></div>
+          <h2 className="text-[19px] font-black tracking-tight">{t("nav.feeds")}</h2>
         </div>
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder={t("feeds.search")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 rounded-lg bg-accent border-none" />
+        <button 
+          onClick={() => navigate("/feeds/settings")} 
+          className="p-1 hover:bg-accent rounded-full transition-colors"
+        >
+          <Settings className="h-5 w-5 text-muted-foreground" />
+        </button>
+      </div>
+
+      {/* Section: My Feeds Header */}
+      <div className="flex items-center gap-4 px-4 py-5">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+          <ListFilter className="h-6 w-6 text-primary" strokeWidth={2.5} />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-[18px] font-extrabold text-foreground leading-tight">{t("feeds.my_feeds")}</h3>
+          <p className="text-[14px] text-muted-foreground leading-snug">{t("feeds.my_feeds_desc")}</p>
         </div>
       </div>
-      <div className="border-t border-border">
-        {discoverFeeds.map((feed: any) => { const Icon = iconMap[feed.icon] || Compass; return (
-          <div key={feed.id} className="px-4 py-4 border-b border-border">
-            <div className="flex items-start gap-3">
-              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${feed.color} text-white`}><Icon className="h-5 w-5" strokeWidth={2} /></div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div><p className="font-semibold text-[15px] text-foreground">{feed.name}</p><p className="text-sm text-muted-foreground">{t("feeds.feed_by")} {feed.author_handle}</p></div>
-                  <Button variant="outline" size="sm" className="rounded-full text-primary border-primary hover:bg-primary/10 flex-shrink-0" onClick={() => pinFeedMutation.mutate(feed.id)}>
-                    <Pin className="h-3.5 w-3.5 mr-1" />{t("search.pin_feed")}
-                  </Button>
+
+      {/* My Feeds List */}
+      <div className="flex flex-col">
+        {myFeeds.map((feed: any) => { 
+          const Icon = iconMap[feed.icon] || Compass; 
+          return (
+            <button 
+              key={feed.id} 
+              className="flex w-full items-center gap-4 px-4 py-3.5 hover:bg-accent/50 transition-colors border-b border-slate-100 dark:border-slate-800"
+            >
+              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${feed.color} text-white shadow-sm`}>
+                <Icon className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <span className="flex-1 text-left text-[16px] font-bold text-foreground">{feed.name}</span>
+              <ChevronRight className="h-5 w-5 text-slate-300" strokeWidth={3} />
+            </button>
+          ); 
+        })}
+      </div>
+
+      {/* Discover Section Header */}
+      <div className="px-4 pt-8 pb-4">
+        <div className="flex items-center gap-4 mb-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/60">
+            <ListFilter className="h-6 w-6 text-primary" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h3 className="text-[18px] font-extrabold text-foreground leading-tight">Discover New Feeds</h3>
+            <p className="text-[14px] text-muted-foreground leading-snug">{t("feeds.discover_desc")}</p>
+          </div>
+        </div>
+        
+        {/* Search Input */}
+        <div className="relative mb-2">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input 
+            placeholder="Search feeds" 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="w-full h-10 pl-10 pr-4 rounded-full bg-slate-100 dark:bg-slate-900 border-none text-[15px] focus:ring-1 focus:ring-primary/40 outline-none placeholder:text-muted-foreground" 
+          />
+        </div>
+      </div>
+
+      {/* Discover Feeds List */}
+      <div className="flex flex-col border-t border-slate-100 dark:border-slate-800">
+        {discoverFeeds.map((feed: any) => { 
+          const Icon = iconMap[feed.icon] || Compass; 
+          return (
+            <div key={feed.id} className="px-4 py-4 border-b border-slate-100 dark:border-slate-800 hover:bg-accent/30 transition-colors">
+              <div className="flex items-start gap-3">
+                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${feed.color} text-white shadow-sm`}>
+                  <Icon className="h-5 w-5" strokeWidth={2.5} />
                 </div>
-                {feed.description && <p className="mt-1 text-sm text-foreground">{feed.description}</p>}
-                {feed.liked_count > 0 && <p className="mt-1 text-sm text-primary">{t("search.liked_by")} {formatLikedCount(feed.liked_count)} {t("search.users_label")}</p>}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col min-w-0">
+                      <p className="font-extrabold text-[16px] text-foreground leading-tight hover:underline cursor-pointer truncate">{feed.name}</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5 truncate">
+                        Feed by <span className="hover:underline">@{feed.author_handle}</span>
+                      </p>
+                    </div>
+                    {/* Bsky Styled Pin Button */}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 font-bold text-[13px] px-3.5 transition-all flex-shrink-0" 
+                      onClick={() => pinFeedMutation.mutate(feed.id)}
+                    >
+                      <Pin className="h-3.5 w-3.5 mr-1.5" fill="currentColor" />
+                      Pin Feed
+                    </Button>
+                  </div>
+                  
+                  {feed.description && (
+                    <p className="mt-2 text-[14px] leading-snug text-foreground/90 break-words line-clamp-3">
+                      {feed.description}
+                    </p>
+                  )}
+                  
+                  {feed.liked_count > 0 && (
+                    <p className="mt-2.5 text-[13px] font-medium text-slate-500">
+                      Liked by {formatLikedCount(feed.liked_count)} users
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
+          ); 
+        })}
+        
+        {discoverFeeds.length === 0 && (
+          <div className="py-16 text-center">
+            <p className="text-muted-foreground text-sm font-medium">
+              {searchQuery ? t("feeds.no_match") : t("feeds.all_saved")}
+            </p>
           </div>
-        ); })}
-        {discoverFeeds.length === 0 && <div className="py-8 text-center text-muted-foreground">{searchQuery ? t("feeds.no_match") : t("feeds.all_saved")}</div>}
+        )}
       </div>
     </div>
   );
