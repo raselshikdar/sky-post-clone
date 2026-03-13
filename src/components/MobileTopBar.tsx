@@ -6,22 +6,25 @@ import { useNavigate } from "react-router-dom";
 import AwajLogo from "@/components/AwajLogo";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
-// --- Bluesky Exact Proportion Hash Icon ---
+// --- Bluesky Specific Proportion Hash Icon ---
 const BskyHashtag = (props: any) => (
   <svg 
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
-    strokeWidth="2" /* হ্যামবার্গার মেনুর সমান थিকনেস, মোটেও বোল্ড নয় */
+    strokeWidth="2" /* হ্যামবার্গার মেনুর সমান थিকনেস */
     strokeLinecap="round" 
     strokeLinejoin="round" 
     {...props}
   >
-    {/* কম ছড়ানো এবং নিখুঁত স্ল্যান্ট (Slant) অ্যাঙ্গেল */}
-    <line x1="5" y1="9" x2="19" y2="9" />
-    <line x1="5" y1="15" x2="19" y2="15" />
-    <line x1="11" y1="4" x2="9" y2="20" />
-    <line x1="15" y1="4" x2="13" y2="20" />
+    {/* আপনার বিশ্লেষণ অনুযায়ী: মাঝখানের বর্গ বড়, কোণার বর্ধিত রেখা ছোট */}
+    {/* অনুভূমিক রেখা (Horizontal Lines) - বর্ধিত অংশ কমানো হয়েছে */}
+    <line x1="6" y1="9" x2="18" y2="9" />
+    <line x1="6" y1="15" x2="18" y2="15" />
+    
+    {/* উল্লম্ব রেখা (Vertical Lines) - বর্ধিত অংশ কমানো হয়েছে এবং টাইট স্ল্যান্ট দেওয়া হয়েছে */}
+    <line x1="11" y1="5" x2="9" y2="19" />
+    <line x1="15" y1="5" x2="13" y2="19" />
   </svg>
 );
 
@@ -41,12 +44,12 @@ export default function MobileTopBar() {
         <AwajLogo className="h-8 w-8" />
 
         <button onClick={() => navigate("/feeds")} className="p-0">
-          {/* হ্যামবার্গার মেনুর সাইজ (h-6 w-6) এর সাথে সমান রাখা হয়েছে */}
+          {/* সাইজ হ্যামবার্গার মেনুর সাথে সমান (h-6 w-6) রাখা হয়েছে */}
           <BskyHashtag className="h-6 w-6 text-muted-foreground" />
         </button>
       </header>
 
       <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
-    </>
+    </    </>
   );
 }
