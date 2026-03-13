@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, Heart, MessageSquare, Repeat2, Forward, Bookmark, BookmarkCheck, Quote, Link2, Send } from "lucide-react";
+import { ArrowLeft, Quote, Link2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { format } from "date-fns";
@@ -19,6 +19,42 @@ import PostCardMenu from "@/components/PostCardMenu";
 import SharePostDialog from "@/components/SharePostDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+
+// --- Bluesky Custom SVG Icons ---
+const BskyComment = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
+const BskyRepost = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m17 2 4 4-4 4"></path>
+    <path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+    <path d="m7 22-4-4 4-4"></path>
+    <path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+  </svg>
+);
+
+const BskyLike = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+  </svg>
+);
+
+const BskySave = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+  </svg>
+);
+
+const BskyShare = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="15 14 20 9 15 4"></polyline>
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+  </svg>
+);
+// --------------------------------
 
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
@@ -298,7 +334,7 @@ export default function PostDetail() {
           </div>
         </div>
 
-        <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">
+        <p className="mt-3 whitespace-pre-wrap break-words text-lg leading-relaxed">
           <RichContent content={post.content} />
         </p>
 
@@ -366,19 +402,19 @@ export default function PostDetail() {
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
             {/* Comment */}
             <button onClick={() => setReplyOpen(true)} className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-              <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
+              <BskyComment className="h-5 w-5" strokeWidth={1.75} />
             </button>
 
             {/* Repost dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-repost))] ${isReposted ? "text-[hsl(var(--bsky-repost))]" : "text-muted-foreground"}`}>
-                  <Repeat2 className="h-5 w-5" strokeWidth={1.75} />
+                  <BskyRepost className="h-5 w-5" strokeWidth={1.75} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44 z-50 bg-background border border-border shadow-lg">
                 <DropdownMenuItem onClick={handleRepost} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
-                  <Repeat2 className="h-4 w-4" />
+                  <BskyRepost className="h-4 w-4" />
                   {isReposted ? "Undo repost" : "Repost"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setQuoteComposerOpen(true)} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
@@ -390,19 +426,19 @@ export default function PostDetail() {
 
             {/* Like */}
             <button onClick={handleLike} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-like))] ${isLiked ? "text-[hsl(var(--bsky-like))]" : "text-muted-foreground"}`}>
-              <Heart className="h-5 w-5" strokeWidth={1.75} fill={isLiked ? "currentColor" : "none"} />
+              <BskyLike className="h-5 w-5" strokeWidth={1.75} fill={isLiked ? "currentColor" : "none"} />
             </button>
 
             {/* Bookmark */}
             <button onClick={handleBookmark} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-primary ${isBookmarked ? "text-primary" : "text-muted-foreground"}`}>
-              {isBookmarked ? <BookmarkCheck className="h-5 w-5" strokeWidth={1.75} fill="currentColor" /> : <Bookmark className="h-5 w-5" strokeWidth={1.75} />}
+              <BskySave className="h-5 w-5" strokeWidth={1.75} fill={isBookmarked ? "currentColor" : "none"} />
             </button>
 
             {/* Share dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-                  <Forward className="h-5 w-5" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
+                  <BskyShare className="h-5 w-5" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 z-50 bg-background border border-border shadow-lg">
