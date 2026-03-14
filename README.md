@@ -1,6 +1,6 @@
 # Awaj – Social Media Platform
 
-A modern, real-time social media application built with React, TypeScript, and Tailwind CSS.
+A modern, real-time social media application built with React, TypeScript, and Tailwind CSS inspired by BlueSky.
 
 ## Features
 
