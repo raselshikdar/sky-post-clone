@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -62,7 +62,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// --- ScrollToTop Component (Main Branch Feature) ---
 function ScrollToTop() {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
@@ -99,11 +98,17 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
-// এটি অ্যান্ড্রয়েড প্লাগইন এবং স্ক্রল-টু-টপ হ্যান্ডেল করবে
 function AppPlugins() {
   const { theme } = useTheme();
   useBackButton();
   useStatusBar(theme);
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.error("SW Register Error:", err));
+    }
+  }, []);
+
   return (
     <>
       <ScrollToTop />
