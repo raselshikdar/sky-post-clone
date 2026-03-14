@@ -7,41 +7,50 @@ export const useStatusBar = (theme: string | undefined) => {
     const syncSystemBars = async () => {
       try {
         const html = document.documentElement;
-        // থিম প্রোভাইডার সাধারণত html ক্লাসে 'dark' যোগ করে 
-        // এবং এমুলেড এর জন্য 'data-dark-theme' বা সরাসরি বডিতে ক্লাস দেয়
         const isDark = html.classList.contains('dark');
         const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        // আপনার index.css এর HSL টোকেন থেকে প্রাপ্ত হুবহু Hex কালার
-        let finalColor = '#ffffff'; // Light
+        // আপনার index.css অনুযায়ী নিখুঁত কালার সিলেকশন
+        let finalColor = '#ffffff'; // ডিফল্ট লাইট মোড (hsl: 0 0% 100%)
 
         if (isDark) {
           if (isAmoled) {
-            finalColor = '#000000'; // AMOLED (0 0% 0%)
+            finalColor = '#000000'; // AMOLED (hsl: 0 0% 0%)
           } else {
-            finalColor = '#15202b'; // Dim (220 30% 14%) - Twitter style dim
+            // Dim Mode: hsl(220 30% 14%) -> #19212c (আপনার CSS অনুযায়ী সঠিক কোড)
+            finalColor = '#19212c'; 
           }
         }
 
-        // ওপরের স্ট্যাটাস বার আপডেট
+        // ১. ওপরের স্ট্যাটাস বার আপডেট
         await StatusBar.setBackgroundColor({ color: finalColor });
-        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+        
+        // ডার্ক বা ডিম মোডে স্টাইল হবে Style.Light (যাতে আইকন/টেক্সট সাদা দেখায়)
+        // লাইট মোডে স্টাইল হবে Style.Dark (যাতে আইকন/টেক্সট কালো দেখায়)
+        await StatusBar.setStyle({ 
+          style: isDark ? Style.Light : Style.Dark 
+        });
 
-        // নিচের নেভিগেশন বার (এখন আর ফোনের ডিফল্ট থিমে আটকে থাকবে না)
+        // ২. নিচের নেভিগেশন বার আপডেট (আপনার ফোনের নিচের বোতামের এরিয়া)
         await NavigationBar.setColor({ 
           color: finalColor, 
-          darkButtons: !isDark // লাইট মোডে বাটন কালো, ডার্ক মোডে সেই স্ট্যান্ডার্ড ছাই রঙ
+          darkButtons: !isDark // লাইট মোডে বাটন কালো, ডার্ক/ডিম মোডে সাদা
         });
 
       } catch (e) {
-        console.warn('System bar sync failed');
+        console.warn('System bar sync failed', e);
       }
     };
 
-    // আপনার থিম প্রোভাইডারের ট্রানজিশন শেষ হওয়ার জন্য অপেক্ষা করা
+    // প্রথমবার রান করা
     syncSystemBars();
+
+    // থিম পরিবর্তন হলে অটোমেটিক ধরার জন্য অবজার্ভার
     const observer = new MutationObserver(syncSystemBars);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-dark-theme'] });
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class', 'data-dark-theme'] 
+    });
 
     return () => observer.disconnect();
   }, [theme]);
