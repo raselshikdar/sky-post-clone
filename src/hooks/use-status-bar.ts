@@ -1,47 +1,47 @@
 import { useEffect } from 'react';
+import { StatusBar, Style } from '@capacitor-status-bar';
+import { NavigationBar } from '@capgo/capacitor-navigation-bar';
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
     const syncSystemBars = async () => {
-      setTimeout(async () => {
-        try {
-          // নেটিভ প্লাগইনগুলোকে ডাইনামিকালি লোড করা হচ্ছে যাতে বিল্ড এরর না আসে
-          const { StatusBar, Style } = await import('@capacitor/status-bar');
-          const { NavigationBar } = await import('@capgo/capacitor-navigation-bar');
+      try {
+        const html = document.documentElement;
+        const isDark = html.classList.contains('dark');
+        const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-          const html = document.documentElement;
-          const isDark = html.classList.contains('dark');
-          const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
+        let finalColor = '#ffffff'; // Light (Default)
 
-          let finalColor = '#ffffff';
-          if (isDark) {
-            finalColor = isAmoled ? '#000000' : '#19212c';
+        if (isDark) {
+          if (isAmoled) {
+            finalColor = '#000000'; // AMOLED (0 0% 0%)
+          } else {
+            // আপনার index.css এর hsl(220 30% 14%) থেকে প্রাপ্ত সঠিক কালার
+            finalColor = '#19212c'; 
           }
-
-          await StatusBar.setBackgroundColor({ color: finalColor });
-          await StatusBar.setStyle({ 
-            style: isDark ? Style.Light : Style.Dark 
-          });
-
-          if (NavigationBar) {
-            await NavigationBar.setColor({ 
-              color: finalColor, 
-              darkButtons: !isDark 
-            });
-          }
-        } catch (e) {
-          console.warn('System bar sync failed or not on mobile');
         }
-      }, 100);
+
+        // ওপরের স্ট্যাটাস বার আপডেট
+        await StatusBar.setBackgroundColor({ color: finalColor });
+        // ডার্ক/ডিম মোডে সাদা আইকন (Style.Light) এবং লাইট মোডে কালো আইকন (Style.Dark)
+        await StatusBar.setStyle({ style: isDark ? Style.Light : Style.Dark });
+
+        // নিচের নেভিগেশন বার আপডেট
+        if (NavigationBar) {
+          await NavigationBar.setColor({ 
+            color: finalColor, 
+            darkButtons: !isDark 
+          });
+        }
+
+      } catch (e) {
+        console.warn('System bar sync failed');
+      }
     };
 
     syncSystemBars();
-
     const observer = new MutationObserver(syncSystemBars);
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class', 'data-dark-theme'] 
-    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-dark-theme'] });
 
     return () => observer.disconnect();
   }, [theme]);
