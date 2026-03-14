@@ -1,5 +1,4 @@
 // Service worker for PWA installability + Web Push Notifications
-
 const CACHE_NAME = 'awaj-v2';
 const PRECACHE_URLS = [
   '/',
@@ -25,14 +24,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first strategy: always try network, fall back to cache
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
 // ─── Web Push Notification Handler ───
-
 self.addEventListener('push', (event) => {
   let data = {};
   try {
@@ -41,33 +38,37 @@ self.addEventListener('push', (event) => {
     data = { title: 'Awaj', body: event.data?.text() || 'New notification' };
   }
 
+  const options = {
+    body: data.body || '',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    data: { url: data.url || '/' },
+    tag: data.tag || 'awaj-notification',
+    renotify: true,
+    vibrate: [200, 100, 200]
+  };
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Awaj', {
-      body: data.body || '',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-192x192.png',
-      data: { url: data.url || '/' },
-      tag: data.tag || undefined,
-      renotify: !!data.tag,
-      vibrate: [200, 100, 200],
-    })
+    self.registration.showNotification(data.title || 'Awaj', options)
   );
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/';
+  
+  // অ্যাপ লোকালহোস্টে চললেও লিঙ্ক সব সময় মূল ডোমেইনে হবে
+  const rootUrl = "https://awaj.eu.cc";
+  const relativePath = event.notification.data?.url || '/';
+  const urlToOpen = new URL(relativePath, rootUrl).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Try to focus an existing window
       for (const client of windowClients) {
-        if (new URL(client.url).pathname === url && 'focus' in client) {
+        if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }
       }
-      // Open new window if none found
-      return clients.openWindow(url);
+      if (clients.openWindow) return clients.openWindow(urlToOpen);
     })
   );
 });
