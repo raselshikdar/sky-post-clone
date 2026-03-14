@@ -2,6 +2,8 @@
 
 A modern, real-time social media application built with React, TypeScript, and Tailwind CSS.
 
+> **Disclaimer:** *This project is an independent, educational clone inspired by the UI/UX of BlueSky. It is not affiliated with, endorsed by, or connected to BlueSky in any way. All source code is originally developed.*
+
 ## Features
 
 - 📝 Create, like, repost, and bookmark posts with image uploads
