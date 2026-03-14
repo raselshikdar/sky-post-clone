@@ -1,46 +1,37 @@
-import { useEffect } from 'react';
-import { StatusBar, Style } from '@capacitor-status-bar';
-import { NavigationBar } from '@capgo/capacitor-navigation-bar';
+import { useEffect } from 'react'; // 'import' ছোট হাতের করে ঠিক করা হয়েছে
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
     const syncSystemBars = async () => {
       try {
+        const win = window as any;
+        const StatusBar = win.Capacitor?.Plugins?.StatusBar;
+        const NavigationBar = win.Capacitor?.Plugins?.NavigationBar;
+
+        if (!StatusBar) return;
+
         const html = document.documentElement;
         const isDark = html.classList.contains('dark');
         const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        let finalColor = '#ffffff'; // Light
-
+        let finalColor = '#ffffff';
         if (isDark) {
-          if (isAmoled) {
-            finalColor = '#000000'; // AMOLED
-          } else {
-            // শুধুমাত্র এই লাইনটি পরিবর্তন করা হয়েছে (#15202b বদলে #19212c)
-            // এটি তোমার CSS এর hsl(220 30% 14%) এর হুবহু Hex কোড
-            finalColor = '#19212c'; 
-          }
+          finalColor = isAmoled ? '#000000' : '#19212c';
         }
 
-        // স্ট্যাটাস বার আপডেট
         await StatusBar.setBackgroundColor({ color: finalColor });
-        
-        // ডার্ক/ডিম মোডে সাদা আইকন (Style.Light) এবং লাইট মোডে কালো (Style.Dark)
-        // তোমার দেওয়া কোডে লজিকটা উল্টো ছিল, আমি শুধু সেটা সোজা করে দিলাম
         await StatusBar.setStyle({ 
-          style: isDark ? Style.Light : Style.Dark 
+          style: isDark ? 'LIGHT' : 'DARK' 
         });
 
-        // নেভিগেশন বার আপডেট
         if (NavigationBar) {
           await NavigationBar.setColor({ 
             color: finalColor, 
             darkButtons: !isDark 
           });
         }
-
       } catch (e) {
-        console.warn('System bar sync failed');
+        // সাইলেন্ট এরর
       }
     };
 
