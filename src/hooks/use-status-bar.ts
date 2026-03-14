@@ -1,51 +1,46 @@
 import { useEffect } from 'react';
-import { StatusBar, Style } from '@capacitor/status-bar';
+import { StatusBar, Style } from '@capacitor-status-bar';
 import { NavigationBar } from '@capgo/capacitor-navigation-bar';
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
     const syncSystemBars = async () => {
-      try {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-        const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
+      // থিম পরিবর্তনের জন্য ২-৩ মিলি-সেকেন্ড সময় দিলে DOM সঠিকভাবে আপডেট হয়
+      setTimeout(async () => {
+        try {
+          const html = document.documentElement;
+          const isDark = html.classList.contains('dark');
+          const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        // আপনার index.css অনুযায়ী নিখুঁত কালার সিলেকশন
-        let finalColor = '#ffffff'; // ডিফল্ট লাইট মোড (hsl: 0 0% 100%)
-
-        if (isDark) {
-          if (isAmoled) {
-            finalColor = '#000000'; // AMOLED (hsl: 0 0% 0%)
-          } else {
-            // Dim Mode: hsl(220 30% 14%) -> #19212c (আপনার CSS অনুযায়ী সঠিক কোড)
-            finalColor = '#19212c'; 
+          // ব্যাকগ্রাউন্ড কালার লজিক
+          let finalColor = '#ffffff'; // Light
+          if (isDark) {
+            finalColor = isAmoled ? '#000000' : '#19212c'; // AMOLED vs Dim
           }
+
+          // ১. স্ট্যাটাস বার ব্যাকগ্রাউন্ড এবং আইকন স্টাইল
+          // অ্যান্ড্রয়েডে Style.Light মানে সাদা আইকন (ডার্ক থিমের জন্য)
+          // এবং Style.Dark মানে কালো আইকন (লাইট থিমের জন্য)
+          await StatusBar.setBackgroundColor({ color: finalColor });
+          await StatusBar.setStyle({ 
+            style: isDark ? Style.Light : Style.Dark 
+          });
+
+          // ২. নেভিগেশন বার আপডেট
+          if (NavigationBar) {
+            await NavigationBar.setColor({ 
+              color: finalColor, 
+              darkButtons: !isDark 
+            });
+          }
+        } catch (e) {
+          console.warn('System bar sync failed', e);
         }
-
-        // ১. ওপরের স্ট্যাটাস বার আপডেট
-        await StatusBar.setBackgroundColor({ color: finalColor });
-        
-        // ডার্ক বা ডিম মোডে স্টাইল হবে Style.Light (যাতে আইকন/টেক্সট সাদা দেখায়)
-        // লাইট মোডে স্টাইল হবে Style.Dark (যাতে আইকন/টেক্সট কালো দেখায়)
-        await StatusBar.setStyle({ 
-          style: isDark ? Style.Light : Style.Dark 
-        });
-
-        // ২. নিচের নেভিগেশন বার আপডেট (আপনার ফোনের নিচের বোতামের এরিয়া)
-        await NavigationBar.setColor({ 
-          color: finalColor, 
-          darkButtons: !isDark // লাইট মোডে বাটন কালো, ডার্ক/ডিম মোডে সাদা
-        });
-
-      } catch (e) {
-        console.warn('System bar sync failed', e);
-      }
+      }, 50); // ছোট একটি ডিলে যাতে UI স্টেট কনফার্ম হয়
     };
 
-    // প্রথমবার রান করা
     syncSystemBars();
 
-    // থিম পরিবর্তন হলে অটোমেটিক ধরার জন্য অবজার্ভার
     const observer = new MutationObserver(syncSystemBars);
     observer.observe(document.documentElement, { 
       attributes: true, 
