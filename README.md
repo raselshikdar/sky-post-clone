@@ -2,16 +2,17 @@
 
 A modern, real-time social media application built with React, TypeScript, and Tailwind CSS.
 
-> ***Disclaimer:** This project is an independent, educational clone inspired by the UI/UX of BlueSky. It is not affiliated with, endorsed by, or connected to BlueSky in any way. All source code is originally developed.*
+> **Disclaimer:** *This project is an independent, educational clone inspired by the UI/UX of BlueSky. It is not affiliated with, endorsed by, or connected to BlueSky in any way. All source code is originally developed.*
 
 ## Features
 
 - 📝 Create, like, repost, and bookmark posts with image uploads
 - 💬 Real-time direct messaging with emoji reactions
-- 🔔 Notification system (likes, follows, replies)
+- 🔔 Native Web Push Notifications (Raw RFC 8291 implementation with VAPID keys)
 - 🔍 Search users and posts, trending topics, and interest-based discovery
 - 📰 Custom feed management with pinning and reordering
 - 👤 User profiles with avatar/banner uploads and verification system
+- 📱 Cross-platform support with native Android app built via Capacitor (featuring immersive status bars)
 - 🛡️ Admin dashboard with moderation, user management, and support tickets
 - 🔒 Role-based access control (admin, moderator, user)
 
@@ -21,13 +22,14 @@ A modern, real-time social media application built with React, TypeScript, and T
 - **Styling:** Tailwind CSS, shadcn/ui
 - **Backend:** Lovable Cloud (Supabase)
 - **State:** TanStack React Query
+- **Mobile/Native:** Capacitor (Android)
 - **Routing:** React Router v6
 
 ## Getting Started
 
 ```sh
 # Clone the repository
-git clone https://github.com/raselshikdar/sky-post-clone
+git clone [https://github.com/raselshikdar/sky-post-clone](https://github.com/raselshikdar/sky-post-clone)
 
 # Navigate to the project directory
 cd sky-post-clone
@@ -39,9 +41,9 @@ npm install
 npm run dev
 ```
 
-## Project Structure
+# Project Structure
 
-```
+```text
 src/
 ├── components/     # Reusable UI components
 ├── contexts/       # React context providers (Auth)
@@ -54,5 +56,4 @@ src/
 ```
 
 ## License
-
-This project is proprietary software. All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](/LICENSE) file for details.
