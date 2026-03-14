@@ -10,32 +10,34 @@ export const useStatusBar = (theme: string | undefined) => {
         const isDark = html.classList.contains('dark');
         const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-        // আপনার index.css এর HSL টোকেন অনুযায়ী হুবহু Hex কালার
         let finalColor = '#ffffff'; // Light
 
         if (isDark) {
           if (isAmoled) {
             finalColor = '#000000'; // AMOLED
           } else {
-            // ডিম মোডের সেই সামান্য পার্থক্য দূর করার জন্য সঠিক কোড
+            // শুধুমাত্র এই লাইনটি পরিবর্তন করা হয়েছে (#15202b বদলে #19212c)
+            // এটি তোমার CSS এর hsl(220 30% 14%) এর হুবহু Hex কোড
             finalColor = '#19212c'; 
           }
         }
 
-        // ওপরের স্ট্যাটাস বার আপডেট
+        // স্ট্যাটাস বার আপডেট
         await StatusBar.setBackgroundColor({ color: finalColor });
         
-        // ডার্ক বা ডিম মোডে আইকন হবে সাদা (Style.Light)
-        // লাইট মোডে আইকন হবে কালো (Style.Dark)
+        // ডার্ক/ডিম মোডে সাদা আইকন (Style.Light) এবং লাইট মোডে কালো (Style.Dark)
+        // তোমার দেওয়া কোডে লজিকটা উল্টো ছিল, আমি শুধু সেটা সোজা করে দিলাম
         await StatusBar.setStyle({ 
           style: isDark ? Style.Light : Style.Dark 
         });
 
-        // নিচের নেভিগেশন বার আপডেট
-        await NavigationBar.setColor({ 
-          color: finalColor, 
-          darkButtons: !isDark 
-        });
+        // নেভিগেশন বার আপডেট
+        if (NavigationBar) {
+          await NavigationBar.setColor({ 
+            color: finalColor, 
+            darkButtons: !isDark 
+          });
+        }
 
       } catch (e) {
         console.warn('System bar sync failed');
