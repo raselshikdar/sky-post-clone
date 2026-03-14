@@ -1,4 +1,4 @@
-import { useEffect } from 'react'; // 'import' ছোট হাতের করে ঠিক করা হয়েছে
+import { useEffect } from 'react';
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
@@ -14,14 +14,18 @@ export const useStatusBar = (theme: string | undefined) => {
         const isDark = html.classList.contains('dark');
         const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
+        // কালার একদম ১০০% ঠিক আছে, আমি এটা একটুও বদলাইনি
         let finalColor = '#ffffff';
         if (isDark) {
           finalColor = isAmoled ? '#000000' : '#19212c';
         }
 
         await StatusBar.setBackgroundColor({ color: finalColor });
+        
+        // শুধুমাত্র এই লাইনটি ঠিক করা হয়েছে। 
+        // ডার্ক মোডে 'DARK' স্টাইল (সাদা আইকন) এবং লাইট মোডে 'LIGHT' স্টাইল (কালো আইকন)
         await StatusBar.setStyle({ 
-          style: isDark ? 'LIGHT' : 'DARK' 
+          style: isDark ? 'DARK' : 'LIGHT' 
         });
 
         if (NavigationBar) {
