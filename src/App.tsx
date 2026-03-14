@@ -104,9 +104,23 @@ function AppPlugins() {
   useStatusBar(theme);
 
   useEffect(() => {
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.error("SW Register Error:", err));
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log("SW Registered Successfully"))
+        .catch(err => console.error("SW Register Error:", err));
     }
+
+    // Notification Permission Request
+    const requestPermission = async () => {
+      if ("Notification" in window) {
+        if (Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+      }
+    };
+
+    requestPermission();
   }, []);
 
   return (
