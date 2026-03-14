@@ -1,32 +1,28 @@
 import { useEffect } from 'react';
-import { StatusBar, Style } from '@capacitor-status-bar';
-import { NavigationBar } from '@capgo/capacitor-navigation-bar';
 
 export const useStatusBar = (theme: string | undefined) => {
   useEffect(() => {
     const syncSystemBars = async () => {
-      // থিম পরিবর্তনের জন্য ২-৩ মিলি-সেকেন্ড সময় দিলে DOM সঠিকভাবে আপডেট হয়
       setTimeout(async () => {
         try {
+          // নেটিভ প্লাগইনগুলোকে ডাইনামিকালি লোড করা হচ্ছে যাতে বিল্ড এরর না আসে
+          const { StatusBar, Style } = await import('@capacitor/status-bar');
+          const { NavigationBar } = await import('@capgo/capacitor-navigation-bar');
+
           const html = document.documentElement;
           const isDark = html.classList.contains('dark');
           const isAmoled = html.getAttribute('data-dark-theme') === 'dark';
 
-          // ব্যাকগ্রাউন্ড কালার লজিক
-          let finalColor = '#ffffff'; // Light
+          let finalColor = '#ffffff';
           if (isDark) {
-            finalColor = isAmoled ? '#000000' : '#19212c'; // AMOLED vs Dim
+            finalColor = isAmoled ? '#000000' : '#19212c';
           }
 
-          // ১. স্ট্যাটাস বার ব্যাকগ্রাউন্ড এবং আইকন স্টাইল
-          // অ্যান্ড্রয়েডে Style.Light মানে সাদা আইকন (ডার্ক থিমের জন্য)
-          // এবং Style.Dark মানে কালো আইকন (লাইট থিমের জন্য)
           await StatusBar.setBackgroundColor({ color: finalColor });
           await StatusBar.setStyle({ 
             style: isDark ? Style.Light : Style.Dark 
           });
 
-          // ২. নেভিগেশন বার আপডেট
           if (NavigationBar) {
             await NavigationBar.setColor({ 
               color: finalColor, 
@@ -34,9 +30,9 @@ export const useStatusBar = (theme: string | undefined) => {
             });
           }
         } catch (e) {
-          console.warn('System bar sync failed', e);
+          console.warn('System bar sync failed or not on mobile');
         }
-      }, 50); // ছোট একটি ডিলে যাতে UI স্টেট কনফার্ম হয়
+      }, 100);
     };
 
     syncSystemBars();
