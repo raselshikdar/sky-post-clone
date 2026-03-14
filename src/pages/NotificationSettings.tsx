@@ -2,12 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, Heart, UserPlus, MessageCircle, AtSign, Repeat2, Bell, ChevronRight, Quote } from "lucide-react";
+import { ArrowLeft, Heart, UserPlus, MessageCircle, AtSign, Repeat2, Bell, ChevronRight, Quote, BellRing, BellOff } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function NotificationSettings() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function NotificationSettings() {
   const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const { t } = useTranslation();
+  const { isSubscribed, isSupported, permission, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
 
   const NOTIFICATION_TYPES = [
     { key: "likes", label: t("notif_settings.likes"), icon: Heart, defaults: { in_app: true, push: true, from_who: "everyone" } },
@@ -81,12 +83,64 @@ export default function NotificationSettings() {
     return `${parts.join(", ")}, ${fromText}`;
   };
 
+  const handlePushToggle = async () => {
+    if (pushLoading) return;
+    if (isSubscribed) {
+      await unsubscribe();
+      toast.success("Push notifications disabled");
+    } else {
+      const success = await subscribe();
+      if (success) {
+        toast.success("Push notifications enabled!");
+      } else if (permission === "denied") {
+        toast.error("Push notifications are blocked. Please enable them in your browser settings.");
+      } else {
+        toast.error("Failed to enable push notifications");
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
         <button onClick={() => navigate(-1)} className="text-foreground"><ArrowLeft className="h-5 w-5" /></button>
         <h2 className="text-lg font-bold">{t("notif_settings.title")}</h2>
       </div>
+
+      {/* Push Notifications Global Toggle */}
+      {isSupported && (
+        <div className="border-b border-border">
+          <button
+            onClick={handlePushToggle}
+            disabled={pushLoading}
+            className="flex w-full items-center gap-4 px-4 py-4 text-left hover:bg-accent/30 transition-colors"
+          >
+            {isSubscribed ? (
+              <BellRing className="h-5 w-5 text-primary flex-shrink-0" strokeWidth={1.75} />
+            ) : (
+              <BellOff className="h-5 w-5 text-muted-foreground flex-shrink-0" strokeWidth={1.75} />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-[15px]">
+                {isSubscribed ? "Push Notifications Enabled" : "Enable Push Notifications"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isSubscribed
+                  ? "You'll receive alerts even when the app is closed"
+                  : permission === "denied"
+                  ? "Blocked by browser — check your browser settings"
+                  : "Get notified even when the app is closed"}
+              </p>
+            </div>
+            <Switch
+              checked={isSubscribed}
+              onCheckedChange={handlePushToggle}
+              disabled={pushLoading}
+            />
+          </button>
+        </div>
+      )}
+
       <div className="py-1">
         {NOTIFICATION_TYPES.map((type) => {
           const Icon = type.icon;
