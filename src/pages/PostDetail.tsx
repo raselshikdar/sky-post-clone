@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, Heart, MessageSquare, Repeat2, Forward, Bookmark, BookmarkCheck, Quote, Link2, Send } from "lucide-react";
+import { ArrowLeft, Quote, Link2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { format } from "date-fns";
@@ -20,6 +20,69 @@ import SharePostDialog from "@/components/SharePostDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
+// --- Bluesky Custom SVG Icons ---
+const BskyComment = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
+const BskyRepost = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m17 2 4 4-4 4"></path>
+    <path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+    <path d="m7 22-4-4 4-4"></path>
+    <path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+  </svg>
+);
+
+const BskyLike = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+  </svg>
+);
+
+const BskySave = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+  </svg>
+);
+
+const BskyShare = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="15 14 20 9 15 4"></polyline>
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+  </svg>
+);
+
+const BskyFilter = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="4" y1="21" x2="4" y2="14" />
+    <line x1="4" y1="10" x2="4" y2="3" />
+    <line x1="12" y1="21" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12" y2="3" />
+    <line x1="20" y1="21" x2="20" y2="16" />
+    <line x1="20" y1="12" x2="20" y2="3" />
+    <line x1="2" y1="14" x2="6" y2="14" />
+    <line x1="10" y1="8" x2="14" y2="8" />
+    <line x1="18" y1="16" x2="22" y2="16" />
+  </svg>
+);
+
+const RadioActive = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="#0085ff" strokeWidth="2" fill="none"/>
+    <circle cx="12" cy="12" r="6" fill="#0085ff"/>
+  </svg>
+);
+
+const RadioInactive = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.3"/>
+  </svg>
+);
+// --------------------------------
+
 export default function PostDetail() {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -30,6 +93,10 @@ export default function PostDetail() {
   const [hidden, setHidden] = useState(false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+
+  // Sorting and View State
+  const [replyView, setReplyView] = useState("linear");
+  const [replySort, setReplySort] = useState("top");
 
   const { data: post } = useQuery({
     queryKey: ["post", postId],
@@ -174,14 +241,27 @@ export default function PostDetail() {
     enabled: !!user && !!postId,
   });
 
+  // Follow interaction logic
+  const { data: userFollowing = false } = useQuery({
+    queryKey: ["isFollowing", post?.author_id, user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("follows").select("id").eq("follower_id", user!.id).eq("following_id", post!.author_id).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && !!post?.author_id && post?.author_id !== user?.id,
+  });
+
   const [likedOverride, setLikedOverride] = useState<boolean | null>(null);
   const [repostedOverride, setRepostedOverride] = useState<boolean | null>(null);
   const [bookmarkedOverride, setBookmarkedOverride] = useState<boolean | null>(null);
+  const [followingOverride, setFollowingOverride] = useState<boolean | null>(null);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Use override during mutation, otherwise trust query data
   const isLiked = likedOverride !== null ? likedOverride : userLiked;
   const isReposted = repostedOverride !== null ? repostedOverride : userReposted;
   const isBookmarked = bookmarkedOverride !== null ? bookmarkedOverride : userBookmarked;
+  const isFollowing = followingOverride !== null ? followingOverride : userFollowing;
 
   // Helper: sync like/repost state to feed caches
   const updatePostInFeedCaches = (pid: string, updater: (post: any) => any) => {
@@ -259,6 +339,22 @@ export default function PostDetail() {
     setBookmarkedOverride(null);
   };
 
+  const handleFollow = async () => {
+    if (!user || !post?.author_id) return;
+    setIsFollowLoading(true);
+    const newFollowing = !isFollowing;
+    setFollowingOverride(newFollowing);
+
+    if (newFollowing) {
+      await supabase.from("follows").insert({ follower_id: user.id, following_id: post.author_id });
+      await supabase.from("notifications").insert({ user_id: post.author_id, actor_id: user.id, type: "follow" });
+    } else {
+      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", post.author_id);
+    }
+    await queryClient.invalidateQueries({ queryKey: ["isFollowing", post.author_id] });
+    setIsFollowLoading(false);
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
     toast.success("Link copied!");
@@ -270,35 +366,102 @@ export default function PostDetail() {
 
   const profile = post.profiles as any;
 
+  // Sorting logic based on selected state
+  const sortedReplies = [...replies].sort((a, b) => {
+    if (replySort === "top") {
+      return b.likeCount - a.likeCount;
+    }
+    if (replySort === "newest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    // oldest (default)
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex items-center gap-4 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="rounded-full p-1.5 transition-colors bsky-hover">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h2 className="text-lg font-bold">{t("detail.post")}</h2>
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="rounded-full p-1.5 transition-colors bsky-hover">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h2 className="text-lg font-bold">{t("detail.post")}</h2>
+        </div>
+
+        {/* 3 Dots / Filter Option Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="rounded-full p-1.5 transition-colors text-muted-foreground hover:text-foreground">
+              <BskyFilter className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60 rounded-xl p-1 z-50 bg-background border border-border shadow-lg">
+            <div className="px-3 py-2 text-[13px] font-semibold text-muted-foreground">Show replies as</div>
+            <DropdownMenuItem onClick={() => setReplyView("linear")} className="flex items-center justify-between cursor-pointer rounded-md px-3 py-2.5 outline-none focus:bg-accent focus:text-accent-foreground">
+              <span className="text-[15px] font-medium">Linear</span>
+              {replyView === "linear" ? <RadioActive /> : <RadioInactive />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setReplyView("threaded")} className="flex items-center justify-between cursor-pointer rounded-md px-3 py-2.5 outline-none focus:bg-accent focus:text-accent-foreground">
+              <span className="text-[15px] font-medium">Threaded</span>
+              {replyView === "threaded" ? <RadioActive /> : <RadioInactive />}
+            </DropdownMenuItem>
+
+            <div className="my-1.5 h-px bg-border/50" />
+
+            <div className="px-3 py-2 text-[13px] font-semibold text-muted-foreground">Reply sorting</div>
+            <DropdownMenuItem onClick={() => setReplySort("top")} className="flex items-center justify-between cursor-pointer rounded-md px-3 py-2.5 outline-none focus:bg-accent focus:text-accent-foreground">
+              <span className="text-[15px] font-medium">Top replies first</span>
+              {replySort === "top" ? <RadioActive /> : <RadioInactive />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setReplySort("oldest")} className="flex items-center justify-between cursor-pointer rounded-md px-3 py-2.5 outline-none focus:bg-accent focus:text-accent-foreground">
+              <span className="text-[15px] font-medium">Oldest replies first</span>
+              {replySort === "oldest" ? <RadioActive /> : <RadioInactive />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setReplySort("newest")} className="flex items-center justify-between cursor-pointer rounded-md px-3 py-2.5 outline-none focus:bg-accent focus:text-accent-foreground">
+              <span className="text-[15px] font-medium">Newest replies first</span>
+              {replySort === "newest" ? <RadioActive /> : <RadioInactive />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Main Post */}
       <div className="px-4 py-3 bsky-divider">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 cursor-pointer" onClick={() => navigate(`/profile/${profile?.username}`)}>
-            <AvatarImage src={profile?.avatar_url} />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {profile?.display_name?.[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-bold flex items-center gap-1">
-              {profile?.display_name}
-              <VerifiedBadge userId={post.author_id} />
-            </p>
-            <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-12 w-12 cursor-pointer" onClick={() => navigate(`/profile/${profile?.username}`)}>
+              <AvatarImage src={profile?.avatar_url} />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {profile?.display_name?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-bold flex items-center gap-0.5">
+                {profile?.display_name}
+                <VerifiedBadge userId={post.author_id} />
+              </p>
+              <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+            </div>
           </div>
+
+          {/* Follow Button */}
+          {user && post.author_id !== user.id && (
+            <button
+              onClick={handleFollow}
+              disabled={isFollowLoading}
+              className={`mt-1 rounded-full px-4 py-1.5 text-[14px] font-normal transition-opacity hover:opacity-90 disabled:opacity-50 ${
+                isFollowing 
+                  ? "bg-secondary text-secondary-foreground border border-border" 
+                  : "bg-foreground text-background"
+              }`}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </button>
+          )}
         </div>
 
-        <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">
+        <p className="mt-3 whitespace-pre-wrap break-words text-lg leading-relaxed">
           <RichContent content={post.content} />
         </p>
 
@@ -366,19 +529,19 @@ export default function PostDetail() {
           <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
             {/* Comment */}
             <button onClick={() => setReplyOpen(true)} className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-              <MessageSquare className="h-5 w-5" strokeWidth={1.75} />
+              <BskyComment className="h-5 w-5" strokeWidth={1.75} />
             </button>
 
             {/* Repost dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-repost))] ${isReposted ? "text-[hsl(var(--bsky-repost))]" : "text-muted-foreground"}`}>
-                  <Repeat2 className="h-5 w-5" strokeWidth={1.75} />
+                  <BskyRepost className="h-5 w-5" strokeWidth={1.75} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44 z-50 bg-background border border-border shadow-lg">
                 <DropdownMenuItem onClick={handleRepost} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
-                  <Repeat2 className="h-4 w-4" />
+                  <BskyRepost className="h-4 w-4" />
                   {isReposted ? "Undo repost" : "Repost"}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setQuoteComposerOpen(true)} className="cursor-pointer py-2.5 px-3 text-sm gap-2">
@@ -390,19 +553,19 @@ export default function PostDetail() {
 
             {/* Like */}
             <button onClick={handleLike} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-[hsl(var(--bsky-like))] ${isLiked ? "text-[hsl(var(--bsky-like))]" : "text-muted-foreground"}`}>
-              <Heart className="h-5 w-5" strokeWidth={1.75} fill={isLiked ? "currentColor" : "none"} />
+              <BskyLike className="h-5 w-5" strokeWidth={1.75} fill={isLiked ? "currentColor" : "none"} />
             </button>
 
             {/* Bookmark */}
             <button onClick={handleBookmark} className={`group flex items-center gap-1 rounded-full p-1.5 transition-colors hover:text-primary ${isBookmarked ? "text-primary" : "text-muted-foreground"}`}>
-              {isBookmarked ? <BookmarkCheck className="h-5 w-5" strokeWidth={1.75} fill="currentColor" /> : <Bookmark className="h-5 w-5" strokeWidth={1.75} />}
+              <BskySave className="h-5 w-5" strokeWidth={1.75} fill={isBookmarked ? "currentColor" : "none"} />
             </button>
 
             {/* Share dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="group flex items-center gap-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:text-primary">
-                  <Forward className="h-5 w-5" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
+                  <BskyShare className="h-5 w-5" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 z-50 bg-background border border-border shadow-lg">
@@ -431,7 +594,7 @@ export default function PostDetail() {
       </div>
 
       {/* Replies */}
-      {replies.map((reply) => (
+      {sortedReplies.map((reply) => (
         <PostCard key={reply.id} {...reply} />
       ))}
 

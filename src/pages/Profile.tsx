@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/PostCard";
-import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, BellOff, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Camera, Link2, Search, ListFilter, Radio, BellPlus, BellOff, Flag, VolumeX, Ban, X, Globe, Info, ExternalLink, Tv, Headphones, Mic, Pin } from "lucide-react";
 import ImageCropDialog from "@/components/ImageCropDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
 import FollowListDialog from "@/components/FollowListDialog";
+import MutualFollowersIndicator from "@/components/MutualFollowersIndicator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useLiveViewerCount, useLiveViewerPresence } from "@/hooks/use-live-viewers";
@@ -111,6 +112,43 @@ export default function Profile() {
       return profiles || [];
     },
     enabled: !!user && !!profile?.id && !isOwnProfile,
+  });
+
+  // Pinned post for this profile
+  const { data: pinnedPost } = useQuery({
+    queryKey: ["pinnedPost", profile?.id, user?.id],
+    queryFn: async () => {
+      if (!profile) return null;
+      const { data: pin } = await supabase.from("pinned_posts").select("post_id").eq("user_id", profile.id).maybeSingle();
+      if (!pin) return null;
+      const { data: post } = await supabase.from("posts").select("id, content, created_at, parent_id, author_id, video_url, embed_url, profiles!posts_author_id_fkey(id, username, display_name, avatar_url)").eq("id", pin.post_id).single();
+      if (!post) return null;
+      const postIds = [post.id];
+      const [likesRes, repostsRes, repliesRes, userLikesRes, userRepostsRes, imagesRes, userRepliesRes] = await Promise.all([
+        supabase.from("likes").select("post_id").in("post_id", postIds),
+        supabase.from("reposts").select("post_id").in("post_id", postIds),
+        supabase.from("posts").select("parent_id").in("parent_id", postIds),
+        user ? supabase.from("likes").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
+        user ? supabase.from("reposts").select("post_id").in("post_id", postIds).eq("user_id", user.id) : { data: [] },
+        supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
+        user ? supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id) : { data: [] },
+      ]);
+      const p = post.profiles as any;
+      const postImgs: string[] = (imagesRes.data || []).map((img: any) => img.url);
+      return {
+        id: post.id, authorId: post.author_id,
+        authorName: p?.display_name || "", authorHandle: p?.username || "",
+        authorAvatar: p?.avatar_url || "", content: post.content,
+        createdAt: post.created_at, images: postImgs.length > 0 ? postImgs : undefined,
+        videoUrl: (post as any).video_url || null, embedUrl: (post as any).embed_url || null,
+        likeCount: (likesRes.data || []).length, replyCount: (repliesRes.data || []).filter((r: any) => r.parent_id).length,
+        repostCount: (repostsRes.data || []).length,
+        isLiked: new Set((userLikesRes.data || []).map((l: any) => l.post_id)).has(post.id),
+        isReposted: new Set((userRepostsRes.data || []).map((r: any) => r.post_id)).has(post.id),
+        isReplied: new Set((userRepliesRes.data || []).map((r: any) => r.parent_id)).has(post.id),
+      };
+    },
+    enabled: !!profile?.id,
   });
 
   // Live status for this profile
@@ -383,7 +421,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <h1 className="mt-2 text-[22px] font-extrabold leading-tight flex items-center gap-1.5">
+        <h1 className="mt-2 text-[22px] font-extrabold leading-tight flex items-center gap-0.75">
           {profile.display_name}
           <VerifiedBadge userId={profile.id} />
         </h1>
@@ -411,23 +449,9 @@ export default function Profile() {
           <p className="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">{renderBio(profile.bio)}</p>
         )}
 
-        {/* Mutual followers */}
-        {!isOwnProfile && mutualFollowers.length > 0 && (
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {mutualFollowers.slice(0, 3).map((mf: any) => (
-                <Avatar key={mf.id} className="h-6 w-6 border-2 border-background">
-                  <AvatarImage src={mf.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
-                    {mf.display_name?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
-            <p className="text-sm text-primary">
-              Followed by {mutualFollowers.map((mf: any) => mf.display_name).join(" and ")}
-            </p>
-          </div>
+        {/* Mutual/Known followers */}
+        {!isOwnProfile && (
+          <MutualFollowersIndicator mutualFollowers={mutualFollowers} />
         )}
       </div>
 
@@ -472,10 +496,22 @@ export default function Profile() {
         </ScrollArea>
       </div>
 
-      {posts.length === 0 ? (
+            {/* Pinned post */}
+      {activeTab === "Posts" && pinnedPost && (
+        <div>
+          {/* px-4 পরিবর্তন করে pr-4 এবং pl-[68px] করা হয়েছে */}
+          <div className="flex items-center gap-1.5 pr-4 pl-[68px] pt-2 pb-0 text-muted-foreground">
+            <Pin className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Pinned</span>
+          </div>
+          <PostCard {...pinnedPost} />
+        </div>
+      )}
+
+      {posts.length === 0 && !pinnedPost ? (
         <p className="py-12 text-center text-muted-foreground">No {activeTab.toLowerCase()} yet</p>
       ) : (
-        posts.map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
+        posts.filter((entry: any) => !(activeTab === "Posts" && pinnedPost && entry.post.id === pinnedPost.id)).map((entry: any) => <PostCard key={entry.feedKey} {...entry.post} repostedBy={entry.repostedBy} />)
       )}
 
       {isOwnProfile && (

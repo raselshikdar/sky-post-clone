@@ -47,7 +47,6 @@ export default function MobileBottomNav() {
     enabled: !!user,
   });
 
-  // Realtime: notifications
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -59,7 +58,6 @@ export default function MobileBottomNav() {
     return () => { supabase.removeChannel(ch); };
   }, [user, queryClient]);
 
-  // Realtime: messages
   useEffect(() => {
     if (!user) return;
     const ch = supabase
@@ -85,22 +83,39 @@ export default function MobileBottomNav() {
           : pathname.startsWith(path);
         const badge = getBadge(label);
 
+        let iconFill = "none";
+        let customClass = "";
+
+        if (isActive) {
+          if (label === "Home") {
+            iconFill = "currentColor";
+            customClass = " [&>path]:!fill-current [&>polyline]:!fill-background [&>polyline]:!stroke-background";
+          } else if (label === "Chat") {
+            iconFill = "currentColor";
+            customClass = " [&>path:not(:first-child)]:!stroke-background [&>path:not(:first-child)]:!fill-background";
+          } else if (label === "Notifications") {
+            iconFill = "currentColor";
+            customClass = " [&>path:last-child]:!fill-none";
+          }
+        }
+
         return (
           <NavLink
             key={label}
             to={path}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1 ${
-              isActive ? "text-foreground" : "text-muted-foreground"
-            }`}
+            className="flex flex-col items-center gap-0.5 px-3 py-1 text-foreground"
           >
-            <div className="relative">
+            <div className="relative flex items-center justify-center">
               <Icon
-                className="h-6 w-6"
-                strokeWidth={isActive ? 2.25 : 1.75}
-                fill={isActive && path === "/" ? "currentColor" : "none"}
+                className={`h-6 w-6${customClass}`}
+                strokeWidth={2.25}
+                fill={iconFill}
               />
+              {isActive && label === "Search" && (
+                <div className="absolute left-[11px] top-[11px] h-[8px] w-[8px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+              )}
               {badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {badge > 99 ? "99+" : badge}
                 </span>
               )}
@@ -109,14 +124,14 @@ export default function MobileBottomNav() {
         );
       })}
 
-      {/* Profile avatar as last nav item */}
       <NavLink
         to={`/profile/${profile?.username || ""}`}
         className="flex flex-col items-center gap-0.5 px-3 py-1"
       >
-        <Avatar className="h-6 w-6">
+        {/* প্রোফাইল আইকনের সাইজ অন্যান্য আইকনের সাথে ভিজ্যুয়ালি ব্যালেন্স করার জন্য h-[24px] w-[24px] করা হয়েছে */}
+        <Avatar className="h-[24px] w-[24px]">
           <AvatarImage src={profile?.avatar_url || ""} />
-          <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+          <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-medium">
             {profile?.display_name?.[0]?.toUpperCase() || "?"}
           </AvatarFallback>
         </Avatar>

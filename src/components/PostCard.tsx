@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Heart, MessageSquare, Repeat2, Forward, Bookmark, BookmarkCheck, Quote, Link2, Send } from "lucide-react";
+import { Quote, Link2, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,42 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Composer from "@/components/Composer";
 import SharePostDialog from "@/components/SharePostDialog";
 import LinkPreview from "@/components/LinkPreview";
+
+// --- Bluesky Custom SVG Icons ---
+const BskyComment = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
+const BskyRepost = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m17 2 4 4-4 4"></path>
+    <path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+    <path d="m7 22-4-4 4-4"></path>
+    <path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+  </svg>
+);
+
+const BskyLike = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+  </svg>
+);
+
+const BskySave = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path>
+  </svg>
+);
+
+const BskyShare = (props: any) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="15 14 20 9 15 4"></polyline>
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+  </svg>
+);
+// --------------------------------
 
 /** Extract the first URL from post content */
 function extractFirstUrl(text: string): string | null {
@@ -243,7 +279,7 @@ export default function PostCard({
 
   if (hidden) return null;
 
-  const BookmarkIcon = bookmarked || isBookmarked ? BookmarkCheck : Bookmark;
+  const BookmarkIcon = BskySave;
 
   return (
     <>
@@ -253,12 +289,12 @@ export default function PostCard({
       >
         {repostedBy && (
           <div className="flex items-center gap-1.5 px-4 pt-2.5 pb-0 ml-[52px] text-[13px] text-muted-foreground font-medium">
-            <Repeat2 className="h-3.5 w-3.5" strokeWidth={2} />
+            <BskyRepost className="h-3.5 w-3.5" strokeWidth={2} />
             <span
               className="hover:underline cursor-pointer"
               onClick={(e) => { e.stopPropagation(); navigate(`/profile/${repostedBy.username}`); }}
             >
-              Reposted by @{repostedBy.username}
+              Reposted by {repostedBy.username === (window.location.pathname.split("/").pop()) ? "you" : `@${repostedBy.username}`}
             </span>
           </div>
         )}
@@ -275,7 +311,7 @@ export default function PostCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 text-sm">
+          <div className="flex items-center gap-0.5 text-sm">
             <span className="truncate font-semibold text-foreground hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${authorHandle}`); }}>{authorName}</span>
             <VerifiedBadge userId={authorId} />
             <span className="truncate bsky-text-secondary">@{authorHandle}</span>
@@ -292,7 +328,11 @@ export default function PostCard({
             <LinkPreview url={extractFirstUrl(content)!} />
           )}
 
-          {images && images.length > 0 && <ImageGrid images={images} />}
+          {images && images.length > 0 && (
+  <div onClick={(e) => e.stopPropagation()}>
+    <ImageGrid images={images} />
+  </div>
+)}
 
           {videoUrl && <VideoPlayer url={videoUrl} />}
 
@@ -328,7 +368,7 @@ export default function PostCard({
           )}
 
           <div className="mt-2 flex items-center justify-between -ml-1.5">
-            <ActionButton icon={MessageSquare} count={replyCount} active={isReplied} activeColor="text-[hsl(var(--bsky-reply))]" hoverColor="hover:text-[hsl(var(--bsky-reply))]" onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
+            <ActionButton icon={BskyComment} count={replyCount} active={isReplied} activeColor="text-[hsl(var(--bsky-reply))]" hoverColor="hover:text-[hsl(var(--bsky-reply))]" onClick={(e) => { e.stopPropagation(); setReplyComposerOpen(true); }} />
             
             {/* Repost dropdown with quote option */}
             <DropdownMenu open={repostMenuOpen} onOpenChange={setRepostMenuOpen}>
@@ -338,7 +378,7 @@ export default function PostCard({
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setRepostMenuOpen(prev => !prev); }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
-                  <Repeat2 className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  <BskyRepost className="h-[18px] w-[18px]" strokeWidth={1.75} />
                   {reposts > 0 && <span className="text-xs">{reposts}</span>}
                 </button>
               </DropdownMenuTrigger>
@@ -347,7 +387,7 @@ export default function PostCard({
                   onClick={(e) => { e.stopPropagation(); handleRepost(e as any); }}
                   className="cursor-pointer py-2.5 px-3 text-sm gap-2"
                 >
-                  <Repeat2 className="h-4 w-4" />
+                  <BskyRepost className="h-4 w-4" />
                   {reposted ? "Undo repost" : "Repost"}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -361,7 +401,7 @@ export default function PostCard({
             </DropdownMenu>
 
             <ActionButton
-              icon={Heart} count={likes} active={liked} activeColor="text-[hsl(var(--bsky-like))]" hoverColor="hover:text-[hsl(var(--bsky-like))]"
+              icon={BskyLike} count={likes} active={liked} activeColor="text-[hsl(var(--bsky-like))]" hoverColor="hover:text-[hsl(var(--bsky-like))]"
               animate={animating} onAnimationEnd={() => setAnimating(false)} onClick={handleLike} fill={liked}
             />
             <ActionButton
@@ -378,7 +418,7 @@ export default function PostCard({
                   onClick={(e) => { e.stopPropagation(); e.preventDefault(); setShareMenuOpen(prev => !prev); }}
                   onPointerDown={(e) => e.preventDefault()}
                 >
-                  <Forward className="h-[18px] w-[18px]" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
+                  <BskyShare className="h-[18px] w-[18px]" strokeWidth={1.75} style={{ filter: 'drop-shadow(0.4px 0px 0px currentColor)' }} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 z-50 bg-background border border-border shadow-lg">

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle, Pin, Settings, Trash2 } from "lucide-react";
+import { MoreHorizontal, Languages, Copy, BellOff, Filter, EyeOff, VolumeX, UserX, AlertTriangle, Pin, PinOff, Settings, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/i18n/LanguageContext";
@@ -26,6 +26,17 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Check if this post is currently pinned by the owner
+  const { data: isPinned } = useQuery({
+    queryKey: ["isPinned", postId, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.from("pinned_posts").select("id").eq("user_id", user.id).eq("post_id", postId).maybeSingle();
+      return !!data;
+    },
+    enabled: !!user && isOwner,
+  });
+
   const handleCopy = (e: React.MouseEvent) => { stop(e); navigator.clipboard.writeText(content); toast.success(t("menu.post_text_copied")); };
   const handleDelete = async (e: React.MouseEvent) => {
     stop(e); if (!user || !isOwner) return;
@@ -39,6 +50,16 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
     const { error } = await supabase.from("pinned_posts").insert({ user_id: user.id, post_id: postId });
     if (error) { toast.error("Failed to pin post"); return; }
     toast.success(t("menu.post_pinned"));
+    queryClient.invalidateQueries({ queryKey: ["pinnedPost"] });
+    queryClient.invalidateQueries({ queryKey: ["isPinned"] });
+  };
+  const handleUnpin = async (e: React.MouseEvent) => {
+    stop(e); if (!user) return;
+    const { error } = await supabase.from("pinned_posts").delete().eq("user_id", user.id).eq("post_id", postId);
+    if (error) { toast.error("Failed to unpin post"); return; }
+    toast.success("Post unpinned");
+    queryClient.invalidateQueries({ queryKey: ["pinnedPost"] });
+    queryClient.invalidateQueries({ queryKey: ["isPinned"] });
   };
   const handleMuteThread = async (e: React.MouseEvent) => {
     stop(e); if (!user) return;
@@ -100,7 +121,10 @@ export default function PostCardMenu({ postId, authorId, authorHandle, content, 
       <DropdownMenuContent align="end" className="w-56 z-50 bg-background border border-border shadow-lg">
         {isOwner ? (
           <>
-            {menuItem(t("menu.pin_profile"), Pin, handlePin)}
+            {isPinned
+              ? menuItem("Unpin from profile", PinOff, handleUnpin)
+              : menuItem(t("menu.pin_profile"), Pin, handlePin)
+            }
             {menuItem(t("menu.copy_text"), Copy, handleCopy)}
             <DropdownMenuSeparator />
             {menuItem(t("menu.mute_thread"), BellOff, handleMuteThread)}

@@ -1,7 +1,6 @@
-// Minimal service worker for PWA installability
-// Does not interfere with app logic — only caches the shell for offline support
+// Service worker for PWA installability + Web Push Notifications
 
-const CACHE_NAME = 'awaj-v1';
+const CACHE_NAME = 'awaj-v2';
 const PRECACHE_URLS = [
   '/',
   '/favicon.png',
@@ -29,5 +28,46 @@ self.addEventListener('fetch', (event) => {
   // Network-first strategy: always try network, fall back to cache
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
+
+// ─── Web Push Notification Handler ───
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    data = { title: 'Awaj', body: event.data?.text() || 'New notification' };
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Awaj', {
+      body: data.body || '',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      data: { url: data.url || '/' },
+      tag: data.tag || undefined,
+      renotify: !!data.tag,
+      vibrate: [200, 100, 200],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Try to focus an existing window
+      for (const client of windowClients) {
+        if (new URL(client.url).pathname === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Open new window if none found
+      return clients.openWindow(url);
+    })
   );
 });
