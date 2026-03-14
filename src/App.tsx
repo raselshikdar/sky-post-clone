@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "next-themes";
 import { LanguageProvider } from "@/i18n/LanguageContext";
@@ -44,6 +44,8 @@ import PublicFeed from "@/pages/PublicFeed";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import FeedbackPage from "@/pages/FeedbackPage";
+
+// Android specific imports
 import { useBackButton } from "./hooks/use-back-button";
 import { useStatusBar } from "./hooks/use-status-bar";
 import { PullToRefresh } from "./components/PullToRefresh";
@@ -59,6 +61,15 @@ const queryClient = new QueryClient({
     queries: { staleTime: 1000 * 60 * 5, gcTime: 1000 * 60 * 30, refetchOnWindowFocus: false, retry: 1 },
   },
 });
+
+// --- ScrollToTop Component (Main Branch Feature) ---
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -88,12 +99,17 @@ function ExploreRoute() {
   return <PublicFeed />;
 }
 
-// এটি হুকগুলোকে রাউটারের ভেতরে হ্যান্ডেল করবে
+// এটি অ্যান্ড্রয়েড প্লাগইন এবং স্ক্রল-টু-টপ হ্যান্ডেল করবে
 function AppPlugins() {
-  const { theme } = useTheme(); // থিম ডিটেক্ট করার জন্য
+  const { theme } = useTheme();
   useBackButton();
-  useStatusBar(theme); // থিম অনুযায়ী সিস্টেম বার ফিক্স হবে
-  return <PullToRefresh />;
+  useStatusBar(theme);
+  return (
+    <>
+      <ScrollToTop />
+      <PullToRefresh />
+    </>
+  );
 }
 
 const App = () => {
