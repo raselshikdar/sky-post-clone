@@ -18,4 +18,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // --- এই অংশটি যোগ করা হয়েছে বিল্ড এরর সমাধান করতে ---
+  build: {
+    rollupOptions: {
+      external: [
+        '@capacitor/status-bar',
+        '@capgo/capacitor-navigation-bar'
+      ],
+    },
+  },
 }));
