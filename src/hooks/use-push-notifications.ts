@@ -58,7 +58,7 @@ export function usePushNotifications() {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: publicKey,
+        applicationServerKey: publicKey.buffer as ArrayBuffer,
       });
 
       const subscriptionJSON = subscription.toJSON();
