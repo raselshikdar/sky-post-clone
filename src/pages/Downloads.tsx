@@ -51,7 +51,7 @@ export default function Downloads() {
         </a>
 
         <p className="text-xs text-muted-foreground text-center mt-4">
-          Android 5.0+ required · ~15 MB
+          Android 5.0+ required · ~8 MB
         </p>
       </div>
     </div>
