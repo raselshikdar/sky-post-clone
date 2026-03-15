@@ -62,7 +62,7 @@ export default function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[300px] p-0 flex flex-col">
+      <SheetContent side="left" className="w-[270px] p-0 flex flex-col">
         <nav className="flex-1 overflow-y-auto py-1 px-2">
           <div className="px-3 pt-4 pb-3">
             <Avatar className="h-14 w-14 mb-2">
