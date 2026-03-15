@@ -6,6 +6,7 @@ import RightSidebar from "@/components/RightSidebar";
 import { useState } from "react";
 import { SquarePen } from "lucide-react";
 import Composer from "@/components/Composer";
+import LiveChatFAB from "@/components/LiveChatFAB";
 
 interface AppLayoutProps {
   homeOverride?: React.ReactNode;
@@ -30,7 +31,9 @@ export default function AppLayout({ homeOverride }: AppLayoutProps = {}) {
 
       <RightSidebar />
 
-      {!isMessagesPage && (
+      {pathname === "/support" ? (
+        <LiveChatFAB />
+      ) : !isMessagesPage && (
         <button
           className="fab-button"
           onClick={() => setComposerOpen(true)}
