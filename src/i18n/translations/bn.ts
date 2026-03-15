@@ -356,6 +356,7 @@ const bn: Record<string, string> = {
   "drawer.terms": "শর্তাবলী",
   "drawer.privacy": "গোপনীয়তা",
   "drawer.feedback": "মতামত",
+  "drawer.help_feedback": "সাহায্য ও মতামত",
   "sidebar.search": "অনুসন্ধান",
   "sidebar.whats_hot": "জনপ্রিয়",
   "sidebar.no_trending": "এখনো কোনো ট্রেন্ডিং পোস্ট নেই",

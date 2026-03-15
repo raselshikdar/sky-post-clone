@@ -415,6 +415,7 @@ const en = {
   "drawer.terms": "Terms",
   "drawer.privacy": "Privacy",
   "drawer.feedback": "Feedback",
+  "drawer.help_feedback": "Help & Feedback",
 
   // Right sidebar
   "sidebar.search": "Search",
