@@ -28,6 +28,7 @@ export default function InteractionSettings({ open, onOpenChange, postId, onSave
   const { data: existing } = useQuery({
     queryKey: ["post_interaction_settings", postId],
     queryFn: async () => {
+      if (!postId) return null;
       const { data } = await supabase
         .from("post_interaction_settings")
         .select("*")
