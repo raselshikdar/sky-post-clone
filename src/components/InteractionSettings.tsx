@@ -11,7 +11,7 @@ import { toast } from "sonner";
 interface InteractionSettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  postId: string;
+  postId?: string;
   onSave: (label: string) => void;
 }
 
