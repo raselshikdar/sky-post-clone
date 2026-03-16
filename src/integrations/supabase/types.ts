@@ -193,6 +193,38 @@ export type Database = {
         }
         Relationships: []
       }
+      content_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          preference: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          preference: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          preference?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_preferences_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_settings: {
         Row: {
           autoplay_media: boolean
@@ -873,6 +905,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      muted_words: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
       }
       notification_settings: {
         Row: {

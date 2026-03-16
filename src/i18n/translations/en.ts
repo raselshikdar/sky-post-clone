@@ -56,6 +56,18 @@ const en = {
   "menu.thread_muted": "Thread muted",
   "menu.post_hidden": "Post hidden",
   "menu.post_reported": "Post reported. Thank you.",
+  "menu.translate": "Translate",
+  "menu.translate_copied": "Post text copied for translation",
+  "menu.show_more": "Show more like this",
+  "menu.show_less": "Show less like this",
+  "menu.show_more_saved": "Preference saved",
+  "menu.show_less_saved": "Preference saved",
+  "menu.mute_words": "Mute words & tags",
+  "menu.mute_words_placeholder": "Enter a word or tag...",
+  "menu.no_muted_words": "No muted words yet",
+  "menu.word_muted": "Word muted",
+  "menu.word_unmuted": "Word unmuted",
+  "menu.word_already_muted": "Already muted",
 
   // Search/Explore
   "search.placeholder": "Search for posts, users, or feeds",
