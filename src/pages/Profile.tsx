@@ -96,23 +96,26 @@ export default function Profile() {
   });
 
   // Mutual followers (people you follow who also follow this person)
-  const { data: mutualFollowers = [] } = useQuery({
-    queryKey: ["mutualFollowers", profile?.id],
+  const { data: mutualData } = useQuery({
+    queryKey: ["mutualFollowers", profile?.id, user?.id],
     queryFn: async () => {
-      if (!user || !profile) return [];
+      if (!user || !profile) return { users: [], total: 0 };
       // Get people I follow
       const { data: myFollowing } = await supabase.from("follows").select("following_id").eq("follower_id", user.id);
-      if (!myFollowing || myFollowing.length === 0) return [];
+      if (!myFollowing || myFollowing.length === 0) return { users: [], total: 0 };
       const myFollowingIds = myFollowing.map((f) => f.following_id);
-      // Get people who follow this profile
-      const { data: theirFollowers } = await supabase.from("follows").select("follower_id").eq("following_id", profile.id).in("follower_id", myFollowingIds).limit(3);
-      if (!theirFollowers || theirFollowers.length === 0) return [];
-      const mutualIds = theirFollowers.map((f) => f.follower_id);
-      const { data: profiles } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", mutualIds);
-      return profiles || [];
+      // Get all mutual follower IDs (people I follow who also follow this profile)
+      const { data: allMutuals } = await supabase.from("follows").select("follower_id").eq("following_id", profile.id).in("follower_id", myFollowingIds);
+      if (!allMutuals || allMutuals.length === 0) return { users: [], total: 0 };
+      const total = allMutuals.length;
+      const previewIds = allMutuals.slice(0, 3).map((f) => f.follower_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", previewIds);
+      return { users: profiles || [], total };
     },
     enabled: !!user && !!profile?.id && !isOwnProfile,
   });
+  const mutualFollowers = mutualData?.users || [];
+  const mutualTotal = mutualData?.total || 0;
 
   // Pinned post for this profile
   const { data: pinnedPost } = useQuery({
