@@ -10,25 +10,20 @@ interface MutualUser {
   avatar_url: string | null;
 }
 
-const MOCK_MUTUAL_FOLLOWERS: MutualUser[] = [
-  { id: "mock-1", username: "alice", display_name: "Alice Johnson", avatar_url: null },
-  { id: "mock-2", username: "bob_dev", display_name: "Bob Smith", avatar_url: null },
-  { id: "mock-3", username: "carol_writes", display_name: "Carol Lee", avatar_url: null },
-  { id: "mock-4", username: "dave_photo", display_name: "Dave Chen", avatar_url: null },
-  { id: "mock-5", username: "eve_design", display_name: "Eve Martinez", avatar_url: null },
-];
-
 interface MutualFollowersIndicatorProps {
   mutualFollowers: MutualUser[];
+  totalCount?: number;
 }
 
-export default function MutualFollowersIndicator({ mutualFollowers }: MutualFollowersIndicatorProps) {
+export default function MutualFollowersIndicator({ mutualFollowers, totalCount }: MutualFollowersIndicatorProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  const users = mutualFollowers.length > 0 ? mutualFollowers : MOCK_MUTUAL_FOLLOWERS;
-  const previewUsers = users.slice(0, 3);
-  const remaining = users.length - previewUsers.length;
+  if (!mutualFollowers || mutualFollowers.length === 0) return null;
+
+  const previewUsers = mutualFollowers.slice(0, 3);
+  const total = totalCount ?? mutualFollowers.length;
+  const remaining = total - previewUsers.length;
 
   const buildText = () => {
     const names = previewUsers.map((u) => u.username);
@@ -51,17 +46,17 @@ export default function MutualFollowersIndicator({ mutualFollowers }: MutualFoll
         onClick={() => setOpen(true)}
         className="mt-2 flex items-center gap-1.5 text-left group"
       >
-        <div className="flex -space-x-1.5">
+        <div className="flex -space-x-2">
           {previewUsers.map((u) => (
-            <Avatar key={u.id} className="h-6 w-6 border border-background">
+            <Avatar key={u.id} className="h-5 w-5 border-2 border-background ring-0">
               <AvatarImage src={u.avatar_url || ""} />
-              <AvatarFallback className="bg-muted text-muted-foreground text-[8px]">
+              <AvatarFallback className="bg-muted text-muted-foreground text-[7px]">
                 {u.display_name?.[0]?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
           ))}
         </div>
-        <p className="text-[13px] leading-tight text-muted-foreground group-hover:underline">
+        <p className="text-xs leading-tight text-muted-foreground group-hover:underline">
           {buildText()}
         </p>
       </button>
@@ -72,7 +67,7 @@ export default function MutualFollowersIndicator({ mutualFollowers }: MutualFoll
             <DialogTitle className="text-base font-bold">Known Followers</DialogTitle>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto">
-            {users.map((u) => (
+            {mutualFollowers.map((u) => (
               <button
                 key={u.id}
                 onClick={() => handleUserClick(u.username)}
