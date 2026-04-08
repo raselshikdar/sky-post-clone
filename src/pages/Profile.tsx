@@ -453,8 +453,8 @@ export default function Profile() {
         )}
 
         {/* Mutual/Known followers */}
-        {!isOwnProfile && (
-          <MutualFollowersIndicator mutualFollowers={mutualFollowers} />
+        {!isOwnProfile && mutualFollowers.length > 0 && (
+          <MutualFollowersIndicator mutualFollowers={mutualFollowers} totalCount={mutualTotal} />
         )}
       </div>
 
