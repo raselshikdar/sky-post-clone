@@ -155,7 +155,12 @@ export default function AdminVerification() {
 
       if (status === "approved") {
         // Also add to verified_users
-        await supabase.from("verified_users").upsert({ user_id: userId, verified_by: user!.id }, { onConflict: "user_id" });
+        await supabase.from("verified_users").upsert({ user_id: userId, verified_by: user!.id, is_suspended: false, suspension_reason: null, suspended_at: null, suspended_by: null }, { onConflict: "user_id" });
+        // Auto-delete uploaded documents after approval (privacy promise)
+        if (documentUrl) {
+          const paths = documentUrl.split("|").filter(Boolean);
+          await supabase.storage.from("verification-docs").remove(paths);
+        }
         // Notify user of approval
         await supabase.from("notifications").insert({
           user_id: userId,
