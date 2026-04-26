@@ -116,9 +116,15 @@ export default function AdminVerification() {
     },
   });
 
-  const getDocUrl = (path: string) => {
-    const { data } = supabase.storage.from("verification-docs").getPublicUrl(path);
-    return data.publicUrl;
+  const openDoc = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from("verification-docs")
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      toast.error("Could not load document");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const docTypeLabel = (t: string) => {
@@ -170,14 +176,13 @@ export default function AdminVerification() {
                     <div className="flex items-center gap-2 text-xs">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">{docTypeLabel(r.document_type)}</span>
-                      <a
-                        href={getDocUrl(r.document_url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => openDoc(r.document_url)}
                         className="flex items-center gap-1 text-primary hover:underline ml-auto"
                       >
                         View Document <ExternalLink className="h-3 w-3" />
-                      </a>
+                      </button>
                     </div>
 
                     <Textarea
