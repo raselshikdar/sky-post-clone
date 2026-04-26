@@ -7,14 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { BadgeCheck, Search, X, Clock, FileText, ExternalLink } from "lucide-react";
+import { BadgeCheck, Search, X, Clock, FileText, ExternalLink, Pause, Play } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function AdminVerification() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [suspendTarget, setSuspendTarget] = useState<{ userId: string; displayName: string } | null>(null);
+  const [suspendReason, setSuspendReason] = useState("");
 
   // Existing verified users
   const { data: verified = [] } = useQuery({
