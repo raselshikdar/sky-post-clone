@@ -43,7 +43,11 @@ export default function VerifiedBadge({ userId, className }: VerifiedBadgeProps)
   if (data.isVerified) {
     return (
       <BadgeCheck
-        className={`${sizeClass} text-primary shrink-0`}
+        className={`${sizeClass} shrink-0`}
+        style={{ color: "hsl(var(--primary))" }}
+        fill="hsl(var(--primary))"
+        stroke="hsl(var(--background))"
+        strokeWidth={2.5}
       />
     );
   }
