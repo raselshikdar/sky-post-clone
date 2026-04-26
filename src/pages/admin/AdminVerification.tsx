@@ -97,20 +97,38 @@ export default function AdminVerification() {
   });
 
   const reviewMutation = useMutation({
-    mutationFn: async ({ requestId, status, userId }: { requestId: string; status: string; userId: string }) => {
+    mutationFn: async ({ requestId, status, userId, documentUrl }: { requestId: string; status: string; userId: string; documentUrl: string }) => {
+      const notes = reviewNotes[requestId] || null;
       await supabase.from("verification_requests").update({
         status,
         reviewed_by: user!.id,
-        admin_notes: reviewNotes[requestId] || null,
+        admin_notes: notes,
       }).eq("id", requestId);
 
       if (status === "approved") {
         // Also add to verified_users
         await supabase.from("verified_users").upsert({ user_id: userId, verified_by: user!.id }, { onConflict: "user_id" });
+        // Notify user of approval
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          actor_id: user!.id,
+          type: "verification_approved",
+        });
+      } else if (status === "rejected") {
+        // Auto-delete uploaded document on rejection
+        if (documentUrl) {
+          await supabase.storage.from("verification-docs").remove([documentUrl]);
+        }
+        // Notify user of rejection (admin_notes available via verification_requests link)
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          actor_id: user!.id,
+          type: "verification_rejected",
+        });
       }
     },
     onSuccess: (_, { status }) => {
-      toast.success(status === "approved" ? "Request approved & user verified!" : "Request rejected");
+      toast.success(status === "approved" ? "Request approved & user verified!" : "Request rejected & document removed");
       queryClient.invalidateQueries({ queryKey: ["admin_verification_requests"] });
       queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
     },
@@ -197,7 +215,7 @@ export default function AdminVerification() {
                       <Button
                         size="sm"
                         className="flex-1 rounded-full"
-                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "approved", userId: r.user_id })}
+                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "approved", userId: r.user_id, documentUrl: r.document_url })}
                         disabled={reviewMutation.isPending}
                       >
                         <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Approve
@@ -206,7 +224,7 @@ export default function AdminVerification() {
                         size="sm"
                         variant="destructive"
                         className="flex-1 rounded-full"
-                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "rejected", userId: r.user_id })}
+                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "rejected", userId: r.user_id, documentUrl: r.document_url })}
                         disabled={reviewMutation.isPending}
                       >
                         <X className="h-3.5 w-3.5 mr-1" /> Reject
