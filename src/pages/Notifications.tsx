@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu } from "lucide-react";
+import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX } from "lucide-react";
 import MobileDrawer from "@/components/MobileDrawer";
 import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,8 @@ import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/i18n/LanguageContext";
 
-const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign };
-const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary" };
+const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign, verification_approved: BadgeCheck, verification_rejected: ShieldX };
+const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary", verification_approved: "text-primary", verification_rejected: "text-destructive" };
 
 export default function Notifications() {
   const { user } = useAuth();
