@@ -347,25 +347,83 @@ export default function AdminVerification() {
             {verifiedProfiles.length === 0 ? (
               <p className="py-8 text-center text-muted-foreground">No verified users yet</p>
             ) : (
-              verifiedProfiles.map((u: any) => (
-                <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={u.avatar_url} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">{u.display_name?.[0]?.toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate flex items-center gap-1">{u.display_name} <BadgeCheck className="h-4 w-4 text-primary" /></p>
-                    <p className="text-xs text-muted-foreground">@{u.username}</p>
+              verifiedProfiles.map((u: any) => {
+                const vRow = verified.find((v: any) => v.user_id === u.id);
+                const suspended = !!vRow?.is_suspended;
+                return (
+                  <div key={u.id} className="flex items-center gap-3 px-4 py-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={u.avatar_url} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">{u.display_name?.[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate flex items-center gap-1">
+                        {u.display_name}
+                        {!suspended && <BadgeCheck className="h-4 w-4 text-primary" />}
+                        {suspended && <span className="text-[10px] uppercase font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded">Paused</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">@{u.username}{suspended && vRow?.suspension_reason ? ` · ${vRow.suspension_reason}` : ""}</p>
+                    </div>
+                    {suspended ? (
+                      <button
+                        onClick={() => unsuspendMutation.mutate(u.id)}
+                        title="Restore verification"
+                        className="rounded-full border border-primary/30 p-1.5 text-primary hover:bg-primary/10"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSuspendTarget({ userId: u.id, displayName: u.display_name })}
+                        title="Suspend verification"
+                        className="rounded-full border border-yellow-500/30 p-1.5 text-yellow-500 hover:bg-yellow-500/10"
+                      >
+                        <Pause className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => unverifyMutation.mutate(u.id)}
+                      title="Remove verification permanently"
+                      className="rounded-full border border-destructive/30 p-1.5 text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <button onClick={() => unverifyMutation.mutate(u.id)} className="rounded-full border border-destructive/30 p-1.5 text-destructive hover:bg-destructive/10">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Suspend dialog */}
+      <Dialog open={!!suspendTarget} onOpenChange={(o) => { if (!o) { setSuspendTarget(null); setSuspendReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pause verification</DialogTitle>
+            <DialogDescription>
+              Pause {suspendTarget?.displayName}'s verification badge. The user will be notified with the reason and can request a review or re-apply.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Reason (shown to the user)..."
+            value={suspendReason}
+            onChange={(e) => setSuspendReason(e.target.value)}
+            rows={3}
+            maxLength={500}
+            className="rounded-lg text-sm resize-none"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setSuspendTarget(null); setSuspendReason(""); }}>Cancel</Button>
+            <Button
+              onClick={() => suspendTarget && suspendMutation.mutate({ userId: suspendTarget.userId, reason: suspendReason.trim() || "Verification paused by admin" })}
+              disabled={suspendMutation.isPending}
+            >
+              <Pause className="h-4 w-4 mr-1" /> Pause
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
