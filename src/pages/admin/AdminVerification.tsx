@@ -96,6 +96,51 @@ export default function AdminVerification() {
     onSuccess: () => {
       toast.success("Verification removed");
       queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
+    },
+  });
+
+  const suspendMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      await supabase.from("verified_users").update({
+        is_suspended: true,
+        suspension_reason: reason,
+        suspended_at: new Date().toISOString(),
+        suspended_by: user!.id,
+      }).eq("user_id", userId);
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        actor_id: user!.id,
+        type: "verification_suspended",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Verification suspended & user notified");
+      setSuspendTarget(null);
+      setSuspendReason("");
+      queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
+    },
+  });
+
+  const unsuspendMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await supabase.from("verified_users").update({
+        is_suspended: false,
+        suspension_reason: null,
+        suspended_at: null,
+        suspended_by: null,
+      }).eq("user_id", userId);
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        actor_id: user!.id,
+        type: "verification_restored",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Verification restored");
+      queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
     },
   });
 
