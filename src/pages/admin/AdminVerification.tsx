@@ -163,9 +163,10 @@ export default function AdminVerification() {
           type: "verification_approved",
         });
       } else if (status === "rejected") {
-        // Auto-delete uploaded document on rejection
+        // Auto-delete uploaded documents on rejection (supports multi-file paths separated by |)
         if (documentUrl) {
-          await supabase.storage.from("verification-docs").remove([documentUrl]);
+          const paths = documentUrl.split("|").filter(Boolean);
+          await supabase.storage.from("verification-docs").remove(paths);
         }
         // Notify user of rejection (admin_notes available via verification_requests link)
         await supabase.from("notifications").insert({
