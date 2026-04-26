@@ -176,14 +176,13 @@ export default function AdminVerification() {
                     <div className="flex items-center gap-2 text-xs">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">{docTypeLabel(r.document_type)}</span>
-                      <a
-                        href={getDocUrl(r.document_url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => openDoc(r.document_url)}
                         className="flex items-center gap-1 text-primary hover:underline ml-auto"
                       >
                         View Document <ExternalLink className="h-3 w-3" />
-                      </a>
+                      </button>
                     </div>
 
                     <Textarea
