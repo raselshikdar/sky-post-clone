@@ -245,16 +245,21 @@ export default function AdminVerification() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-xs flex-wrap">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">{docTypeLabel(r.document_type)}</span>
-                      <button
-                        type="button"
-                        onClick={() => openDoc(r.document_url)}
-                        className="flex items-center gap-1 text-primary hover:underline ml-auto"
-                      >
-                        View Document <ExternalLink className="h-3 w-3" />
-                      </button>
+                      <div className="flex items-center gap-2 ml-auto">
+                        {r.document_url.split("|").filter(Boolean).map((path: string, idx: number, arr: string[]) => (
+                          <button
+                            key={path}
+                            type="button"
+                            onClick={() => openDoc(path)}
+                            className="flex items-center gap-1 text-primary hover:underline"
+                          >
+                            {arr.length > 1 ? (idx === 0 ? "Front" : "Back") : "View Document"} <ExternalLink className="h-3 w-3" />
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <Textarea
