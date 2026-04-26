@@ -24,6 +24,8 @@ export default function Notifications() {
   const typeText: Record<string, string> = {
     like: t("notif.liked_post"), repost: t("notif.reposted_post"), follow: t("notif.followed_you"),
     reply: t("notif.replied_post"), mention: t("notif.mentioned_you"),
+    verification_approved: "approved your verification request",
+    verification_rejected: "rejected your verification request — tap to see why",
   };
 
   const { data: notifications = [], isLoading } = useQuery({
