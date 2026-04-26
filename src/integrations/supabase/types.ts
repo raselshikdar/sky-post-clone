@@ -1701,18 +1701,30 @@ export type Database = {
       verified_users: {
         Row: {
           id: string
+          is_suspended: boolean
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           user_id: string
           verified_at: string
           verified_by: string | null
         }
         Insert: {
           id?: string
+          is_suspended?: boolean
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           user_id: string
           verified_at?: string
           verified_by?: string | null
         }
         Update: {
           id?: string
+          is_suspended?: boolean
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           user_id?: string
           verified_at?: string
           verified_by?: string | null
