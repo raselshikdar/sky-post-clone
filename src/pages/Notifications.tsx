@@ -26,6 +26,8 @@ export default function Notifications() {
     reply: t("notif.replied_post"), mention: t("notif.mentioned_you"),
     verification_approved: "approved your verification request",
     verification_rejected: "rejected your verification request — tap to see why",
+    verification_suspended: "paused your verification — tap for details",
+    verification_restored: "restored your verification badge",
   };
 
   const { data: notifications = [], isLoading } = useQuery({
