@@ -116,9 +116,15 @@ export default function AdminVerification() {
     },
   });
 
-  const getDocUrl = (path: string) => {
-    const { data } = supabase.storage.from("verification-docs").getPublicUrl(path);
-    return data.publicUrl;
+  const openDoc = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from("verification-docs")
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      toast.error("Could not load document");
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   const docTypeLabel = (t: string) => {
