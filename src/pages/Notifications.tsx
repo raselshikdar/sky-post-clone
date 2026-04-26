@@ -121,7 +121,7 @@ export default function Notifications() {
               <div key={n.id}
                 className={`flex gap-3 px-4 py-3.5 border-b border-border cursor-pointer transition-colors hover:bg-accent/30 ${!n.read ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
                 onClick={() => {
-                  if (n.type === "verification_approved" || n.type === "verification_rejected") {
+                  if (n.type === "verification_approved" || n.type === "verification_rejected" || n.type === "verification_suspended" || n.type === "verification_restored") {
                     navigate("/verification");
                   } else if (n.post_id) {
                     navigate(`/post/${n.post_id}`);
