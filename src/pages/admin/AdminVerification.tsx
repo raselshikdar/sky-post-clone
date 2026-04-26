@@ -7,14 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { BadgeCheck, Search, X, Clock, FileText, ExternalLink } from "lucide-react";
+import { BadgeCheck, Search, X, Clock, FileText, ExternalLink, Pause, Play } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function AdminVerification() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
+  const [suspendTarget, setSuspendTarget] = useState<{ userId: string; displayName: string } | null>(null);
+  const [suspendReason, setSuspendReason] = useState("");
 
   // Existing verified users
   const { data: verified = [] } = useQuery({
@@ -93,6 +96,51 @@ export default function AdminVerification() {
     onSuccess: () => {
       toast.success("Verification removed");
       queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
+    },
+  });
+
+  const suspendMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      await supabase.from("verified_users").update({
+        is_suspended: true,
+        suspension_reason: reason,
+        suspended_at: new Date().toISOString(),
+        suspended_by: user!.id,
+      }).eq("user_id", userId);
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        actor_id: user!.id,
+        type: "verification_suspended",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Verification suspended & user notified");
+      setSuspendTarget(null);
+      setSuspendReason("");
+      queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
+    },
+  });
+
+  const unsuspendMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await supabase.from("verified_users").update({
+        is_suspended: false,
+        suspension_reason: null,
+        suspended_at: null,
+        suspended_by: null,
+      }).eq("user_id", userId);
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        actor_id: user!.id,
+        type: "verification_restored",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Verification restored");
+      queryClient.invalidateQueries({ queryKey: ["admin_verified"] });
+      queryClient.invalidateQueries({ queryKey: ["badge_status"] });
     },
   });
 
@@ -107,7 +155,12 @@ export default function AdminVerification() {
 
       if (status === "approved") {
         // Also add to verified_users
-        await supabase.from("verified_users").upsert({ user_id: userId, verified_by: user!.id }, { onConflict: "user_id" });
+        await supabase.from("verified_users").upsert({ user_id: userId, verified_by: user!.id, is_suspended: false, suspension_reason: null, suspended_at: null, suspended_by: null }, { onConflict: "user_id" });
+        // Auto-delete uploaded documents after approval (privacy promise)
+        if (documentUrl) {
+          const paths = documentUrl.split("|").filter(Boolean);
+          await supabase.storage.from("verification-docs").remove(paths);
+        }
         // Notify user of approval
         await supabase.from("notifications").insert({
           user_id: userId,
@@ -115,9 +168,10 @@ export default function AdminVerification() {
           type: "verification_approved",
         });
       } else if (status === "rejected") {
-        // Auto-delete uploaded document on rejection
+        // Auto-delete uploaded documents on rejection (supports multi-file paths separated by |)
         if (documentUrl) {
-          await supabase.storage.from("verification-docs").remove([documentUrl]);
+          const paths = documentUrl.split("|").filter(Boolean);
+          await supabase.storage.from("verification-docs").remove(paths);
         }
         // Notify user of rejection (admin_notes available via verification_requests link)
         await supabase.from("notifications").insert({
@@ -191,16 +245,21 @@ export default function AdminVerification() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-xs flex-wrap">
                       <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                       <span className="font-medium">{docTypeLabel(r.document_type)}</span>
-                      <button
-                        type="button"
-                        onClick={() => openDoc(r.document_url)}
-                        className="flex items-center gap-1 text-primary hover:underline ml-auto"
-                      >
-                        View Document <ExternalLink className="h-3 w-3" />
-                      </button>
+                      <div className="flex items-center gap-2 ml-auto">
+                        {r.document_url.split("|").filter(Boolean).map((path: string, idx: number, arr: string[]) => (
+                          <button
+                            key={path}
+                            type="button"
+                            onClick={() => openDoc(path)}
+                            className="flex items-center gap-1 text-primary hover:underline"
+                          >
+                            {arr.length > 1 ? (idx === 0 ? "Front" : "Back") : "View Document"} <ExternalLink className="h-3 w-3" />
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <Textarea
@@ -299,25 +358,83 @@ export default function AdminVerification() {
             {verifiedProfiles.length === 0 ? (
               <p className="py-8 text-center text-muted-foreground">No verified users yet</p>
             ) : (
-              verifiedProfiles.map((u: any) => (
-                <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={u.avatar_url} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">{u.display_name?.[0]?.toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate flex items-center gap-1">{u.display_name} <BadgeCheck className="h-4 w-4 text-primary" /></p>
-                    <p className="text-xs text-muted-foreground">@{u.username}</p>
+              verifiedProfiles.map((u: any) => {
+                const vRow = verified.find((v: any) => v.user_id === u.id);
+                const suspended = !!vRow?.is_suspended;
+                return (
+                  <div key={u.id} className="flex items-center gap-3 px-4 py-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={u.avatar_url} />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">{u.display_name?.[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate flex items-center gap-1">
+                        {u.display_name}
+                        {!suspended && <BadgeCheck className="h-4 w-4 text-primary" />}
+                        {suspended && <span className="text-[10px] uppercase font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded">Paused</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">@{u.username}{suspended && vRow?.suspension_reason ? ` · ${vRow.suspension_reason}` : ""}</p>
+                    </div>
+                    {suspended ? (
+                      <button
+                        onClick={() => unsuspendMutation.mutate(u.id)}
+                        title="Restore verification"
+                        className="rounded-full border border-primary/30 p-1.5 text-primary hover:bg-primary/10"
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSuspendTarget({ userId: u.id, displayName: u.display_name })}
+                        title="Suspend verification"
+                        className="rounded-full border border-yellow-500/30 p-1.5 text-yellow-500 hover:bg-yellow-500/10"
+                      >
+                        <Pause className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => unverifyMutation.mutate(u.id)}
+                      title="Remove verification permanently"
+                      className="rounded-full border border-destructive/30 p-1.5 text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <button onClick={() => unverifyMutation.mutate(u.id)} className="rounded-full border border-destructive/30 p-1.5 text-destructive hover:bg-destructive/10">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Suspend dialog */}
+      <Dialog open={!!suspendTarget} onOpenChange={(o) => { if (!o) { setSuspendTarget(null); setSuspendReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pause verification</DialogTitle>
+            <DialogDescription>
+              Pause {suspendTarget?.displayName}'s verification badge. The user will be notified with the reason and can request a review or re-apply.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Reason (shown to the user)..."
+            value={suspendReason}
+            onChange={(e) => setSuspendReason(e.target.value)}
+            rows={3}
+            maxLength={500}
+            className="rounded-lg text-sm resize-none"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setSuspendTarget(null); setSuspendReason(""); }}>Cancel</Button>
+            <Button
+              onClick={() => suspendTarget && suspendMutation.mutate({ userId: suspendTarget.userId, reason: suspendReason.trim() || "Verification paused by admin" })}
+              disabled={suspendMutation.isPending}
+            >
+              <Pause className="h-4 w-4 mr-1" /> Pause
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

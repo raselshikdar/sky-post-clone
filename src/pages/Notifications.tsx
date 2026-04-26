@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX } from "lucide-react";
+import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX, PauseCircle } from "lucide-react";
 import MobileDrawer from "@/components/MobileDrawer";
 import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,8 @@ import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/i18n/LanguageContext";
 
-const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign, verification_approved: BadgeCheck, verification_rejected: ShieldX };
-const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary", verification_approved: "text-primary", verification_rejected: "text-destructive" };
+const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign, verification_approved: BadgeCheck, verification_rejected: ShieldX, verification_suspended: PauseCircle, verification_restored: BadgeCheck };
+const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary", verification_approved: "text-primary", verification_rejected: "text-destructive", verification_suspended: "text-yellow-500", verification_restored: "text-primary" };
 
 export default function Notifications() {
   const { user } = useAuth();
@@ -26,6 +26,8 @@ export default function Notifications() {
     reply: t("notif.replied_post"), mention: t("notif.mentioned_you"),
     verification_approved: "approved your verification request",
     verification_rejected: "rejected your verification request — tap to see why",
+    verification_suspended: "paused your verification — tap for details",
+    verification_restored: "restored your verification badge",
   };
 
   const { data: notifications = [], isLoading } = useQuery({
@@ -119,7 +121,7 @@ export default function Notifications() {
               <div key={n.id}
                 className={`flex gap-3 px-4 py-3.5 border-b border-border cursor-pointer transition-colors hover:bg-accent/30 ${!n.read ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
                 onClick={() => {
-                  if (n.type === "verification_approved" || n.type === "verification_rejected") {
+                  if (n.type === "verification_approved" || n.type === "verification_rejected" || n.type === "verification_suspended" || n.type === "verification_restored") {
                     navigate("/verification");
                   } else if (n.post_id) {
                     navigate(`/post/${n.post_id}`);

@@ -13,11 +13,11 @@ export default function VerifiedBadge({ userId, className }: VerifiedBadgeProps)
     queryFn: async () => {
       const [rolesRes, verifiedRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId),
-        supabase.from("verified_users").select("id").eq("user_id", userId).maybeSingle(),
+        supabase.from("verified_users").select("id, is_suspended").eq("user_id", userId).maybeSingle(),
       ]);
       const roles = (rolesRes.data || []).map((r: any) => r.role);
       const isStaff = roles.includes("admin") || roles.includes("moderator");
-      const isVerified = !!verifiedRes.data;
+      const isVerified = !!verifiedRes.data && !(verifiedRes.data as any)?.is_suspended;
       return { isStaff, isVerified };
     },
     staleTime: 60000,
