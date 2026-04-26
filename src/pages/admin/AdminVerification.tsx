@@ -215,7 +215,7 @@ export default function AdminVerification() {
                       <Button
                         size="sm"
                         className="flex-1 rounded-full"
-                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "approved", userId: r.user_id })}
+                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "approved", userId: r.user_id, documentUrl: r.document_url })}
                         disabled={reviewMutation.isPending}
                       >
                         <BadgeCheck className="h-3.5 w-3.5 mr-1" /> Approve
@@ -224,7 +224,7 @@ export default function AdminVerification() {
                         size="sm"
                         variant="destructive"
                         className="flex-1 rounded-full"
-                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "rejected", userId: r.user_id })}
+                        onClick={() => reviewMutation.mutate({ requestId: r.id, status: "rejected", userId: r.user_id, documentUrl: r.document_url })}
                         disabled={reviewMutation.isPending}
                       >
                         <X className="h-3.5 w-3.5 mr-1" /> Reject
