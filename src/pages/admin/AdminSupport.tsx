@@ -118,25 +118,37 @@ export default function AdminSupport() {
       </div>
 
       <Dialog open={!!selectedTicket} onOpenChange={(v) => !v && setSelectedTicket(null)}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedTicket?.subject}</DialogTitle>
+            <DialogTitle className="pr-8">{selectedTicket?.subject}</DialogTitle>
+            {selectedTicket && (
+              <p className="text-xs text-muted-foreground">
+                @{(ticketProfiles as any)[selectedTicket.user_id]?.username || "unknown"} · {selectedTicket.type} ·{" "}
+                <Badge variant={statusColors[selectedTicket.status] as any} className="text-[10px] px-1.5 py-0 ml-1">
+                  {selectedTicket.status}
+                </Badge>
+              </p>
+            )}
           </DialogHeader>
-          {selectedTicket && (
+          {selectedTicket && user && (
             <div className="space-y-4">
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-sm whitespace-pre-wrap">{selectedTicket.message}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Admin Notes</label>
-                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes..." />
-              </div>
-              <div className="flex gap-2 flex-wrap">
+              <SupportChatThread
+                ticketId={selectedTicket.id}
+                ticketStatus={selectedTicket.status}
+                ticketUserId={selectedTicket.user_id}
+                currentUserId={user.id}
+                isStaff={true}
+                seedMessage={selectedTicket.message}
+                seedCreatedAt={selectedTicket.created_at}
+                legacyAdminNotes={selectedTicket.admin_notes}
+              />
+              <div className="flex gap-2 flex-wrap border-t border-border pt-3">
                 {["in_progress", "resolved", "closed"].map((s) => (
                   <button
                     key={s}
-                    onClick={() => updateTicketMutation.mutate({ id: selectedTicket.id, status: s, notes: adminNotes })}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                    disabled={selectedTicket.status === s}
+                    onClick={() => updateStatusMutation.mutate({ id: selectedTicket.id, status: s })}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                   >
                     Mark as {s.replace("_", " ")}
                   </button>
