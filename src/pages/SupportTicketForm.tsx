@@ -20,6 +20,7 @@ type ViewMode = "list" | "form" | "detail" | "submitted";
 export default function SupportTicketForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [view, setView] = useState<ViewMode>("list");
