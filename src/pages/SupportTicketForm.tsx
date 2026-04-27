@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight } from "lucide-react";
+import { SupportChatThread } from "@/components/SupportChatThread";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -176,48 +177,22 @@ export default function SupportTicketForm() {
 
             <Separator />
 
-            {/* User's original message */}
-            <div className="space-y-1.5">
+            {/* Conversation thread */}
+            <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                Your Message
+                Conversation
               </div>
-              <div className="rounded-xl bg-secondary/70 p-3.5">
-                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{selectedTicket.message}</p>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Admin/Moderator response */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                Staff Response
-              </div>
-              {selectedTicket.admin_notes ? (
-                <div className="rounded-xl bg-primary/5 border border-primary/20 p-3.5 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-primary font-medium">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Admin / Moderator
-                    {selectedTicket.updated_at && (
-                      <>
-                        <span className="text-muted-foreground">·</span>
-                        <span className="text-muted-foreground">
-                          {new Date(selectedTicket.updated_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{selectedTicket.admin_notes}</p>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-border p-4 flex flex-col items-center gap-2 text-center">
-                  <Clock className="h-6 w-6 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">{t("support.awaiting")}</p>
-                  <p className="text-xs text-muted-foreground">You'll see the response here once a staff member reviews your ticket.</p>
-                </div>
-              )}
+              <SupportChatThread
+                ticketId={selectedTicket.id}
+                ticketStatus={selectedTicket.status}
+                ticketUserId={selectedTicket.user_id}
+                currentUserId={user!.id}
+                isStaff={false}
+                seedMessage={selectedTicket.message}
+                seedCreatedAt={selectedTicket.created_at}
+                legacyAdminNotes={selectedTicket.admin_notes}
+              />
             </div>
 
             {/* Status timeline */}

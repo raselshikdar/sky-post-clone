@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { MessageSquareText, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { timeAgo } from "@/lib/time";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { SupportChatThread } from "@/components/SupportChatThread";
 
 const statusIcons: Record<string, any> = {
   open: Clock,
@@ -24,14 +25,14 @@ const statusColors: Record<string, string> = {
 
 export default function AdminSupport() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [adminNotes, setAdminNotes] = useState("");
   const [filter, setFilter] = useState("open");
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ["admin_tickets", filter],
     queryFn: async () => {
-      let query = supabase.from("support_tickets").select("*").order("created_at", { ascending: false }).limit(50);
+      let query = supabase.from("support_tickets").select("*").order("updated_at", { ascending: false }).limit(50);
       if (filter !== "all") query = query.eq("status", filter);
       const { data } = await query;
       return data || [];
@@ -51,22 +52,19 @@ export default function AdminSupport() {
     enabled: tickets.length > 0,
   });
 
-  const updateTicketMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
-      const update: any = { status, updated_at: new Date().toISOString() };
-      if (notes !== undefined) update.admin_notes = notes;
-      await supabase.from("support_tickets").update(update).eq("id", id);
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await supabase.from("support_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     },
-    onSuccess: () => {
-      toast.success("Ticket updated");
+    onSuccess: (_, vars) => {
+      toast.success(`Ticket marked as ${vars.status.replace("_", " ")}`);
       queryClient.invalidateQueries({ queryKey: ["admin_tickets"] });
-      setSelectedTicket(null);
+      setSelectedTicket((prev: any) => (prev ? { ...prev, status: vars.status } : prev));
     },
   });
 
   const openTicket = (ticket: any) => {
     setSelectedTicket(ticket);
-    setAdminNotes(ticket.admin_notes || "");
   };
 
   return (
@@ -120,25 +118,37 @@ export default function AdminSupport() {
       </div>
 
       <Dialog open={!!selectedTicket} onOpenChange={(v) => !v && setSelectedTicket(null)}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedTicket?.subject}</DialogTitle>
+            <DialogTitle className="pr-8">{selectedTicket?.subject}</DialogTitle>
+            {selectedTicket && (
+              <p className="text-xs text-muted-foreground">
+                @{(ticketProfiles as any)[selectedTicket.user_id]?.username || "unknown"} · {selectedTicket.type} ·{" "}
+                <Badge variant={statusColors[selectedTicket.status] as any} className="text-[10px] px-1.5 py-0 ml-1">
+                  {selectedTicket.status}
+                </Badge>
+              </p>
+            )}
           </DialogHeader>
-          {selectedTicket && (
+          {selectedTicket && user && (
             <div className="space-y-4">
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-sm whitespace-pre-wrap">{selectedTicket.message}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Admin Notes</label>
-                <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes..." />
-              </div>
-              <div className="flex gap-2 flex-wrap">
+              <SupportChatThread
+                ticketId={selectedTicket.id}
+                ticketStatus={selectedTicket.status}
+                ticketUserId={selectedTicket.user_id}
+                currentUserId={user.id}
+                isStaff={true}
+                seedMessage={selectedTicket.message}
+                seedCreatedAt={selectedTicket.created_at}
+                legacyAdminNotes={selectedTicket.admin_notes}
+              />
+              <div className="flex gap-2 flex-wrap border-t border-border pt-3">
                 {["in_progress", "resolved", "closed"].map((s) => (
                   <button
                     key={s}
-                    onClick={() => updateTicketMutation.mutate({ id: selectedTicket.id, status: s, notes: adminNotes })}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent"
+                    disabled={selectedTicket.status === s}
+                    onClick={() => updateStatusMutation.mutate({ id: selectedTicket.id, status: s })}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                   >
                     Mark as {s.replace("_", " ")}
                   </button>
