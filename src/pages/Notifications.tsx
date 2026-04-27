@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX, PauseCircle } from "lucide-react";
+import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX, PauseCircle, LifeBuoy } from "lucide-react";
 import MobileDrawer from "@/components/MobileDrawer";
 import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
