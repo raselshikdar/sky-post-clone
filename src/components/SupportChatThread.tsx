@@ -3,11 +3,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, ShieldCheck, Lock, Paperclip, X, FileText, Loader2, Download } from "lucide-react";
+import { Send, ShieldCheck, Lock, Paperclip, X, FileText, Loader2, Download, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 const BUCKET = "support-attachments";
-const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB per file
+const MAX_FILES = 6;
+
+interface Attachment {
+  url: string; // storage path
+  name: string;
+  type: string | null;
+  size: number;
+}
 
 interface Props {
   ticketId: string;
@@ -33,7 +41,7 @@ export function SupportChatThread({
   const qc = useQueryClient();
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -70,39 +78,55 @@ export function SupportChatThread({
 
   const closed = ticketStatus === "closed";
 
-  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files || []);
     e.target.value = "";
-    if (!f) return;
-    if (f.size > MAX_BYTES) {
-      toast.error("File too large (max 10 MB)");
-      return;
+    if (incoming.length === 0) return;
+
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_BYTES) {
+        toast.error(`"${f.name}" is too large (max 10 MB)`);
+        continue;
+      }
+      accepted.push(f);
     }
-    setPendingFile(f);
+
+    setPendingFiles((prev) => {
+      const next = [...prev, ...accepted];
+      if (next.length > MAX_FILES) {
+        toast.error(`Maximum ${MAX_FILES} files per message`);
+        return next.slice(0, MAX_FILES);
+      }
+      return next;
+    });
+  };
+
+  const removePending = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const send = async () => {
     const text = body.trim();
-    if (!text && !pendingFile) return;
+    if (!text && pendingFiles.length === 0) return;
     setSending(true);
     try {
-      let attachmentUrl: string | null = null;
-      let attachmentName: string | null = null;
-      let attachmentType: string | null = null;
-      let attachmentSize: number | null = null;
+      const uploaded: Attachment[] = [];
 
-      if (pendingFile) {
-        const safeName = pendingFile.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${ticketId}/${Date.now()}_${safeName}`;
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, pendingFile, {
-          contentType: pendingFile.type || "application/octet-stream",
+      for (const file of pendingFiles) {
+        const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${ticketId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+          contentType: file.type || "application/octet-stream",
           upsert: false,
         });
         if (upErr) throw upErr;
-        attachmentUrl = path;
-        attachmentName = pendingFile.name;
-        attachmentType = pendingFile.type || null;
-        attachmentSize = pendingFile.size;
+        uploaded.push({
+          url: path,
+          name: file.name,
+          type: file.type || null,
+          size: file.size,
+        });
       }
 
       const { error } = await supabase.from("support_ticket_messages" as any).insert({
@@ -110,15 +134,12 @@ export function SupportChatThread({
         sender_id: currentUserId,
         body: text || null,
         is_staff: isStaff,
-        attachment_url: attachmentUrl,
-        attachment_name: attachmentName,
-        attachment_type: attachmentType,
-        attachment_size: attachmentSize,
+        attachments: uploaded,
       });
       if (error) throw error;
 
       setBody("");
-      setPendingFile(null);
+      setPendingFiles([]);
       qc.invalidateQueries({ queryKey: ["support_ticket_messages", ticketId] });
       qc.invalidateQueries({ queryKey: ["my_tickets"] });
       qc.invalidateQueries({ queryKey: ["admin_tickets"] });
@@ -131,6 +152,20 @@ export function SupportChatThread({
 
   const fmt = (d: string) =>
     new Date(d).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+
+  // Normalize message attachments (combine new array + legacy single-attachment columns)
+  const getAttachments = (m: any): Attachment[] => {
+    const list: Attachment[] = Array.isArray(m.attachments) ? [...m.attachments] : [];
+    if (m.attachment_url && !list.some((a) => a.url === m.attachment_url)) {
+      list.push({
+        url: m.attachment_url,
+        name: m.attachment_name || "file",
+        type: m.attachment_type || null,
+        size: m.attachment_size || 0,
+      });
+    }
+    return list;
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -151,24 +186,26 @@ export function SupportChatThread({
           </Bubble>
         )}
 
-        {messages.map((m: any) => (
-          <Bubble
-            key={m.id}
-            mine={m.sender_id === currentUserId}
-            staff={m.is_staff}
-            time={fmt(m.created_at)}
-          >
-            {m.attachment_url && (
-              <AttachmentView
-                path={m.attachment_url}
-                name={m.attachment_name}
-                type={m.attachment_type}
-                size={m.attachment_size}
-              />
-            )}
-            {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
-          </Bubble>
-        ))}
+        {messages.map((m: any) => {
+          const atts = getAttachments(m);
+          return (
+            <Bubble
+              key={m.id}
+              mine={m.sender_id === currentUserId}
+              staff={m.is_staff}
+              time={fmt(m.created_at)}
+            >
+              {atts.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  {atts.map((a, i) => (
+                    <AttachmentView key={i} attachment={a} />
+                  ))}
+                </div>
+              )}
+              {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
+            </Bubble>
+          );
+        })}
         <div ref={scrollRef} />
       </div>
 
@@ -179,18 +216,25 @@ export function SupportChatThread({
         </div>
       ) : (
         <div className="space-y-2">
-          {pendingFile && (
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-2.5 py-1.5 text-xs">
-              <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <span className="truncate flex-1">{pendingFile.name}</span>
-              <span className="text-muted-foreground">{formatSize(pendingFile.size)}</span>
-              <button
-                onClick={() => setPendingFile(null)}
-                className="p-0.5 rounded hover:bg-accent"
-                aria-label="Remove attachment"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+          {pendingFiles.length > 0 && (
+            <div className="rounded-xl border border-border bg-secondary/40 p-2 space-y-1.5">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {pendingFiles.length} attachment{pendingFiles.length === 1 ? "" : "s"} ·{" "}
+                  {formatSize(pendingFiles.reduce((s, f) => s + f.size, 0))}
+                </span>
+                <button
+                  onClick={() => setPendingFiles([])}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                {pendingFiles.map((f, idx) => (
+                  <PendingFileChip key={idx} file={f} onRemove={() => removePending(idx)} />
+                ))}
+              </div>
             </div>
           )}
           <div className="flex items-end gap-2">
@@ -198,8 +242,9 @@ export function SupportChatThread({
               ref={fileInputRef}
               type="file"
               hidden
+              multiple
               accept="image/*,application/pdf,.doc,.docx,.txt,.log,.csv,.zip"
-              onChange={onPickFile}
+              onChange={onPickFiles}
             />
             <Button
               type="button"
@@ -207,8 +252,8 @@ export function SupportChatThread({
               size="icon"
               className="rounded-full flex-shrink-0"
               onClick={() => fileInputRef.current?.click()}
-              disabled={sending}
-              aria-label="Attach file"
+              disabled={sending || pendingFiles.length >= MAX_FILES}
+              aria-label="Attach files"
             >
               <Paperclip className="h-4 w-4" />
             </Button>
@@ -228,7 +273,7 @@ export function SupportChatThread({
             />
             <Button
               onClick={send}
-              disabled={sending || (!body.trim() && !pendingFile)}
+              disabled={sending || (!body.trim() && pendingFiles.length === 0)}
               className="rounded-full"
               size="icon"
             >
@@ -241,32 +286,57 @@ export function SupportChatThread({
   );
 }
 
-function AttachmentView({
-  path,
-  name,
-  type,
-  size,
-}: {
-  path: string;
-  name: string | null;
-  type: string | null;
-  size: number | null;
-}) {
+function PendingFileChip({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const isImage = file.type.startsWith("image/");
+
+  useEffect(() => {
+    if (!isImage) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, isImage]);
+
+  return (
+    <div className="relative rounded-lg overflow-hidden border border-border bg-background group">
+      {isImage && preview ? (
+        <img src={preview} alt={file.name} className="h-20 w-full object-cover" />
+      ) : (
+        <div className="h-20 flex flex-col items-center justify-center gap-1 px-1 text-center">
+          <FileText className="h-5 w-5 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground line-clamp-1 px-1">{file.name}</span>
+        </div>
+      )}
+      <div className="px-1.5 py-1 text-[10px] text-muted-foreground bg-background/80 truncate">
+        {formatSize(file.size)}
+      </div>
+      <button
+        onClick={onRemove}
+        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+        aria-label="Remove attachment"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
+function AttachmentView({ attachment }: { attachment: Attachment }) {
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const isImage = (type || "").startsWith("image/");
+  const isImage = (attachment.type || "").startsWith("image/");
 
   useEffect(() => {
     let cancelled = false;
     supabase.storage
       .from(BUCKET)
-      .createSignedUrl(path, 3600)
+      .createSignedUrl(attachment.url, 3600)
       .then(({ data }) => {
         if (!cancelled && data?.signedUrl) setSignedUrl(data.signedUrl);
       });
     return () => {
       cancelled = true;
     };
-  }, [path]);
+  }, [attachment.url]);
 
   if (isImage) {
     return (
@@ -277,10 +347,10 @@ function AttachmentView({
         className="block rounded-lg overflow-hidden bg-black/5 max-w-[260px]"
       >
         {signedUrl ? (
-          <img src={signedUrl} alt={name || "attachment"} className="w-full h-auto max-h-64 object-cover" />
+          <img src={signedUrl} alt={attachment.name} className="w-full h-auto max-h-64 object-cover" />
         ) : (
-          <div className="h-32 flex items-center justify-center">
-            <Loader2 className="h-4 w-4 animate-spin opacity-60" />
+          <div className="h-32 w-[260px] flex items-center justify-center">
+            <ImageIcon className="h-5 w-5 opacity-40" />
           </div>
         )}
       </a>
@@ -295,8 +365,8 @@ function AttachmentView({
       className="flex items-center gap-2 rounded-lg bg-background/30 border border-current/10 px-2.5 py-2 text-xs hover:opacity-90 max-w-[260px]"
     >
       <FileText className="h-4 w-4 flex-shrink-0" />
-      <span className="truncate flex-1 font-medium">{name || "Attachment"}</span>
-      {size != null && <span className="opacity-70">{formatSize(size)}</span>}
+      <span className="truncate flex-1 font-medium">{attachment.name}</span>
+      {attachment.size > 0 && <span className="opacity-70">{formatSize(attachment.size)}</span>}
       <Download className="h-3.5 w-3.5 flex-shrink-0 opacity-70" />
     </a>
   );
