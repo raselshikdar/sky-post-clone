@@ -1441,7 +1441,11 @@ export type Database = {
       }
       support_ticket_messages: {
         Row: {
-          body: string
+          attachment_name: string | null
+          attachment_size: number | null
+          attachment_type: string | null
+          attachment_url: string | null
+          body: string | null
           created_at: string
           id: string
           is_staff: boolean
@@ -1449,7 +1453,11 @@ export type Database = {
           ticket_id: string
         }
         Insert: {
-          body: string
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_type?: string | null
+          attachment_url?: string | null
+          body?: string | null
           created_at?: string
           id?: string
           is_staff?: boolean
@@ -1457,7 +1465,11 @@ export type Database = {
           ticket_id: string
         }
         Update: {
-          body?: string
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_type?: string | null
+          attachment_url?: string | null
+          body?: string | null
           created_at?: string
           id?: string
           is_staff?: boolean
@@ -1771,6 +1783,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_ticket_file: { Args: { _path: string }; Returns: boolean }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       has_role: {
         Args: {
