@@ -124,6 +124,8 @@ export default function Notifications() {
                 onClick={() => {
                   if (n.type === "verification_approved" || n.type === "verification_rejected" || n.type === "verification_suspended" || n.type === "verification_restored") {
                     navigate("/verification");
+                  } else if (n.type === "support_reply") {
+                    navigate(`/support?ticket=${n.post_id}`);
                   } else if (n.post_id) {
                     navigate(`/post/${n.post_id}`);
                   } else {
