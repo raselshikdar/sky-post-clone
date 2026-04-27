@@ -25,14 +25,14 @@ const statusColors: Record<string, string> = {
 
 export default function AdminSupport() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [adminNotes, setAdminNotes] = useState("");
   const [filter, setFilter] = useState("open");
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ["admin_tickets", filter],
     queryFn: async () => {
-      let query = supabase.from("support_tickets").select("*").order("created_at", { ascending: false }).limit(50);
+      let query = supabase.from("support_tickets").select("*").order("updated_at", { ascending: false }).limit(50);
       if (filter !== "all") query = query.eq("status", filter);
       const { data } = await query;
       return data || [];
@@ -52,22 +52,19 @@ export default function AdminSupport() {
     enabled: tickets.length > 0,
   });
 
-  const updateTicketMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
-      const update: any = { status, updated_at: new Date().toISOString() };
-      if (notes !== undefined) update.admin_notes = notes;
-      await supabase.from("support_tickets").update(update).eq("id", id);
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await supabase.from("support_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
     },
-    onSuccess: () => {
-      toast.success("Ticket updated");
+    onSuccess: (_, vars) => {
+      toast.success(`Ticket marked as ${vars.status.replace("_", " ")}`);
       queryClient.invalidateQueries({ queryKey: ["admin_tickets"] });
-      setSelectedTicket(null);
+      setSelectedTicket((prev: any) => (prev ? { ...prev, status: vars.status } : prev));
     },
   });
 
   const openTicket = (ticket: any) => {
     setSelectedTicket(ticket);
-    setAdminNotes(ticket.admin_notes || "");
   };
 
   return (
