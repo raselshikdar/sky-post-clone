@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight } from "lucide-react";
 import { SupportChatThread } from "@/components/SupportChatThread";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { Badge } from "@/components/ui/badge";
