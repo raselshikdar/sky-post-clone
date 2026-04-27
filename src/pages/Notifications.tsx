@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX, PauseCircle } from "lucide-react";
+import { Bell, Heart, Repeat2, UserPlus, MessageCircle, Settings, AtSign, Menu, BadgeCheck, ShieldX, PauseCircle, LifeBuoy } from "lucide-react";
 import MobileDrawer from "@/components/MobileDrawer";
 import NotificationSkeleton from "@/components/NotificationSkeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,8 @@ import { timeAgo } from "@/lib/time";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/i18n/LanguageContext";
 
-const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign, verification_approved: BadgeCheck, verification_rejected: ShieldX, verification_suspended: PauseCircle, verification_restored: BadgeCheck };
-const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary", verification_approved: "text-primary", verification_rejected: "text-destructive", verification_suspended: "text-yellow-500", verification_restored: "text-primary" };
+const typeIcons: Record<string, any> = { like: Heart, repost: Repeat2, follow: UserPlus, reply: MessageCircle, mention: AtSign, verification_approved: BadgeCheck, verification_rejected: ShieldX, verification_suspended: PauseCircle, verification_restored: BadgeCheck, support_reply: LifeBuoy };
+const typeColors: Record<string, string> = { like: "text-[hsl(var(--bsky-like))]", repost: "text-[hsl(var(--bsky-repost))]", follow: "text-primary", reply: "text-primary", mention: "text-primary", verification_approved: "text-primary", verification_rejected: "text-destructive", verification_suspended: "text-yellow-500", verification_restored: "text-primary", support_reply: "text-primary" };
 
 export default function Notifications() {
   const { user } = useAuth();
@@ -28,6 +28,7 @@ export default function Notifications() {
     verification_rejected: "rejected your verification request — tap to see why",
     verification_suspended: "paused your verification — tap for details",
     verification_restored: "restored your verification badge",
+    support_reply: "replied to your support ticket — tap to view",
   };
 
   const { data: notifications = [], isLoading } = useQuery({
@@ -123,6 +124,8 @@ export default function Notifications() {
                 onClick={() => {
                   if (n.type === "verification_approved" || n.type === "verification_rejected" || n.type === "verification_suspended" || n.type === "verification_restored") {
                     navigate("/verification");
+                  } else if (n.type === "support_reply") {
+                    navigate(`/support?ticket=${n.post_id}`);
                   } else if (n.post_id) {
                     navigate(`/post/${n.post_id}`);
                   } else {

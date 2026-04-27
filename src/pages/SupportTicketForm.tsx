@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight } from "lucide-react";
 import { SupportChatThread } from "@/components/SupportChatThread";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n/LanguageContext";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ type ViewMode = "list" | "form" | "detail" | "submitted";
 export default function SupportTicketForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [view, setView] = useState<ViewMode>("list");
@@ -50,6 +51,18 @@ export default function SupportTicketForm() {
     },
     enabled: !!user,
   });
+
+  // Auto-open ticket if ?ticket=<id> is in URL (from notification click)
+  useEffect(() => {
+    const id = searchParams.get("ticket");
+    if (!id || myTickets.length === 0) return;
+    const found = myTickets.find((t: any) => t.id === id);
+    if (found) {
+      setSelectedTicket(found);
+      setView("detail");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, myTickets]);
 
   const handleSubmit = async () => {
     if (!subject.trim() || !message.trim()) {
