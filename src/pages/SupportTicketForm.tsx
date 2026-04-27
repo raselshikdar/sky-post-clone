@@ -52,6 +52,18 @@ export default function SupportTicketForm() {
     enabled: !!user,
   });
 
+  // Auto-open ticket if ?ticket=<id> is in URL (from notification click)
+  useEffect(() => {
+    const id = searchParams.get("ticket");
+    if (!id || myTickets.length === 0) return;
+    const found = myTickets.find((t: any) => t.id === id);
+    if (found) {
+      setSelectedTicket(found);
+      setView("detail");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, myTickets]);
+
   const handleSubmit = async () => {
     if (!subject.trim() || !message.trim()) {
       toast.error("Please fill in all fields");
