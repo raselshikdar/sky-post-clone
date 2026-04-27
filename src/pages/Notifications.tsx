@@ -28,6 +28,7 @@ export default function Notifications() {
     verification_rejected: "rejected your verification request — tap to see why",
     verification_suspended: "paused your verification — tap for details",
     verification_restored: "restored your verification badge",
+    support_reply: "replied to your support ticket — tap to view",
   };
 
   const { data: notifications = [], isLoading } = useQuery({
