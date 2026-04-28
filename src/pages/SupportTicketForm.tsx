@@ -222,9 +222,18 @@ export default function SupportTicketForm() {
     }
   };
 
-  const openTicketDetail = (ticket: any) => {
+  const openTicketDetail = async (ticket: any) => {
     setSelectedTicket(ticket);
     setView("detail");
+    if (user) {
+      await supabase
+        .from("support_ticket_reads" as any)
+        .upsert(
+          { user_id: user.id, ticket_id: ticket.id, last_read_at: new Date().toISOString() },
+          { onConflict: "user_id,ticket_id" }
+        );
+      queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+    }
   };
 
   // Header
