@@ -65,8 +65,7 @@ export default function AdminLayout() {
 
   const badgeFor = (key?: BadgeKey): number => {
     if (!key || !counts) return 0;
-    if (key === "users") return counts.accountReports;
-    if (key === "moderation") return counts.reports;
+    if (key === "moderation") return counts.moderation;
     if (key === "verification") return counts.verification;
     if (key === "support") return counts.support;
     return 0;
