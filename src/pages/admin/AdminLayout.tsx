@@ -6,15 +6,24 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useAdminBadgeCounts } from "@/hooks/use-admin-badge-counts";
 
-const adminNavItems = [
+type BadgeKey = "users" | "moderation" | "verification" | "support";
+
+const adminNavItems: {
+  label: string;
+  path: string;
+  icon: any;
+  adminOnly: boolean;
+  badgeKey?: BadgeKey;
+}[] = [
   { label: "Overview", path: "/admin", icon: BarChart3, adminOnly: false },
-  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false },
-  { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false },
+  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false, badgeKey: "users" },
+  { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false, badgeKey: "moderation" },
   { label: "Content", path: "/admin/content", icon: FileText, adminOnly: false },
   { label: "Feeds", path: "/admin/feeds", icon: Rss, adminOnly: true },
-  { label: "Verification", path: "/admin/verification", icon: BadgeCheck, adminOnly: true },
-  { label: "Support", path: "/admin/support", icon: MessageSquareText, adminOnly: false },
+  { label: "Verification", path: "/admin/verification", icon: BadgeCheck, adminOnly: true, badgeKey: "verification" },
+  { label: "Support", path: "/admin/support", icon: MessageSquareText, adminOnly: false, badgeKey: "support" },
   { label: "Roles", path: "/admin/roles", icon: Settings2, adminOnly: true },
 ];
 
@@ -52,6 +61,23 @@ export default function AdminLayout() {
   }
 
   const visibleItems = adminNavItems.filter(item => isAdmin || !item.adminOnly);
+  const counts = useAdminBadgeCounts(isStaff);
+
+  const badgeFor = (key?: BadgeKey): number => {
+    if (!key || !counts) return 0;
+    if (key === "users") return counts.accountReports;
+    if (key === "moderation") return counts.reports;
+    if (key === "verification") return counts.verification;
+    if (key === "support") return counts.support;
+    return 0;
+  };
+
+  const renderBadge = (n: number) =>
+    n > 0 ? (
+      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+        {n > 99 ? "99+" : n}
+      </span>
+    ) : null;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -64,7 +90,7 @@ export default function AdminLayout() {
           <h1 className="text-lg font-bold">{isAdmin ? "Admin" : "Moderator"} Panel</h1>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-2">
-          {visibleItems.map(({ label, path, icon: Icon }) => (
+          {visibleItems.map(({ label, path, icon: Icon, badgeKey }) => (
             <NavLink
               key={path}
               to={path}
@@ -76,7 +102,8 @@ export default function AdminLayout() {
               }
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span>{label}</span>
+              {renderBadge(badgeFor(badgeKey))}
             </NavLink>
           ))}
         </nav>
@@ -91,7 +118,7 @@ export default function AdminLayout() {
             <span className="text-base font-bold">{isAdmin ? "Admin" : "Mod"} Panel</span>
           </div>
           <nav className="flex-1 overflow-y-auto py-2 px-2">
-            {visibleItems.map(({ label, path, icon: Icon }) => (
+            {visibleItems.map(({ label, path, icon: Icon, badgeKey }) => (
               <NavLink
                 key={path}
                 to={path}
@@ -104,7 +131,8 @@ export default function AdminLayout() {
                 }
               >
                 <Icon className="h-4.5 w-4.5" />
-                {label}
+                <span>{label}</span>
+                {renderBadge(badgeFor(badgeKey))}
               </NavLink>
             ))}
           </nav>

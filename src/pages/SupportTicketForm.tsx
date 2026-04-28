@@ -89,6 +89,83 @@ export default function SupportTicketForm() {
     enabled: !!user,
   });
 
+  // Unread staff-reply counts per ticket
+  const { data: unreadByTicket = {} as Record<string, number> } = useQuery({
+    queryKey: ["my_ticket_unread", user?.id, myTickets.map((t: any) => t.id).join(",")],
+    queryFn: async () => {
+      if (!user || myTickets.length === 0) return {} as Record<string, number>;
+      const ticketIds = myTickets.map((t: any) => t.id);
+      const [{ data: reads }, { data: msgs }] = await Promise.all([
+        supabase
+          .from("support_ticket_reads" as any)
+          .select("ticket_id, last_read_at")
+          .eq("user_id", user.id)
+          .in("ticket_id", ticketIds),
+        supabase
+          .from("support_ticket_messages" as any)
+          .select("ticket_id, created_at, is_staff, sender_id")
+          .in("ticket_id", ticketIds)
+          .eq("is_staff", true),
+      ]);
+      const lastRead: Record<string, string> = {};
+      (reads || []).forEach((r: any) => { lastRead[r.ticket_id] = r.last_read_at; });
+      const counts: Record<string, number> = {};
+      (msgs || []).forEach((m: any) => {
+        if (m.sender_id === user.id) return;
+        const lr = lastRead[m.ticket_id];
+        if (!lr || new Date(m.created_at) > new Date(lr)) {
+          counts[m.ticket_id] = (counts[m.ticket_id] || 0) + 1;
+        }
+      });
+      return counts;
+    },
+    enabled: !!user && myTickets.length > 0,
+    refetchOnWindowFocus: true,
+  });
+
+  // Realtime: any new staff reply on my tickets refreshes badges
+  useEffect(() => {
+    if (!user || myTickets.length === 0) return;
+    const ticketIds = myTickets.map((t: any) => t.id);
+    const channel = supabase
+      .channel(`my-ticket-msgs-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages" },
+        (payload: any) => {
+          if (ticketIds.includes(payload.new?.ticket_id) && payload.new?.is_staff) {
+            queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, myTickets, queryClient]);
+
+  // While viewing a ticket detail, keep marking it read on new staff messages
+  useEffect(() => {
+    if (view !== "detail" || !selectedTicket || !user) return;
+    const channel = supabase
+      .channel(`ticket-read-${selectedTicket.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages", filter: `ticket_id=eq.${selectedTicket.id}` },
+        async (payload: any) => {
+          if (payload.new?.is_staff && payload.new?.sender_id !== user.id) {
+            await supabase
+              .from("support_ticket_reads" as any)
+              .upsert(
+                { user_id: user.id, ticket_id: selectedTicket.id, last_read_at: new Date().toISOString() },
+                { onConflict: "user_id,ticket_id" }
+              );
+            queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [view, selectedTicket, user, queryClient]);
+
   // Auto-open ticket if ?ticket=<id> is in URL (from notification click)
   useEffect(() => {
     const id = searchParams.get("ticket");
@@ -169,9 +246,18 @@ export default function SupportTicketForm() {
     }
   };
 
-  const openTicketDetail = (ticket: any) => {
+  const openTicketDetail = async (ticket: any) => {
     setSelectedTicket(ticket);
     setView("detail");
+    if (user) {
+      await supabase
+        .from("support_ticket_reads" as any)
+        .upsert(
+          { user_id: user.id, ticket_id: ticket.id, last_read_at: new Date().toISOString() },
+          { onConflict: "user_id,ticket_id" }
+        );
+      queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+    }
   };
 
   // Header
@@ -412,24 +498,40 @@ export default function SupportTicketForm() {
                 const sc = statusConfig(ticket.status);
                 const StatusIcon = sc.icon;
                 const hasResponse = !!ticket.admin_notes;
+                const unread = (unreadByTicket as Record<string, number>)[ticket.id] || 0;
                 return (
                   <button
                     key={ticket.id}
                     onClick={() => openTicketDetail(ticket)}
-                    className="w-full text-left rounded-xl border border-border p-3.5 space-y-2 transition-colors hover:bg-accent/50 active:bg-accent"
+                    className={`w-full text-left rounded-xl border p-3.5 space-y-2 transition-colors hover:bg-accent/50 active:bg-accent ${
+                      unread > 0 ? "border-primary/40 bg-primary/5" : "border-border"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold truncate flex-1">{ticket.subject}</p>
-                      <Badge variant="outline" className={`flex-shrink-0 gap-1 text-[10px] px-1.5 py-0.5 ${sc.color}`}>
-                        <StatusIcon className="h-2.5 w-2.5" />
-                        {sc.label}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {unread > 0 && (
+                          <Badge className="h-5 min-w-5 px-1.5 text-[10px] rounded-full bg-primary text-primary-foreground hover:bg-primary">
+                            {unread}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className={`gap-1 text-[10px] px-1.5 py-0.5 ${sc.color}`}>
+                          <StatusIcon className="h-2.5 w-2.5" />
+                          {sc.label}
+                        </Badge>
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {ticket.type} · {new Date(ticket.created_at).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-1">{ticket.message}</p>
-                    {hasResponse ? (
+                    {unread > 0 ? (
+                      <div className="flex items-center gap-1.5 text-xs text-primary font-semibold">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {unread} new repl{unread === 1 ? "y" : "ies"} from staff
+                        <ChevronRight className="h-3 w-3 ml-auto" />
+                      </div>
+                    ) : hasResponse ? (
                       <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         Staff responded · Tap to view

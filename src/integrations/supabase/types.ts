@@ -1489,6 +1489,30 @@ export type Database = {
           },
         ]
       }
+      support_ticket_reads: {
+        Row: {
+          created_at: string
+          id: string
+          last_read_at: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           admin_notes: string | null
