@@ -90,7 +90,7 @@ export default function AdminLayout() {
           <h1 className="text-lg font-bold">{isAdmin ? "Admin" : "Moderator"} Panel</h1>
         </div>
         <nav className="flex-1 overflow-y-auto py-2 px-2">
-          {visibleItems.map(({ label, path, icon: Icon }) => (
+          {visibleItems.map(({ label, path, icon: Icon, badgeKey }) => (
             <NavLink
               key={path}
               to={path}
@@ -102,7 +102,8 @@ export default function AdminLayout() {
               }
             >
               <Icon className="h-4 w-4" />
-              {label}
+              <span>{label}</span>
+              {renderBadge(badgeFor(badgeKey))}
             </NavLink>
           ))}
         </nav>
