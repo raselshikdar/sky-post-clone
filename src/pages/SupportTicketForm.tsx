@@ -142,6 +142,30 @@ export default function SupportTicketForm() {
     return () => { supabase.removeChannel(channel); };
   }, [user, myTickets, queryClient]);
 
+  // While viewing a ticket detail, keep marking it read on new staff messages
+  useEffect(() => {
+    if (view !== "detail" || !selectedTicket || !user) return;
+    const channel = supabase
+      .channel(`ticket-read-${selectedTicket.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages", filter: `ticket_id=eq.${selectedTicket.id}` },
+        async (payload: any) => {
+          if (payload.new?.is_staff && payload.new?.sender_id !== user.id) {
+            await supabase
+              .from("support_ticket_reads" as any)
+              .upsert(
+                { user_id: user.id, ticket_id: selectedTicket.id, last_read_at: new Date().toISOString() },
+                { onConflict: "user_id,ticket_id" }
+              );
+            queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [view, selectedTicket, user, queryClient]);
+
   // Auto-open ticket if ?ticket=<id> is in URL (from notification click)
   useEffect(() => {
     const id = searchParams.get("ticket");
