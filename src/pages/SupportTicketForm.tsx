@@ -89,6 +89,59 @@ export default function SupportTicketForm() {
     enabled: !!user,
   });
 
+  // Unread staff-reply counts per ticket
+  const { data: unreadByTicket = {} as Record<string, number> } = useQuery({
+    queryKey: ["my_ticket_unread", user?.id, myTickets.map((t: any) => t.id).join(",")],
+    queryFn: async () => {
+      if (!user || myTickets.length === 0) return {} as Record<string, number>;
+      const ticketIds = myTickets.map((t: any) => t.id);
+      const [{ data: reads }, { data: msgs }] = await Promise.all([
+        supabase
+          .from("support_ticket_reads" as any)
+          .select("ticket_id, last_read_at")
+          .eq("user_id", user.id)
+          .in("ticket_id", ticketIds),
+        supabase
+          .from("support_ticket_messages" as any)
+          .select("ticket_id, created_at, is_staff, sender_id")
+          .in("ticket_id", ticketIds)
+          .eq("is_staff", true),
+      ]);
+      const lastRead: Record<string, string> = {};
+      (reads || []).forEach((r: any) => { lastRead[r.ticket_id] = r.last_read_at; });
+      const counts: Record<string, number> = {};
+      (msgs || []).forEach((m: any) => {
+        if (m.sender_id === user.id) return;
+        const lr = lastRead[m.ticket_id];
+        if (!lr || new Date(m.created_at) > new Date(lr)) {
+          counts[m.ticket_id] = (counts[m.ticket_id] || 0) + 1;
+        }
+      });
+      return counts;
+    },
+    enabled: !!user && myTickets.length > 0,
+    refetchOnWindowFocus: true,
+  });
+
+  // Realtime: any new staff reply on my tickets refreshes badges
+  useEffect(() => {
+    if (!user || myTickets.length === 0) return;
+    const ticketIds = myTickets.map((t: any) => t.id);
+    const channel = supabase
+      .channel(`my-ticket-msgs-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "support_ticket_messages" },
+        (payload: any) => {
+          if (ticketIds.includes(payload.new?.ticket_id) && payload.new?.is_staff) {
+            queryClient.invalidateQueries({ queryKey: ["my_ticket_unread"] });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, myTickets, queryClient]);
+
   // Auto-open ticket if ?ticket=<id> is in URL (from notification click)
   useEffect(() => {
     const id = searchParams.get("ticket");
