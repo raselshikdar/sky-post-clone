@@ -331,6 +331,50 @@ export default function SupportTicketForm() {
               <Textarea placeholder={t("support.message_placeholder")} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} rows={5} className="rounded-xl resize-none" />
               <p className="text-xs text-muted-foreground text-right">{message.length}/1000</p>
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Attachments (optional)</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                multiple
+                accept="image/*,application/pdf,.doc,.docx,.txt,.log,.csv,.zip"
+                onChange={onPickFiles}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting || pendingFiles.length >= MAX_FILES}
+                className="w-full rounded-xl gap-2"
+              >
+                <Paperclip className="h-4 w-4" />
+                {pendingFiles.length === 0 ? "Add files (screenshots, docs)" : "Add more"}
+              </Button>
+              {pendingFiles.length > 0 && (
+                <div className="rounded-xl border border-border bg-secondary/40 p-2 space-y-1.5">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {pendingFiles.length} file{pendingFiles.length === 1 ? "" : "s"} ·{" "}
+                      {formatSize(pendingFiles.reduce((s, f) => s + f.size, 0))}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPendingFiles([])}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                    {pendingFiles.map((f, idx) => (
+                      <FilePreview key={idx} file={f} onRemove={() => removePending(idx)} formatSize={formatSize} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">Max {MAX_FILES} files, 10 MB each.</p>
+            </div>
             <Button onClick={handleSubmit} disabled={submitting} className="w-full rounded-full gap-2">
               <Send className="h-4 w-4" />{submitting ? t("support.submitting") : t("support.submit")}
             </Button>
