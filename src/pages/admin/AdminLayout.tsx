@@ -61,6 +61,23 @@ export default function AdminLayout() {
   }
 
   const visibleItems = adminNavItems.filter(item => isAdmin || !item.adminOnly);
+  const counts = useAdminBadgeCounts(isStaff);
+
+  const badgeFor = (key?: BadgeKey): number => {
+    if (!key || !counts) return 0;
+    if (key === "users") return counts.accountReports;
+    if (key === "moderation") return counts.reports;
+    if (key === "verification") return counts.verification;
+    if (key === "support") return counts.support;
+    return 0;
+  };
+
+  const renderBadge = (n: number) =>
+    n > 0 ? (
+      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+        {n > 99 ? "99+" : n}
+      </span>
+    ) : null;
 
   return (
     <div className="flex min-h-screen bg-background">
