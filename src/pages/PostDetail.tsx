@@ -438,10 +438,12 @@ export default function PostDetail() {
             </Avatar>
             <div>
               <p className="font-bold flex items-center gap-0.5">
-                {profile?.display_name}
+                <span className="cursor-pointer hover:underline" onClick={() => navigate(`/profile/${profile?.username}`)}>
+                  {profile?.display_name}
+                </span>
                 <VerifiedBadge userId={post.author_id} />
               </p>
-              <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+              <p className="text-sm text-muted-foreground cursor-pointer hover:underline w-fit" onClick={() => navigate(`/profile/${profile?.username}`)}>@{profile?.username}</p>
             </div>
           </div>
 

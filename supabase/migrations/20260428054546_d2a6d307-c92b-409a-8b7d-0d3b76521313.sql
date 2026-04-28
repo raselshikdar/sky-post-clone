@@ -1,0 +1,1 @@
+ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_post_id_fkey;

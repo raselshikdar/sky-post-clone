@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAdminBadgeCounts } from "@/hooks/use-admin-badge-counts";
 
-type BadgeKey = "users" | "moderation" | "verification" | "support";
+type BadgeKey = "moderation" | "verification" | "support";
 
 const adminNavItems: {
   label: string;
@@ -18,7 +18,7 @@ const adminNavItems: {
   badgeKey?: BadgeKey;
 }[] = [
   { label: "Overview", path: "/admin", icon: BarChart3, adminOnly: false },
-  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false, badgeKey: "users" },
+  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false },
   { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false, badgeKey: "moderation" },
   { label: "Content", path: "/admin/content", icon: FileText, adminOnly: false },
   { label: "Feeds", path: "/admin/feeds", icon: Rss, adminOnly: true },
@@ -65,8 +65,7 @@ export default function AdminLayout() {
 
   const badgeFor = (key?: BadgeKey): number => {
     if (!key || !counts) return 0;
-    if (key === "users") return counts.accountReports;
-    if (key === "moderation") return counts.reports;
+    if (key === "moderation") return counts.moderation;
     if (key === "verification") return counts.verification;
     if (key === "support") return counts.support;
     return 0;
