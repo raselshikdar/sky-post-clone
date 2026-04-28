@@ -474,24 +474,40 @@ export default function SupportTicketForm() {
                 const sc = statusConfig(ticket.status);
                 const StatusIcon = sc.icon;
                 const hasResponse = !!ticket.admin_notes;
+                const unread = (unreadByTicket as Record<string, number>)[ticket.id] || 0;
                 return (
                   <button
                     key={ticket.id}
                     onClick={() => openTicketDetail(ticket)}
-                    className="w-full text-left rounded-xl border border-border p-3.5 space-y-2 transition-colors hover:bg-accent/50 active:bg-accent"
+                    className={`w-full text-left rounded-xl border p-3.5 space-y-2 transition-colors hover:bg-accent/50 active:bg-accent ${
+                      unread > 0 ? "border-primary/40 bg-primary/5" : "border-border"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm font-semibold truncate flex-1">{ticket.subject}</p>
-                      <Badge variant="outline" className={`flex-shrink-0 gap-1 text-[10px] px-1.5 py-0.5 ${sc.color}`}>
-                        <StatusIcon className="h-2.5 w-2.5" />
-                        {sc.label}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {unread > 0 && (
+                          <Badge className="h-5 min-w-5 px-1.5 text-[10px] rounded-full bg-primary text-primary-foreground hover:bg-primary">
+                            {unread}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className={`gap-1 text-[10px] px-1.5 py-0.5 ${sc.color}`}>
+                          <StatusIcon className="h-2.5 w-2.5" />
+                          {sc.label}
+                        </Badge>
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {ticket.type} · {new Date(ticket.created_at).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-1">{ticket.message}</p>
-                    {hasResponse ? (
+                    {unread > 0 ? (
+                      <div className="flex items-center gap-1.5 text-xs text-primary font-semibold">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {unread} new repl{unread === 1 ? "y" : "ies"} from staff
+                        <ChevronRight className="h-3 w-3 ml-auto" />
+                      </div>
+                    ) : hasResponse ? (
                       <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         Staff responded · Tap to view
