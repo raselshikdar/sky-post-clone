@@ -107,22 +107,52 @@ export default function SupportTicketForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("support_tickets").insert({
-      user_id: user!.id,
-      type,
-      subject: subject.trim(),
-      message: message.trim(),
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error("Failed to submit ticket");
-    } else {
+    try {
+      const { data: ticket, error } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user!.id,
+          type,
+          subject: subject.trim(),
+          message: message.trim(),
+        })
+        .select("id")
+        .single();
+      if (error || !ticket) throw error || new Error("Failed");
+
+      // Upload attachments (if any) and attach to a first message
+      if (pendingFiles.length > 0) {
+        const uploaded: { url: string; name: string; type: string | null; size: number }[] = [];
+        for (const file of pendingFiles) {
+          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${ticket.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+          const { error: upErr } = await supabase.storage
+            .from("support-attachments")
+            .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+          if (upErr) throw upErr;
+          uploaded.push({ url: path, name: file.name, type: file.type || null, size: file.size });
+        }
+        const { error: msgErr } = await supabase.from("support_ticket_messages" as any).insert({
+          ticket_id: ticket.id,
+          sender_id: user!.id,
+          is_staff: false,
+          body: null,
+          attachments: uploaded,
+        });
+        if (msgErr) throw msgErr;
+      }
+
       toast.success(t("support.submitted"));
       setSubject("");
       setMessage("");
       setType("feedback");
+      setPendingFiles([]);
       setView("submitted");
       queryClient.invalidateQueries({ queryKey: ["my_tickets"] });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit ticket");
+    } finally {
+      setSubmitting(false);
     }
   };
 
