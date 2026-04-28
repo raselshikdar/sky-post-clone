@@ -467,3 +467,39 @@ function TimelineItem({ label, date, active, isLast }: { label: string; date?: s
     </div>
   );
 }
+
+function FilePreview({ file, onRemove, formatSize }: { file: File; onRemove: () => void; formatSize: (n: number) => string }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const isImage = file.type.startsWith("image/");
+
+  useEffect(() => {
+    if (!isImage) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, isImage]);
+
+  return (
+    <div className="relative rounded-lg overflow-hidden border border-border bg-background group">
+      {isImage && preview ? (
+        <img src={preview} alt={file.name} className="h-20 w-full object-cover" />
+      ) : (
+        <div className="h-20 flex flex-col items-center justify-center gap-1 px-1 text-center">
+          <FileText className="h-5 w-5 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground line-clamp-1 px-1">{file.name}</span>
+        </div>
+      )}
+      <div className="px-1.5 py-1 text-[10px] text-muted-foreground bg-background/80 truncate">
+        {formatSize(file.size)}
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+        aria-label="Remove attachment"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
