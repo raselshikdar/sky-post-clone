@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight } from "lucide-react";
+import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight, Paperclip, X, FileText } from "lucide-react";
 import { SupportChatThread } from "@/components/SupportChatThread";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
