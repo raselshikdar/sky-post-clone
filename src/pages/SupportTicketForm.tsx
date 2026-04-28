@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight } from "lucide-react";
+import { ChevronLeft, Send, CheckCircle2, ArrowLeft, MessageSquare, Clock, ShieldCheck, CircleDot, ChevronRight, Paperclip, X, FileText } from "lucide-react";
 import { SupportChatThread } from "@/components/SupportChatThread";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -29,6 +29,43 @@ export default function SupportTicketForm() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_BYTES = 10 * 1024 * 1024;
+  const MAX_FILES = 6;
+
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (incoming.length === 0) return;
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_BYTES) {
+        toast.error(`"${f.name}" is too large (max 10 MB)`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    setPendingFiles((prev) => {
+      const next = [...prev, ...accepted];
+      if (next.length > MAX_FILES) {
+        toast.error(`Maximum ${MAX_FILES} files`);
+        return next.slice(0, MAX_FILES);
+      }
+      return next;
+    });
+  };
+
+  const removePending = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
 
   const ticketTypes = [
     { value: "feedback", label: t("support.feedback") },
@@ -70,22 +107,52 @@ export default function SupportTicketForm() {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("support_tickets").insert({
-      user_id: user!.id,
-      type,
-      subject: subject.trim(),
-      message: message.trim(),
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error("Failed to submit ticket");
-    } else {
+    try {
+      const { data: ticket, error } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user!.id,
+          type,
+          subject: subject.trim(),
+          message: message.trim(),
+        })
+        .select("id")
+        .single();
+      if (error || !ticket) throw error || new Error("Failed");
+
+      // Upload attachments (if any) and attach to a first message
+      if (pendingFiles.length > 0) {
+        const uploaded: { url: string; name: string; type: string | null; size: number }[] = [];
+        for (const file of pendingFiles) {
+          const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${ticket.id}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${safeName}`;
+          const { error: upErr } = await supabase.storage
+            .from("support-attachments")
+            .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+          if (upErr) throw upErr;
+          uploaded.push({ url: path, name: file.name, type: file.type || null, size: file.size });
+        }
+        const { error: msgErr } = await supabase.from("support_ticket_messages" as any).insert({
+          ticket_id: ticket.id,
+          sender_id: user!.id,
+          is_staff: false,
+          body: null,
+          attachments: uploaded,
+        });
+        if (msgErr) throw msgErr;
+      }
+
       toast.success(t("support.submitted"));
       setSubject("");
       setMessage("");
       setType("feedback");
+      setPendingFiles([]);
       setView("submitted");
       queryClient.invalidateQueries({ queryKey: ["my_tickets"] });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit ticket");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -264,6 +331,50 @@ export default function SupportTicketForm() {
               <Textarea placeholder={t("support.message_placeholder")} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} rows={5} className="rounded-xl resize-none" />
               <p className="text-xs text-muted-foreground text-right">{message.length}/1000</p>
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Attachments (optional)</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                multiple
+                accept="image/*,application/pdf,.doc,.docx,.txt,.log,.csv,.zip"
+                onChange={onPickFiles}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting || pendingFiles.length >= MAX_FILES}
+                className="w-full rounded-xl gap-2"
+              >
+                <Paperclip className="h-4 w-4" />
+                {pendingFiles.length === 0 ? "Add files (screenshots, docs)" : "Add more"}
+              </Button>
+              {pendingFiles.length > 0 && (
+                <div className="rounded-xl border border-border bg-secondary/40 p-2 space-y-1.5">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {pendingFiles.length} file{pendingFiles.length === 1 ? "" : "s"} ·{" "}
+                      {formatSize(pendingFiles.reduce((s, f) => s + f.size, 0))}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPendingFiles([])}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                    {pendingFiles.map((f, idx) => (
+                      <FilePreview key={idx} file={f} onRemove={() => removePending(idx)} formatSize={formatSize} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">Max {MAX_FILES} files, 10 MB each.</p>
+            </div>
             <Button onClick={handleSubmit} disabled={submitting} className="w-full rounded-full gap-2">
               <Send className="h-4 w-4" />{submitting ? t("support.submitting") : t("support.submit")}
             </Button>
@@ -353,6 +464,42 @@ function TimelineItem({ label, date, active, isLast }: { label: string; date?: s
         <p className={`text-sm ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{label}</p>
         {date && <p className="text-xs text-muted-foreground">{date}</p>}
       </div>
+    </div>
+  );
+}
+
+function FilePreview({ file, onRemove, formatSize }: { file: File; onRemove: () => void; formatSize: (n: number) => string }) {
+  const [preview, setPreview] = useState<string | null>(null);
+  const isImage = file.type.startsWith("image/");
+
+  useEffect(() => {
+    if (!isImage) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file, isImage]);
+
+  return (
+    <div className="relative rounded-lg overflow-hidden border border-border bg-background group">
+      {isImage && preview ? (
+        <img src={preview} alt={file.name} className="h-20 w-full object-cover" />
+      ) : (
+        <div className="h-20 flex flex-col items-center justify-center gap-1 px-1 text-center">
+          <FileText className="h-5 w-5 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground line-clamp-1 px-1">{file.name}</span>
+        </div>
+      )}
+      <div className="px-1.5 py-1 text-[10px] text-muted-foreground bg-background/80 truncate">
+        {formatSize(file.size)}
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-destructive hover:text-destructive-foreground transition-colors"
+        aria-label="Remove attachment"
+      >
+        <X className="h-3 w-3" />
+      </button>
     </div>
   );
 }
