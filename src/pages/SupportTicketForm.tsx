@@ -29,6 +29,43 @@ export default function SupportTicketForm() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_BYTES = 10 * 1024 * 1024;
+  const MAX_FILES = 6;
+
+  const onPickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (incoming.length === 0) return;
+    const accepted: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_BYTES) {
+        toast.error(`"${f.name}" is too large (max 10 MB)`);
+        continue;
+      }
+      accepted.push(f);
+    }
+    setPendingFiles((prev) => {
+      const next = [...prev, ...accepted];
+      if (next.length > MAX_FILES) {
+        toast.error(`Maximum ${MAX_FILES} files`);
+        return next.slice(0, MAX_FILES);
+      }
+      return next;
+    });
+  };
+
+  const removePending = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
 
   const ticketTypes = [
     { value: "feedback", label: t("support.feedback") },
