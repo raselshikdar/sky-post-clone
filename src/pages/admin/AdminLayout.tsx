@@ -6,15 +6,24 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useAdminBadgeCounts } from "@/hooks/use-admin-badge-counts";
 
-const adminNavItems = [
+type BadgeKey = "users" | "moderation" | "verification" | "support";
+
+const adminNavItems: {
+  label: string;
+  path: string;
+  icon: any;
+  adminOnly: boolean;
+  badgeKey?: BadgeKey;
+}[] = [
   { label: "Overview", path: "/admin", icon: BarChart3, adminOnly: false },
-  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false },
-  { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false },
+  { label: "Users", path: "/admin/users", icon: Users, adminOnly: false, badgeKey: "users" },
+  { label: "Moderation", path: "/admin/moderation", icon: Shield, adminOnly: false, badgeKey: "moderation" },
   { label: "Content", path: "/admin/content", icon: FileText, adminOnly: false },
   { label: "Feeds", path: "/admin/feeds", icon: Rss, adminOnly: true },
-  { label: "Verification", path: "/admin/verification", icon: BadgeCheck, adminOnly: true },
-  { label: "Support", path: "/admin/support", icon: MessageSquareText, adminOnly: false },
+  { label: "Verification", path: "/admin/verification", icon: BadgeCheck, adminOnly: true, badgeKey: "verification" },
+  { label: "Support", path: "/admin/support", icon: MessageSquareText, adminOnly: false, badgeKey: "support" },
   { label: "Roles", path: "/admin/roles", icon: Settings2, adminOnly: true },
 ];
 
