@@ -134,8 +134,9 @@ export default function Notifications() {
                 }}>
                 <div className={`mt-1 flex-shrink-0 ${typeColors[n.type]}`}><Icon className="h-5 w-5" strokeWidth={1.75} fill={n.type === "like" ? "currentColor" : "none"} /></div>
                 <div className="min-w-0 flex-1">
-                  <Avatar className="h-9 w-9 mb-1.5"><AvatarImage src={actor?.avatar_url} /><AvatarFallback className="bg-primary text-primary-foreground text-xs">{actor?.display_name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
-                  <p className="text-[15px]">
+                  <div className="flex items-start gap-2">
+                  <Avatar className="h-9 w-9 flex-shrink-0"><AvatarImage src={actor?.avatar_url} /><AvatarFallback className="bg-primary text-primary-foreground text-xs">{actor?.display_name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
+                  <p className="text-[15px] min-w-0 flex-1">
                     <strong className="hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${actor?.username}`); }}>{actor?.display_name}</strong>{" "}
                     <span className="text-muted-foreground">{typeText[n.type] || n.type}</span>
                     <span className="text-muted-foreground"> · {timeAgo(n.created_at)}</span>
