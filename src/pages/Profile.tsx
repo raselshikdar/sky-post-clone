@@ -57,10 +57,10 @@ export default function Profile() {
     queryKey: ["followCounts", profile?.id],
     queryFn: async () => {
       const [followers, following] = await Promise.all([
-        supabase.from("follows").select("id", { count: "exact" }).eq("following_id", profile!.id),
-        supabase.from("follows").select("id", { count: "exact" }).eq("follower_id", profile!.id),
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("following_id", profile!.id),
+        supabase.from("follows").select("*", { count: "exact", head: true }).eq("follower_id", profile!.id),
       ]);
-      return { followers: followers.count || 0, following: following.count || 0 };
+      return { followers: followers.count ?? 0, following: following.count ?? 0 };
     },
     enabled: !!profile?.id,
   });
