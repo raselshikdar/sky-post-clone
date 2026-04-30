@@ -63,7 +63,23 @@ export default function Profile() {
       return { followers: followers.count ?? 0, following: following.count ?? 0 };
     },
     enabled: !!profile?.id,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+
+  // Realtime: refresh follow counts whenever anyone follows/unfollows this profile
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`follows-${profile.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "follows", filter: `following_id=eq.${profile.id}` },
+        () => queryClient.invalidateQueries({ queryKey: ["followCounts", profile.id] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "follows", filter: `follower_id=eq.${profile.id}` },
+        () => queryClient.invalidateQueries({ queryKey: ["followCounts", profile.id] }))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id, queryClient]);
 
   const { data: postCount } = useQuery({
     queryKey: ["postCount", profile?.id],
