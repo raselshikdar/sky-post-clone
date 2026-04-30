@@ -184,7 +184,6 @@ export default function Profile() {
   });
   const [liveViewerOpen, setLiveViewerOpen] = useState(false);
 
-  const queryClient = useQueryClient();
 
   // Profile subscription (bell icon)
   const { data: isSubscribed } = useQuery({
