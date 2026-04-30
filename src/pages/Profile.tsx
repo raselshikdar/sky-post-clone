@@ -41,6 +41,7 @@ export default function Profile() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [listsOpen, setListsOpen] = useState(false);
   const [liveOpen, setLiveOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", username],
