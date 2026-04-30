@@ -141,6 +141,8 @@ export default function Notifications() {
                     <span className="text-muted-foreground">{typeText[n.type] || n.type}</span>
                     <span className="text-muted-foreground"> · {timeAgo(n.created_at)}</span>
                   </p>
+                  </div>
+
                   {isFollowType && !alreadyFollowing && (
                     <button onClick={(e) => { e.stopPropagation(); followMutation.mutate(actor.id); }}
                       className="mt-2 flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
