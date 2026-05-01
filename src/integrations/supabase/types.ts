@@ -1805,6 +1805,10 @@ export type Database = {
     Functions: {
       can_access_ticket_file: { Args: { _path: string }; Returns: boolean }
       get_email_by_username: { Args: { _username: string }; Returns: string }
+      get_home_feed: {
+        Args: { p_limit?: number; p_tab?: string; p_user_id?: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
