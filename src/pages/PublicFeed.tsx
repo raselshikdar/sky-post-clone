@@ -28,80 +28,13 @@ export default function PublicFeed() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["public_posts", tab],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("posts")
-        .select(`
-          id, content, created_at, parent_id, author_id, quote_post_id, video_url, embed_url,
-          profiles!posts_author_id_fkey (id, username, display_name, avatar_url)
-        `)
-        .is("parent_id", null)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (!data) return [];
-
-      const postIds = data.map((p) => p.id);
-      if (postIds.length === 0) return [];
-
-      const quotePostIds = data.map((p) => (p as any).quote_post_id).filter(Boolean) as string[];
-
-      const [likesRes, repostsRes, repliesRes, imagesRes, quotePostsRes, quoteImagesRes] = await Promise.all([
-        supabase.from("likes").select("post_id").in("post_id", postIds),
-        supabase.from("reposts").select("post_id").in("post_id", postIds),
-        supabase.from("posts").select("parent_id").in("parent_id", postIds),
-        supabase.from("post_images").select("post_id, url, position").in("post_id", postIds).order("position"),
-        quotePostIds.length > 0
-          ? supabase.from("posts").select("id, content, created_at, author_id, profiles!posts_author_id_fkey (username, display_name, avatar_url)").in("id", quotePostIds)
-          : { data: [] },
-        quotePostIds.length > 0
-          ? supabase.from("post_images").select("post_id, url, position").in("post_id", quotePostIds).order("position")
-          : { data: [] },
-      ]);
-
-      const likeCounts: Record<string, number> = {};
-      const repostCounts: Record<string, number> = {};
-      const replyCounts: Record<string, number> = {};
-      const postImages: Record<string, string[]> = {};
-
-      (likesRes.data || []).forEach((l) => { likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1; });
-      (repostsRes.data || []).forEach((r) => { repostCounts[r.post_id] = (repostCounts[r.post_id] || 0) + 1; });
-      (repliesRes.data || []).forEach((r) => { if (r.parent_id) replyCounts[r.parent_id] = (replyCounts[r.parent_id] || 0) + 1; });
-      (imagesRes.data || []).forEach((img) => {
-        if (!postImages[img.post_id]) postImages[img.post_id] = [];
-        postImages[img.post_id].push(img.url);
+      const { data, error } = await supabase.rpc("get_posts_by_search", {
+        p_pattern: null,
+        p_viewer_id: null,
+        p_limit: 50,
       });
-
-      const quotePostMap: Record<string, any> = {};
-      const quoteImages: Record<string, string[]> = {};
-      (quoteImagesRes.data || []).forEach((img: any) => {
-        if (!quoteImages[img.post_id]) quoteImages[img.post_id] = [];
-        quoteImages[img.post_id].push(img.url);
-      });
-      (quotePostsRes.data || []).forEach((qp: any) => {
-        const qProfile = qp.profiles as any;
-        quotePostMap[qp.id] = {
-          id: qp.id, content: qp.content,
-          authorName: qProfile?.display_name || "", authorHandle: qProfile?.username || "",
-          authorAvatar: qProfile?.avatar_url || "", createdAt: qp.created_at,
-          images: quoteImages[qp.id],
-        };
-      });
-
-      return data.map((post) => {
-        const p = post.profiles as any;
-        return {
-          id: post.id, authorId: post.author_id,
-          authorName: p?.display_name || "Unknown", authorHandle: p?.username || "unknown",
-          authorAvatar: p?.avatar_url || "", content: post.content, createdAt: post.created_at,
-          images: postImages[post.id],
-          videoUrl: (post as any).video_url || null,
-          embedUrl: (post as any).embed_url || null,
-          likeCount: likeCounts[post.id] || 0, replyCount: replyCounts[post.id] || 0,
-          repostCount: repostCounts[post.id] || 0,
-          isLiked: false, isReposted: false, isReplied: false,
-          quotePost: (post as any).quote_post_id ? quotePostMap[(post as any).quote_post_id] || null : null,
-        };
-      });
+      if (error) { console.error("get_posts_by_search error:", error); return []; }
+      return (data as any[]) || [];
     },
   });
 

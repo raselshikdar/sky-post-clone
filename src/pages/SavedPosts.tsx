@@ -16,30 +16,9 @@ export default function SavedPosts() {
     queryKey: ["saved_posts", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: bookmarks } = await supabase.from("bookmarks").select("post_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false });
-      if (!bookmarks || bookmarks.length === 0) return [];
-      const postIds = bookmarks.map((b) => b.post_id);
-      const { data: posts } = await supabase.from("posts").select("*, profiles:author_id(id, username, display_name, avatar_url), post_images(url, position)").in("id", postIds);
-      if (!posts) return [];
-      const { data: likes } = await supabase.from("likes").select("post_id").eq("user_id", user.id).in("post_id", postIds);
-      const { data: reposts } = await supabase.from("reposts").select("post_id").eq("user_id", user.id).in("post_id", postIds);
-      const { data: userReplies } = await supabase.from("posts").select("parent_id").in("parent_id", postIds).eq("author_id", user.id);
-      const likedSet = new Set(likes?.map((l) => l.post_id) || []);
-      const repostedSet = new Set(reposts?.map((r) => r.post_id) || []);
-      const repliedSet = new Set(userReplies?.map((r: any) => r.parent_id) || []);
-      const { data: likeCounts } = await supabase.from("likes").select("post_id").in("post_id", postIds);
-      const { data: replyCounts } = await supabase.from("posts").select("parent_id").in("parent_id", postIds);
-      const { data: repostCounts } = await supabase.from("reposts").select("post_id").in("post_id", postIds);
-      const lcMap: Record<string, number> = {}; const rcMap: Record<string, number> = {}; const rpMap: Record<string, number> = {};
-      likeCounts?.forEach((l) => { lcMap[l.post_id] = (lcMap[l.post_id] || 0) + 1; });
-      replyCounts?.forEach((r) => { if (r.parent_id) rcMap[r.parent_id] = (rcMap[r.parent_id] || 0) + 1; });
-      repostCounts?.forEach((r) => { rpMap[r.post_id] = (rpMap[r.post_id] || 0) + 1; });
-      const orderMap = new Map(bookmarks.map((b, i) => [b.post_id, i]));
-      return posts.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0)).map((p: any) => ({
-        ...p, likeCount: lcMap[p.id] || 0, replyCount: rcMap[p.id] || 0, repostCount: rpMap[p.id] || 0,
-        isLiked: likedSet.has(p.id), isReposted: repostedSet.has(p.id), isReplied: repliedSet.has(p.id),
-        images: p.post_images?.sort((a: any, b: any) => a.position - b.position).map((i: any) => i.url) || [],
-      }));
+      const { data, error } = await supabase.rpc("get_saved_posts", { p_viewer_id: user.id, p_limit: 100 });
+      if (error) { console.error("get_saved_posts error:", error); return []; }
+      return (data as any[]) || [];
     },
     enabled: !!user,
   });
@@ -60,11 +39,7 @@ export default function SavedPosts() {
         </div>
       ) : (
         savedPosts.map((post: any) => (
-          <PostCard key={post.id} id={post.id} authorId={post.profiles?.id} authorName={post.profiles?.display_name || ""} authorHandle={post.profiles?.username || ""}
-            authorAvatar={post.profiles?.avatar_url || ""} content={post.content} createdAt={post.created_at} images={post.images}
-            videoUrl={post.video_url || null}
-            embedUrl={post.embed_url || null}
-            likeCount={post.likeCount} replyCount={post.replyCount} repostCount={post.repostCount} isLiked={post.isLiked} isReposted={post.isReposted} />
+          <PostCard key={post.id} {...post} />
         ))
       )}
     </div>
