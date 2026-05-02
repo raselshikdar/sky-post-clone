@@ -1809,6 +1809,23 @@ export type Database = {
         Args: { p_limit?: number; p_tab?: string; p_user_id?: string }
         Returns: Json
       }
+      get_posts_by_search: {
+        Args: { p_limit?: number; p_pattern?: string; p_viewer_id?: string }
+        Returns: Json
+      }
+      get_profile_feed: {
+        Args: {
+          p_limit?: number
+          p_profile_id: string
+          p_tab?: string
+          p_viewer_id?: string
+        }
+        Returns: Json
+      }
+      get_saved_posts: {
+        Args: { p_limit?: number; p_viewer_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
