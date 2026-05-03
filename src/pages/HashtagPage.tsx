@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
 import { ArrowLeft, Hash } from "lucide-react";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { devValidateRpcPayload } from "@/lib/postShape";
 
 export default function HashtagPage() {
   const { tag } = useParams<{ tag: string }>();
@@ -30,7 +31,9 @@ export default function HashtagPage() {
         p_limit: 50,
       });
       if (error) { console.error("get_posts_by_search error:", error); return []; }
-      return (data as any[]) || [];
+      const list = (data as any[]) || [];
+      devValidateRpcPayload("get_posts_by_search (Hashtag)", list, "flat");
+      return list;
     },
     enabled: !!tag,
   });
