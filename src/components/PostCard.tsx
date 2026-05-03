@@ -131,31 +131,28 @@ export default function PostCard({
   // Sync bookmark state when query data changes
   useState(() => { setBookmarked(isBookmarked); });
 
-  // Helper: update like/repost state across all cached query keys
+  // Helper: update like/repost state across all cached query keys.
+  // Handles BOTH flat post items and entry-wrapped items ({feedKey, post, repostedBy}).
+  const mapItem = (postId: string, updater: (p: any) => any) => (item: any) => {
+    if (!item) return item;
+    if (item.post && typeof item.post === "object" && item.post.id === postId) {
+      return { ...item, post: updater(item.post) };
+    }
+    if (item.id === postId) return updater(item);
+    return item;
+  };
   const updatePostInCache = (postId: string, updater: (post: any) => any) => {
-    queryClient.setQueriesData({ queryKey: ["posts"] }, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.map((p: any) => p.id === postId ? updater(p) : p);
+    const m = mapItem(postId, updater);
+    const keys = ["posts", "profilePosts", "replies", "hashtag_posts", "trending_topic_posts", "public_posts", "saved_posts"];
+    keys.forEach((k) => {
+      queryClient.setQueriesData({ queryKey: [k] }, (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map(m);
+      });
     });
     queryClient.setQueriesData({ queryKey: ["post", postId] }, (old: any) => {
       if (!old) return old;
       return updater(old);
-    });
-    queryClient.setQueriesData({ queryKey: ["profilePosts"] }, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.map((p: any) => p.id === postId ? updater(p) : p);
-    });
-    queryClient.setQueriesData({ queryKey: ["replies"] }, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.map((p: any) => p.id === postId ? updater(p) : p);
-    });
-    queryClient.setQueriesData({ queryKey: ["hashtag_posts"] }, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.map((p: any) => p.id === postId ? updater(p) : p);
-    });
-    queryClient.setQueriesData({ queryKey: ["trending_topic_posts"] }, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.map((p: any) => p.id === postId ? updater(p) : p);
     });
   };
 
