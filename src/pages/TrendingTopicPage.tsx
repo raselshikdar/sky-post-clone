@@ -7,6 +7,7 @@ import PostCard from "@/components/PostCard";
 import PostCardSkeleton from "@/components/PostCardSkeleton";
 import { ArrowLeft, TrendingUp, MoreHorizontal } from "lucide-react";
 import TrendingTopicInfoDialog from "@/components/TrendingTopicInfoDialog";
+import { devValidateRpcPayload } from "@/lib/postShape";
 
 export default function TrendingTopicPage() {
   const { topic } = useParams<{ topic: string }>();
@@ -23,7 +24,9 @@ export default function TrendingTopicPage() {
         p_limit: 50,
       });
       if (error) { console.error("get_posts_by_search error:", error); return []; }
-      return (data as any[]) || [];
+      const list = (data as any[]) || [];
+      devValidateRpcPayload("get_posts_by_search (Trending)", list, "flat");
+      return list;
     },
     enabled: !!topic,
   });

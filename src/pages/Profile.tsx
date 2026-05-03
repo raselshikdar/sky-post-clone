@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { devValidateRpcPayload } from "@/lib/postShape";
 
 const PROFILE_TABS = ["Posts", "Replies", "Media", "Videos", "Likes", "Feeds", "Starter Packs", "Lists"] as const;
 type ProfileTab = typeof PROFILE_TABS[number];
@@ -246,7 +247,9 @@ export default function Profile() {
         p_limit: 50,
       });
       if (error) { console.error("get_profile_feed error:", error); return []; }
-      return (data as any[]) || [];
+      const list = (data as any[]) || [];
+      devValidateRpcPayload("get_profile_feed", list, "entry");
+      return list;
     },
     enabled: !!profile?.id,
   });

@@ -9,6 +9,7 @@ import AwajLogo from "@/components/AwajLogo";
 import MobileTopBarPublic from "@/components/MobileTopBarPublic";
 import PublicDrawer from "@/components/PublicDrawer";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
+import { devValidateRpcPayload } from "@/lib/postShape";
 
 type FeedTab = "discover" | "feeds";
 
@@ -34,7 +35,9 @@ export default function PublicFeed() {
         p_limit: 50,
       });
       if (error) { console.error("get_posts_by_search error:", error); return []; }
-      return (data as any[]) || [];
+      const list = (data as any[]) || [];
+      devValidateRpcPayload("get_posts_by_search (PublicFeed)", list, "flat");
+      return list;
     },
   });
 

@@ -119,3 +119,26 @@ export function validateList(
   });
   return issues;
 }
+
+/**
+ * Dev-only payload logger. Validates the RPC response and logs grouped
+ * issues to the console before the data reaches PostCard. No-op in prod.
+ */
+export function devValidateRpcPayload(
+  source: string,
+  data: any,
+  variant: "flat" | "entry",
+): void {
+  if (!import.meta.env.DEV) return;
+  if (!Array.isArray(data)) {
+    console.warn(`[postShape] ${source}: expected array, got`, typeof data);
+    return;
+  }
+  const issues = validateList(data, variant);
+  if (issues.length === 0) return;
+  console.groupCollapsed(
+    `[postShape] ${source}: ${issues.length} issue(s) in ${data.length} item(s)`,
+  );
+  for (const i of issues) console.warn(i.path, "-", i.message);
+  console.groupEnd();
+}

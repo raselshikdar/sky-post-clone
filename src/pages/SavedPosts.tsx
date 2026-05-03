@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import PostCard from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/i18n/LanguageContext";
+import { devValidateRpcPayload } from "@/lib/postShape";
 
 export default function SavedPosts() {
   const navigate = useNavigate();
@@ -18,7 +19,9 @@ export default function SavedPosts() {
       if (!user) return [];
       const { data, error } = await supabase.rpc("get_saved_posts", { p_viewer_id: user.id, p_limit: 100 });
       if (error) { console.error("get_saved_posts error:", error); return []; }
-      return (data as any[]) || [];
+      const list = (data as any[]) || [];
+      devValidateRpcPayload("get_saved_posts", list, "flat");
+      return list;
     },
     enabled: !!user,
   });
