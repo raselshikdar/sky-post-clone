@@ -59,7 +59,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-20 flex items-center gap-4 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="p-1">
+        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="p-1">
           <ChevronLeft className="h-5 w-5 text-foreground" />
         </button>
         <h2 className="text-lg font-bold">{t("settings.settings")}</h2>

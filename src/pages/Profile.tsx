@@ -277,7 +277,7 @@ export default function Profile() {
         <div className="aspect-[3/1] w-full bg-primary/20">
           {profile.banner_url && <img src={profile.banner_url} alt="" className="h-full w-full object-cover" />}
         </div>
-        <button onClick={() => navigate(-1)} className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70">
+        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="absolute left-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm hover:bg-black/70">
           <ArrowLeft className="h-4 w-4" />
         </button>
       </div>
