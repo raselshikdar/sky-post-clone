@@ -82,7 +82,7 @@ export default function Lists() {
     <div className="flex flex-col">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
         <button
-          onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; selectedList ? setSelectedList(null) : navigate(-1); }}
+          onPointerDown={(e) => { selectedList ? setSelectedList(null) : navigate(-1); }}
           onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; selectedList ? setSelectedList(null) : navigate(-1); }}
           className="p-1"
         ><ArrowLeft className="h-5 w-5 text-foreground" /></button>

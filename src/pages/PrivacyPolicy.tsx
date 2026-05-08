@@ -7,7 +7,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 backdrop-blur-sm px-4 py-1.5">
-        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="rounded-full p-1 hover:bg-accent">
+        <button data-back="1" onPointerDown={(e) => { navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="rounded-full p-1 hover:bg-accent">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-bold">Privacy Policy</h1>
