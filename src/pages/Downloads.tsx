@@ -10,7 +10,7 @@ export default function Downloads() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="text-foreground">
+        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-bold">Downloads</h1>

@@ -143,7 +143,7 @@ export default function VerificationApply() {
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onClick={() => navigate(-1)} className="p-1 rounded-full hover:bg-accent"><ChevronLeft className="h-5 w-5" /></button>
+        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="p-1 rounded-full hover:bg-accent"><ChevronLeft className="h-5 w-5" /></button>
         <h2 className="text-lg font-bold">{t("verify.title")}</h2>
       </div>
       <ScrollArea className="flex-1">
