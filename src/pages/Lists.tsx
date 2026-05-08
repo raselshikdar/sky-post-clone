@@ -84,7 +84,7 @@ export default function Lists() {
         <button
           data-back="1"
           onPointerDown={(e) => { selectedList ? setSelectedList(null) : navigate(-1); }}
-          onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; selectedList ? setSelectedList(null) : navigate(-1); }}
+          onClick={() => { selectedList ? setSelectedList(null) : navigate(-1); }}
           className="p-1"
         ><ArrowLeft className="h-5 w-5 text-foreground" /></button>
         <h2 className="text-lg font-bold">{selectedList ? selectedListData?.name || t("lists.list") : t("lists.lists")}</h2>

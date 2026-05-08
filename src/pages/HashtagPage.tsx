@@ -41,7 +41,7 @@ export default function HashtagPage() {
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 z-20 flex items-center gap-4 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button data-back="1" onPointerDown={(e) => { navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="rounded-full p-1.5 transition-colors bsky-hover"><ArrowLeft className="h-5 w-5" /></button>
+        <button data-back="1" onPointerDown={(e) => { navigate(-1); }} onClick={() => navigate(-1)} className="rounded-full p-1.5 transition-colors bsky-hover"><ArrowLeft className="h-5 w-5" /></button>
         <div>
           <h2 className="text-lg font-bold flex items-center gap-1"><Hash className="h-5 w-5 text-primary" />{tag}</h2>
           {hashtag && <p className="text-sm text-muted-foreground">{hashtag.post_count} {hashtag.post_count === 1 ? t("hashtag.post") : t("hashtag.posts")}</p>}
