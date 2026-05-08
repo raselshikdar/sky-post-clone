@@ -262,7 +262,7 @@ export default function Composer({ open, onOpenChange, parentId, autoOpenImagePi
             <div className="flex-1">
               <textarea className="min-h-[120px] w-full resize-none bg-transparent text-[17px] leading-relaxed placeholder:text-muted-foreground focus:outline-none"
                 placeholder={quotePost ? t("composer.add_comment") : parentId ? t("composer.write_reply") : t("home.whats_up")}
-                value={content} onChange={(e) => setContent(e.target.value)} autoFocus />
+                value={content} onChange={(e) => setContent(e.target.value)} maxLength={MAX_CHARS} autoFocus />
               {images.length > 0 && (
                 <div className={`grid gap-1 mt-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
                   {images.map((img, i) => (
