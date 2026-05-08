@@ -88,7 +88,7 @@ export default function Feeds() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-2 backdrop-blur-md">
         <div className="flex items-center gap-6">
-          <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="p-1 -ml-1">
+          <button data-back="1" onPointerDown={(e) => { navigate(-1); }} onClick={() => navigate(-1)} className="p-1 -ml-1">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h2 className="text-[17px] font-bold tracking-tight text-foreground">Feeds</h2>

@@ -47,7 +47,7 @@ export default function ChatSettings() {
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; navigate(-1); }} onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; navigate(-1); }} className="text-foreground"><ArrowLeft className="h-5 w-5" /></button>
+        <button data-back="1" onPointerDown={(e) => { navigate(-1); }} onClick={() => navigate(-1)} className="text-foreground"><ArrowLeft className="h-5 w-5" /></button>
         <h2 className="text-lg font-bold">{t("chat_settings.title")}</h2>
       </div>
       <div className="px-4 py-5">

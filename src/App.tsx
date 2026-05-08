@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react"; // নতুন ইমপোর্ট
+import { useEffect, useLayoutEffect } from "react"; // নতুন ইমপোর্ট
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -68,6 +68,42 @@ function ScrollToTop() {
 }
 // --------------------------------------------------------------------------
 
+function PreventInstantBackClickThrough() {
+  useEffect(() => {
+    let suppressClickUntil = 0;
+
+    const markInstantBackPress = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const button = target.closest("button") as HTMLButtonElement | null;
+      if (button?.dataset.back === "1") {
+        event.preventDefault();
+        suppressClickUntil = performance.now() + 700;
+      }
+    };
+
+    const blockGhostClick = (event: MouseEvent) => {
+      if (performance.now() > suppressClickUntil) return;
+
+      suppressClickUntil = 0;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
+    window.addEventListener("pointerdown", markInstantBackPress, true);
+    window.addEventListener("click", blockGhostClick, true);
+
+    return () => {
+      window.removeEventListener("pointerdown", markInstantBackPress, true);
+      window.removeEventListener("click", blockGhostClick, true);
+    };
+  }, []);
+
+  return null;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="flex min-h-screen items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
@@ -108,6 +144,7 @@ const App = () => (
         <BrowserRouter>
           {/* এইখানে ScrollToTop কল করা হয়েছে */}
           <ScrollToTop />
+          <PreventInstantBackClickThrough />
           
           <AuthProvider>
             <Routes>
