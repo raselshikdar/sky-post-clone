@@ -91,11 +91,11 @@ function PreventInstantBackClickThrough() {
       event.stopImmediatePropagation();
     };
 
-    window.addEventListener("pointerdown", markInstantBackPress);
+    window.addEventListener("pointerdown", markInstantBackPress, true);
     window.addEventListener("click", blockGhostClick, true);
 
     return () => {
-      window.removeEventListener("pointerdown", markInstantBackPress);
+      window.removeEventListener("pointerdown", markInstantBackPress, true);
       window.removeEventListener("click", blockGhostClick, true);
     };
   }, []);
