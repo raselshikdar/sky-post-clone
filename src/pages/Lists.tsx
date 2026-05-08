@@ -81,7 +81,11 @@ export default function Lists() {
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/95 px-4 py-1.5 backdrop-blur-sm">
-        <button onClick={() => selectedList ? setSelectedList(null) : navigate(-1)} className="p-1"><ArrowLeft className="h-5 w-5 text-foreground" /></button>
+        <button
+          onPointerDown={(e) => { (e.currentTarget as any).dataset.back = "1"; selectedList ? setSelectedList(null) : navigate(-1); }}
+          onClick={(e) => { if ((e.currentTarget as any).dataset.back === "1") return; selectedList ? setSelectedList(null) : navigate(-1); }}
+          className="p-1"
+        ><ArrowLeft className="h-5 w-5 text-foreground" /></button>
         <h2 className="text-lg font-bold">{selectedList ? selectedListData?.name || t("lists.list") : t("lists.lists")}</h2>
         {!selectedList ? (
           <Button variant="outline" size="sm" className="rounded-full" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> {t("lists.new")}</Button>
