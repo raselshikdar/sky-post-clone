@@ -27,7 +27,7 @@ interface ComposerProps {
   parentId?: string; autoOpenImagePicker?: boolean; quotePost?: QuotePostData;
 }
 
-const MAX_CHARS = 300;
+const MAX_CHARS = 500;
 
 export default function Composer({ open, onOpenChange, parentId, autoOpenImagePicker, quotePost }: ComposerProps) {
   const [content, setContent] = useState("");
