@@ -78,6 +78,7 @@ function PreventInstantBackClickThrough() {
 
       const button = target.closest("button") as HTMLButtonElement | null;
       if (button?.dataset.back === "1") {
+        event.preventDefault();
         suppressClickUntil = performance.now() + 700;
       }
     };
